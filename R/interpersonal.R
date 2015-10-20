@@ -9,6 +9,7 @@ library(psychometric)
 library(reshape)
 library(e1071)
 library(lmerTest)
+library(cowplot)
 
 
 runAnova <- function(mdls, key="Condition"){
@@ -95,9 +96,50 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
 
 
 
-get.key <- function(lst, key) {
-  return(unlist( lapply(lst,FUN = function(l){return(l[[key]])}),recursive = F ))
+get.key <- function(lst, key,as.list=F) {
+  if(as.list == T){
+    return(as.list(lapply(lst,FUN = function(l){return(try(l[[key]]))}),recursive = F ))
+  }
+  else{
+    return(unlist( lapply(lst,FUN = function(l){return(try(l[[key]]))}),recursive = F ))
+  }
 }
+
+plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T) {
+  data <- na.omit(data)
+  r2.labels <- c(bquote(Delta~R[.(xname)]^2),bquote(Delta~R[.(yname)]^2))
+  data$timestamp <- as.POSIXct(data$timestamp,origin = "1970-01-01")
+  params1 <- melt(subset(data,select=c("timestamp","x.lag","y.lag")),id.vars = c("timestamp"))
+  params2 <- melt(subset(data,select=c("timestamp","dx.r.squared","dy.r.squared")),id.vars = c("timestamp"))
+
+  
+  glegend1 <- scale_colour_discrete(name  ="Variable",
+                                    breaks=c("x.lag","y.lag"),
+                                    labels=c(bquote(Lag[.(xname)]),bquote(Lag[.(yname)])))
+  
+  glegend2 <- scale_colour_discrete(name  ="Variable",
+                                    breaks=c("dx.r.squared","dy.r.squared"),
+                                    labels=r2.labels)
+  gstyle <- guides(colour = guide_legend(
+    label.theme = element_text(size=15,angle=0),label.hjust=0,label.vjust=0),title.theme=element_text(size=15,angle=0))
+  x_min = as.POSIXct(min(data$timestamp),origin = "1970-01-01")
+  x_max = as.POSIXct(max(data$timestamp),origin = "1970-01-01")
+  
+  
+  plt1 <- ggplot(data=params1, aes(x=timestamp,y=value,colour=variable)) +  geom_line(size=3) + geom_point(size=6) + xlab("Time") + ylab("Lag") + ggtitle(title) +glegend1 +gstyle 
+  plt2 <- ggplot(data=params2, aes(x=timestamp,y=value,colour=variable)) + geom_line(size=1) + geom_point(size=3) + xlab("Time") + ylab(bquote(R^2)) + ggtitle(title) + glegend2 + gstyle
+
+  plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max))
+  plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) 
+  combinedPlt <- plot_grid(plt2,plt1,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
+
+  if(save){
+    ggsave(f)
+  }
+  return(combinedPlt)
+  
+}
+
 
 plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T) {
   data <- na.omit(data)
@@ -150,7 +192,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   }
   plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max))
   plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) 
-  combinedPlt <- multiplot(plt1,plt2)
+  combinedPlt <- plot_grid(plt1,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
   
   
   
@@ -185,31 +227,70 @@ urlForModel <- function(m) {
 }
 
 
-analyzeLags <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),minLag=0,maxLag=5) {
+analyzeLags <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),minLag=0,maxLag=5,noPlots=F,relativeToLag=-1) {
   lagList <- list()
-  for (lag in minLag:maxLag) {
-    mdl <- analyzeDyad(f1,f2,xname=xname,yname=yname, norm=norm,window_size=window_size,window_overlap=window_overlap,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag)
-    lagList[[lag]] <- mdl
+  n = 1;
+  lags <- minLag:maxLag
+  for (lag in lags) {
+    mdl <- analyzeDyad(f1,f2,xname=xname,yname=yname, norm=norm,window_size=window_size,window_overlap=window_overlap,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots)
+    mdlSummary <- mdl$summary
+    mdlSummary$lag <- lag
+    lagList[[lag+1]] <- mdlSummary
+    n = n+1
   }
   
+  output <- lagList[[minLag+1]]
+  dxVals <- get.key(lagList,key = "dx.r.squared",as.list = T)
+  dyVals <- get.key(lagList,key = "dy.r.squared",as.list = T)
   
-
+  dxValsByLag <- unlist(do.call(cbind,dxVals))
+  dyValsByLag <- unlist(do.call(cbind,dyVals))
+  dxOptimalLag <- apply(dxValsByLag,1,which.max) -1 #Compensate for lack of 0 indexing in R
+  dyOptimalLag <- apply(dyValsByLag,1,which.max) -1 #Compensate for lack of 0 indexing in R
+  
+  if(relativeToLag > -1){
+    dxOptimal <- rowMaxs(dxValsByLag) - dxValsByLag[,relativeToLag+1]
+    dyOptimal <- rowMaxs(dyValsByLag)- dyValsByLag[,relativeToLag+1]
+  }
+  else {
+    dxOptimal <- rowMaxs(dxValsByLag)
+    dyOptimal <- rowMaxs(dyValsByLag)
+  }
+  
+  output$dx.r.squared <- dxOptimal
+  output$dy.r.squared <- dyOptimal
+  output$x.lag <- dxOptimalLag
+  output$y.lag <- dyOptimalLag
+  output$lag <- NULL
+  
+  print(plot.lagparams(output,xname=xname,yname=yname,title=paste(xname,"&",yname)))
+  
+  return(output)
+  
 }
-analyzeDyad <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0) {
-  p1 <- read.eda(f1)
-  p2 <- read.eda(f2)
+
+
+analyzeDyad <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F) {
+  if(simulate){
+    p1 <- f1
+    p2 <- f2
+  }
+  else {
+    p1 <- read.eda(f1)
+    p2 <- read.eda(f2)
+  }
   timeformat ="%Y-%m-%d %H:%M:%S"
   FUN <- function(data){
     return(func(data,lag=lag));
   }
   
   
-  if(simulate){
-    d <- as.simulateddyad(p1,p2,norm=norm)
-  }
-  else {
+#  if(simulate){
+#    d <- as.simulateddyad(p1,p2,norm=norm)
+#  }
+#  else {
     d <- as.dyad(p1,p2,norm=norm)
-  }
+#  }
   
   if(start != ""){
     start <- strptime(start,format=timeformat)
@@ -228,24 +309,28 @@ analyzeDyad <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_
   fs <- getFS(d)
   
   data <- o.window.list(d,window_size = window_size*fs, window_overlap=window_overlap*fs, FUN = FUN,na.rm = na.rm)
-  pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F)
-  pltData
+  out <- list()
+  
+  if(noPlots == F){
+    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F,title = paste(xname,"+",yname,"(","Lag","=",lag,")"))
+    pltData
+    out$plt <- pltData
+  }
+  
   mdls <- data
   n <- length(get.key(mdls,"x.r.squared"))
   mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n), x.r.squared=get.key(mdls,"x.r.squared"),y.r.squared=get.key(mdls,"y.r.squared"),dx.r.squared=get.key(mdls,"dx.r.squared"),dy.r.squared=get.key(mdls,"dy.r.squared"))
-  out <- list()
   out$mdls <- data
   out$summary <- mdlData
-  out$plt <- pltData
   return(out)
 }
 
 
-saveData <- function(mdls,fname="Dyad.csv"){
+saveData <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
   timeformat ="%Y-%m-%d %H:%M:%S"
   data <- mdls$summary
   data$Timestamp <- strftime(as.POSIXlt(as.numeric(data$timestamp),origin = "1970-01-01"), format=timeformat)
-  write.csv(data.frame(Timestamp=data$Timestamp,x.rsquared=data$dx.r.squared, y.rsquared=data$dy.r.squared),file = fname)
-  
+  write.csv(data.frame(Timestamp=data$Timestamp,R2=data$dx.r.squared),file = xfname)
+  write.csv(data.frame(Timestamp=data$Timestamp, R2=data$dy.r.squared),file = yfname)
 }
 

@@ -80,7 +80,7 @@ read.eda <- function(file) {
   FIELDS[1:6] <- c("Z","Y","X","Battery","Temperature","EDA")
   FIELDS[length(FIELDS)] <- strsplit(FIELDS[length(FIELDS)],split = " ")[[1]]
   data <- as.data.frame(read.csv(file,header = F,sep = ",",skip=8,col.names=FIELDS))
-  data <- na.omit(data)
+  data <- na.exclude(data)
   timestamps <- seq(from = start, by=dt , along.with = data$EDA)
   data$Timestamp <- timestamps
   data$Motion <- sqrt(data$X*data$X+data$Y*data$Y + data$Z*data$Z)

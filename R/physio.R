@@ -1,10 +1,122 @@
+source("~/git/CBSL.R/R/utils.R")
+source("~/git/CBSL.R/R/read.R")
+source("~/git/CBSL.R/R/plot.R")
+
 library(matrixStats)
 library(lavaan)
+
 RMSSD <- function(hr.period) {
   hr.period.delta <- diff(hr.period)
   return(sqrt(mean(hr.period.delta*hr.period.delta)))
 }
 
+linearTrend <- function(data) {
+  t <- seq_along(data)
+  mdl <- lm(data ~ t)
+  trend <- coef(mdl)[[2]]
+  return(trend)
+}
+
+tsDescriptives <- function(data,fs=32) {
+  m <- mean(data, na.rm=T)
+  st.dev <- sd(data,na.rm=T)
+  #Compute linear trend
+  trend<-NA
+  try((trend <- linearTrend(data)*fs*60),silent = T)
+  max.data <- max(data)
+  min.data <- min(data)
+  range.data <- range(data)
+  slope <- mean(diff(data))
+  try(data.ds <- decimate(data,q = 32),silent=T)
+  ac <- NA
+  try(ac <- acf(data.ds,lag.max=1,type="correlation")$acf[2], silent=T)
+  
+  return(list(mean=m,sd=st.dev, trend=trend,min=min.data,max=max.data,slope=slope,range=(max.data-min.data),autocorrelation=ac))
+}
+
+
+dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv")) {
+  
+  if(typeof(codes) == "character"){
+    conditions <- read.Codes(codes)
+  }
+  else {
+    conditions <- codes
+  }
+  eda <- read.eda(file = filename)
+  fs <- getFS(eda)
+  nConditions <- dim(conditions)[1]
+  tz <- attr(eda$Timestamp[1],"tz")
+  eda$Condition <- 0
+  for (i in 1:nConditions) {
+    start <- conditions[["Start Time"]][i]
+    end <- conditions[["End Time"]][i]
+    condition <- conditions[["Condition"]][i]
+    validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
+    eda$Condition[which(validTimes)] <- condition
+  }
+  write.csv(eda,file = outputFile)
+  
+}
+
+descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
+  
+  if(typeof(codes) == "character"){
+    conditions <- read.Codes(codes)
+  }
+  else {
+    conditions <- codes
+  }
+  eda <- read.eda(file = filename)
+  fs <- getFS(eda)
+  nConditions <- dim(conditions)[1]
+  results <- list()
+  tz <- attr(eda$Timestamp[1],"tz")
+  eda$Condition <- 0
+  for (i in 1:nConditions) {
+    start <- conditions[["Start Time"]][i]
+    end <- conditions[["End Time"]][i]
+    condition <- conditions[["Condition"]][i]
+    validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
+    eda$Condition[which(validTimes)] <- condition
+    data <- subset(eda,validTimes)
+    desc <- tsDescriptives(data[[col]])
+    
+    results[[i]] <- desc
+  }
+  write.csv(eda,file = paste("DummyCoded/",filename,"_DummyCoded.csv",sep=""))
+  
+  results <- as.data.frame(t(as.data.frame(sapply(results, unlist))))
+  rownames(results) <- NULL
+  #Fix weird issue where values get turned into text
+  results <- lapply(results,as.double)
+  results$Condition <- conditions$Condition
+  results$Start <- conditions$`Start Time`
+  results$End <- conditions$`End Time`
+  
+  #g2 <-ggplot(data = subset(eda, ((eda$Timestamp >= min(results$Start)) & (eda$Timestamp < max(results$End)))) ,mapping = aes(x=Timestamp,y=EDA)) + geom_line(size=1,col="#1FBFC4") + xlab("Time") + ylab("EDA")
+
+  g1 <- plotTSDescriptives(results,title=title)
+  
+  #plt <- plot_grid(g1,g2,ncol=1,nrow=2,align = "h")
+  print(g1)
+  return(results)
+  
+  
+}
+
+
+plotTSDescriptives <- function(data,title="") {
+  data <- melt(as.data.frame(data),id.vars = c("Start","End","Condition"), )
+  g1<- ggplot(data = data,mapping = aes(x=(Start + (End-Start)/2),y=value,col=variable)) + geom_line(size=1) + geom_point(size=3) + xlab("Time") + ylab("Value") + ggtitle(title)
+  g1 <- g1 + geom_rect(aes(xmin=Start,xmax=End,ymin=-1.0,ymax=-0.9, fill=Condition,col=NULL))
+  g1 <- g1 + guides(colour = guide_legend(title="Parameter",ncol = 1,override.aes = list(fill=NA)), fill = guide_legend(ncol = 1)) + theme(legend.position = "right")
+
+  g1 <- g1 + scale_y_continuous()
+  g1 <- g1 + scale_x_datetime()
+
+  return(g1)
+}
 
 
 
@@ -331,8 +443,8 @@ statespace.fiml <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=T,lag=0){
 
   data <- data.frame(x_prime=x_prime,y_prime=y_prime, x=x,y=y)
   
-  base_x_model <- x_prime ~ I(0-x)
-  base_y_model <- y_prime ~ I(0-y)
+  base_x_model <- x_prime ~ I(mean(x,na.rm=T)-x)
+  base_y_model <- y_prime ~ I(mean(y,na.rm=T)-y)
   
   
   base_eq <- list(base_x_model,base_y_model)
@@ -343,8 +455,8 @@ statespace.fiml <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=T,lag=0){
   
   if (type==3){
     
-    x_model <- x_prime ~ I(mean(x,na.rm=T)-x) + y + y_prime
-    y_model <- y_prime ~ I(mean(y,na.rm=T)-y) + x + x_prime
+    x_model <- x_prime ~ I(mean(x,na.rm=T)-x) + I(y-x)
+    y_model <- y_prime ~ I(mean(y,na.rm=T)-y) + I(x-y)
     
     
     eq <- list(x_model,y_model)
@@ -356,11 +468,11 @@ statespace.fiml <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=T,lag=0){
     b0 <- o.coef(x_model,1)
     b1 <- o.coef(x_model,2)
     b2 <- o.coef(x_model,3)
-    b21 <- o.coef(x_model,4)
+    b21 <- 0
     b3 <- o.coef(y_model,1)
     b4 <- o.coef(y_model,2)
     b5 <- o.coef(y_model,3)
-    b45 <- o.coef(y_model,4)
+    b45 <- 0
   }
   else if(type==2){
     

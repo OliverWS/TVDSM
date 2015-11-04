@@ -73,11 +73,11 @@ plot.eda <- function(data,title="EDA Data",show_acc=F, show_raw_acc=F) {
       acc <- ggplot(data=data) + geom_line(aes(x = Timestamp, y=Movement),colour="red") + xlab("Time") + ylab("Movment") +  ggtitle("Accelerometer")
       
     }
-    multiplot(eda,acc)
+    return(multiplot(eda,acc))
     
   }
   else {
-    multiplot(eda)
+    return(eda)
   }
   
   

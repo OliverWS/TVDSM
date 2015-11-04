@@ -47,7 +47,7 @@ runAnova <- function(mdls, key="Condition"){
 
 
 
-analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="Dyad.1",p1.name="Infant",p2.name="Parent",lag=0){
+analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1){
   
   ERCodes <- read.Codes(codes)
   View(ERCodes)
@@ -69,7 +69,7 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
         end = dim(d)[[1]]-1
       }
       print(paste("Start",start,"End",end))
-      mdls[[n]] <- computeStateSpace(d[start:end,],type = type,downsample =1,lag=lag )
+      mdls[[n]] <- computeStateSpace(d[start:end,],type = type,downsample =downsample,lag=lag )
       mdls[[n]]$Condition <- ERCodes$Condition[[n]]
       mdls[[n]]$Duration <- (ERCodes$End.Time[[n]] - ERCodes$Start.Time[[n]])
       mdls[[n]]$Start <- ERCodes$Start.Time[[n]] 
@@ -84,7 +84,7 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
   
 
   
-  plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname)
+  plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams)
   
   
   
@@ -141,7 +141,7 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
 }
 
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T) {
+plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T,plotParams=T) {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -192,10 +192,13 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   }
   plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max))
   plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) 
-  combinedPlt <- plot_grid(plt1,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
-  
-  
-  
+  if(plotParams){
+    combinedPlt <- plot_grid(plt1,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
+  }
+  else {
+    combinedPlt <- plt2
+  }
+
   if(save){
     ggsave(f)
   }
@@ -204,7 +207,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
 }
 
 computeStateSpace <- function(dyad,type=2,downsample=1,lag=0) {
-  FS <- getFS(dyad)
+  FS <- round(getFS(dyad))
   ax <- decimate(dyad[,2], downsample*FS)
   ay <- decimate(dyad[,3],downsample*FS)
   mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag)
@@ -227,12 +230,12 @@ urlForModel <- function(m) {
 }
 
 
-analyzeLags <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),minLag=0,maxLag=5,noPlots=F,relativeToLag=-1) {
+analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),minLag=0,maxLag=5,noPlots=F,relativeToLag=-1) {
   lagList <- list()
   n = 1;
   lags <- minLag:maxLag
   for (lag in lags) {
-    mdl <- analyzeDyad(f1,f2,xname=xname,yname=yname, norm=norm,window_size=window_size,window_overlap=window_overlap,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots)
+    mdl <- analyzeDyad(f1,f2,dyad=dyad,xname=xname,yname=yname, norm=norm,window_size=window_size,window_overlap=window_overlap,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots)
     mdlSummary <- mdl$summary
     mdlSummary$lag <- lag
     lagList[[lag+1]] <- mdlSummary
@@ -270,28 +273,30 @@ analyzeLags <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_
 }
 
 
-analyzeDyad <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F) {
-  if(simulate){
-    p1 <- f1
-    p2 <- f2
-  }
-  else {
-    p1 <- read.eda(f1)
-    p2 <- read.eda(f2)
-  }
+analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T, measure="EDA",type=2,downsample=1) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   FUN <- function(data){
-    return(func(data,lag=lag));
+    return(func(data,lag=lag,type=type,downsample=downsample));
   }
   
-  
-#  if(simulate){
-#    d <- as.simulateddyad(p1,p2,norm=norm)
-#  }
-#  else {
-    d <- as.dyad(p1,p2,norm=norm)
-#  }
-  
+  if(length(dyad) > 0){
+    d <- dyad
+  }
+  else {
+    if(simulate){
+      p1 <- f1
+      p2 <- f2
+    }
+    else {
+      p1 <- read.eda(f1)
+      p2 <- read.eda(f2)
+    }
+    
+    
+    d <- as.dyad(p1,p2,norm=norm,cols = c(measure))
+    
+  }
+
   if(start != ""){
     start <- strptime(start,format=timeformat)
   }
@@ -312,7 +317,7 @@ analyzeDyad <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_
   out <- list()
   
   if(noPlots == F){
-    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F,title = paste(xname,"+",yname,"(","Lag","=",lag,")"))
+    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F,title = paste(xname,"+",yname,"(","Lag","=",lag,")"),plotParams=plotParams)
     pltData
     out$plt <- pltData
   }
@@ -325,6 +330,17 @@ analyzeDyad <- function(f1,f2,xname=f1,yname=f2, norm=F,window_size=60*5,window_
   return(out)
 }
 
+describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
+  dx <- get.key(mdls, "dx.r.squared")
+  dy <- get.key(mdls, "dy.r.squared")
+  dyad <- rowMeans(cbind(dx,dy))
+  
+  group <- c(rep_len(xname,length(dx)),rep_len(yname,length(dy)),rep_len("Dyad",length(dy)))
+  interdependence <- c(dx,dy,dyad)
+  data <- data.frame(Participant=group,R2=interdependence)
+  
+  return(o.describeBy(interdependence, group,tex = F,digits = 3))
+}
 
 saveData <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
   timeformat ="%Y-%m-%d %H:%M:%S"

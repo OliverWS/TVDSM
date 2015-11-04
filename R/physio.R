@@ -1,6 +1,4 @@
-source("~/git/CBSL.R/R/utils.R")
-source("~/git/CBSL.R/R/read.R")
-source("~/git/CBSL.R/R/plot.R")
+
 
 library(matrixStats)
 library(lavaan)

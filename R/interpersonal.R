@@ -1,8 +1,3 @@
-source("~/git/OWS.R/OWS.R")
-source("~/git/CBSL.R/R/utils.R")
-source("~/git/CBSL.R/R/read.R")
-source("~/git/CBSL.R/R/plot.R")
-source("~/git/CBSL.R/R/physio.R")
 library(lattice)
 library(lme4)
 library(psychometric)

@@ -7,3 +7,31 @@ Author: Oliver Wilder-Smith
 Maintainer: Who to complain to <wilder-smith.o@husky.neu.edu>
 Description: R functions for use in Computational Behavioral Science Research
 License: Apache 2.0
+Depends:
+    R (>= 3.1.2)
+Imports:
+  cowplot,
+	e1071,
+	grid,
+	gridExtra,
+	Hmisc,
+	lattice,
+	lavaan,
+	lme4,
+	lmerTest,
+	matrixStats,
+	psychometric,
+	reshape,
+	signal,
+	ascii,
+	car,
+	foreign,
+	ggplot2,
+	gvlma,
+	lawstat,
+	lsr,
+	MASS,
+	mvnormtest,
+	psych,
+	xtable
+		

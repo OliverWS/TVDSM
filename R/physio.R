@@ -70,20 +70,17 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   nConditions <- dim(conditions)[1]
   results <- list()
   tz <- attr(eda$Timestamp[1],"tz")
-  eda$Condition <- 0
   for (i in 1:nConditions) {
     start <- conditions[["Start Time"]][i]
     end <- conditions[["End Time"]][i]
     condition <- conditions[["Condition"]][i]
     validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
-    eda$Condition[which(validTimes)] <- condition
     data <- subset(eda,validTimes)
     desc <- tsDescriptives(data[[col]])
     
     results[[i]] <- desc
   }
-  write.csv(eda,file = paste("DummyCoded/",filename,"_DummyCoded.csv",sep=""))
-  
+
   results <- as.data.frame(t(as.data.frame(sapply(results, unlist))))
   rownames(results) <- NULL
   #Fix weird issue where values get turned into text

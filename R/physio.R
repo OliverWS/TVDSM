@@ -429,8 +429,16 @@ else if (type == 5) {
 
 library(systemfit)
 statespace.fiml <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=T,lag=0){
-  x_prime <-o.Lag(x,lag=lag)
-  y_prime <- o.Lag(y,lag=lag)
+  if(is.null(lag)){
+    x_prime <- Lag(x,-1*lag)
+    y_prime <- Lag(y,-1*lag)
+    
+  }
+  else {
+    x_prime <-o.Lag(x,lag=lag)
+    y_prime <- o.Lag(y,lag=lag)
+    
+  }
 
   
   s1 <- ""

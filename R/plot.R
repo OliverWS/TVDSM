@@ -96,3 +96,16 @@ plot.dyad <- function(p1,p2,title="Dyad") {
   colnames(data) <- c("Timestamp","P1.EDA","P2.EDA")
   ggplot(data=data, aes(x=Timestamp, y=P1.EDA)) + geom_line(aes(x = Timestamp, y=P1.EDA),colour="#2CC4FF")+ geom_line(aes(x = Timestamp, y=P2.EDA),colour="#DD6DAE")+ xlab("Time") + ggtitle(paste(p1.name,"&",p2.name)) + ylab("EDA (uS)")
 }
+
+
+plotEDAByCondition <- function(eda, codes, title="") {
+  
+  if(is.character(eda)) {
+    eda <- read.eda(eda)
+  }
+
+  g1 <- ggplot(data=eda, aes(x=Timestamp, y=EDA)) + geom_line(aes(x = Timestamp, y=EDA),colour="#2CC4FF")+  xlab("Time") + ggtitle(title) + ylab("EDA (uS)")
+  g1 <- g1 + geom_rect(aes(xmin=`Start Time`,xmax=`End Time`,ymin=-1.0,ymax=0, fill=Condition,col=NULL),data=codes)
+  return(g1)
+  
+}

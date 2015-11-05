@@ -337,7 +337,23 @@ describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
   return(o.describeBy(interdependence, group,tex = F,digits = 3))
 }
 
-saveData <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
+saveInterpersonalData <- function(dyadData, outputFilename=NULL){
+  timeformat ="%Y-%m-%d %H:%M:%S"
+  d <- dyadData$mdls
+  data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01"), format=timeformat), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+  if(is.null(outputFilename)){
+    outputFilename <- paste(as.character(dyadData$summary$name[[1]]),".csv",sep="")
+  }
+  abnames <- strsplit(as.character(dyadData$summary$name[[1]]),split = "+")
+  #data$a.name <- abnames[1]
+  #data$b.name <- abnames[2]
+
+  
+  write.csv(data,file = outputFilename)
+  
+}
+
+saveDataForGraphing <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
   timeformat ="%Y-%m-%d %H:%M:%S"
   data <- mdls$summary
   data$Timestamp <- strftime(as.POSIXlt(as.numeric(data$timestamp),origin = "1970-01-01"), format=timeformat)

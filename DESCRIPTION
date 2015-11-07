@@ -1,8 +1,8 @@
 Package: cbsl
 Type: Package
 Title: R Functions for Computational Behavioral Science
-Version: 1.0
-Date: 2014-12-13
+Version: 1.1
+Date: 2015-11-07
 Author: Oliver Wilder-Smith
 Maintainer: Who to complain to <wilder-smith.o@husky.neu.edu>
 Description: R functions for use in Computational Behavioral Science Research

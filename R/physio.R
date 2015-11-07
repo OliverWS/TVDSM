@@ -91,7 +91,7 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   
   #g2 <-ggplot(data = subset(eda, ((eda$Timestamp >= min(results$Start)) & (eda$Timestamp < max(results$End)))) ,mapping = aes(x=Timestamp,y=EDA)) + geom_line(size=1,col="#1FBFC4") + xlab("Time") + ylab("EDA")
 
-  g1 <- plotTSDescriptives(results,title=title)
+  g1 <- plotTSDescriptives(results,title=title,vars=c("mean"))
   
   #plt <- plot_grid(g1,g2,ncol=1,nrow=2,align = "h")
   print(g1)
@@ -101,8 +101,14 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
 }
 
 
-plotTSDescriptives <- function(data,title="") {
-  data <- melt(as.data.frame(data),id.vars = c("Start","End","Condition"), )
+plotTSDescriptives <- function(data,title="",vars=NULL) {
+  if(is.null(vars)){
+    data <- melt(as.data.frame(data),id.vars = c("Start","End","Condition"), )
+  }
+  else {
+    data <- melt(as.data.frame(data),id.vars = c("Start","End","Condition"),measure.vars = vars )
+    
+  }
   g1<- ggplot(data = data,mapping = aes(x=(Start + (End-Start)/2),y=value,col=variable)) + geom_line(size=1) + geom_point(size=3) + xlab("Time") + ylab("Value") + ggtitle(title)
   g1 <- g1 + geom_rect(aes(xmin=Start,xmax=End,ymin=-1.0,ymax=-0.9, fill=Condition,col=NULL))
   g1 <- g1 + guides(colour = guide_legend(title="Parameter",ncol = 1,override.aes = list(fill=NA)), fill = guide_legend(ncol = 1)) + theme(legend.position = "right")
@@ -428,140 +434,6 @@ else if (type == 5) {
 
 
 library(systemfit)
-statespace.fiml <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=T,lag=0){
-  if(is.null(lag)){
-    x_prime <- Lag(x,-1*lag)
-    y_prime <- Lag(y,-1*lag)
-    
-  }
-  else {
-    x_prime <-o.Lag(x,lag=lag)
-    y_prime <- o.Lag(y,lag=lag)
-    
-  }
-
-  
-  s1 <- ""
-  s2 <- ""
-
-  data <- data.frame(x_prime=x_prime,y_prime=y_prime, x=x,y=y)
-  
-  base_x_model <- x_prime ~ I(mean(x,na.rm=T)-x)
-  base_y_model <- y_prime ~ I(mean(y,na.rm=T)-y)
-  
-  
-  base_eq <- list(base_x_model,base_y_model)
-  basefit <- systemfit(list(base_x_model,base_y_model),data=data, method = "SUR")
-  
-  base_x_model <- basefit$eq[[1]]
-  base_y_model <- basefit$eq[[2]]
-  
-  if (type==3){
-    
-    x_model <- x_prime ~ I(mean(x,na.rm=T)-x) + I(y-x)
-    y_model <- y_prime ~ I(mean(y,na.rm=T)-y) + I(x-y)
-    
-    
-    eq <- list(x_model,y_model)
-    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
-    
-    x_model <- fit$eq[[1]]
-    y_model <- fit$eq[[2]]
-    
-    b0 <- o.coef(x_model,1)
-    b1 <- o.coef(x_model,2)
-    b2 <- o.coef(x_model,3)
-    b21 <- 0
-    b3 <- o.coef(y_model,1)
-    b4 <- o.coef(y_model,2)
-    b5 <- o.coef(y_model,3)
-    b45 <- 0
-  }
-  else if(type==2){
-    
-    x_model <- x_prime ~ I(mean(x,na.rm=T)-x) * I(y-x)
-    y_model <- y_prime ~ I(mean(y,na.rm=T)-y) * I(x-y)
-    
-    
-    eq <- list(x_model,y_model)
-    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
-    
-    x_model <- fit$eq[[1]]
-    y_model <- fit$eq[[2]]
-    
-    b0 <- o.coef(x_model,1)
-    b1 <- o.coef(x_model,2)
-    b2 <- o.coef(x_model,3)
-    b21 <- o.coef(x_model,4)
-    b3 <- o.coef(y_model,1)
-    b4 <- o.coef(y_model,2)
-    b5 <- o.coef(y_model,3)
-    b45 <- o.coef(y_model,4)
-  }
-  
-  else {
-    x_model <- x_prime ~  I(y-x) 
-    y_model <- y_prime ~  I(x-y)
-    
-    
-    
-    eq <- list(x_model,y_model)
-    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
-    
-    x_model <- fit$eq[[1]]
-    y_model <- fit$eq[[2]]
-    print(summary(x_model))
-    print(summary(y_model))
-    
-    
-    b0 <- o.coef(x_model,1)
-    b1 <- 0
-    b2 <- o.coef(x_model,2)
-    b3 <- o.coef(y_model,1)
-    b4 <- 0
-    b5 <- o.coef(y_model,2)
-    b21 <- 0
-    b45 <- 0
-  }
-  
-  
-#   data <- data.frame(x_prime=x_prime,y_prime=y_prime,x=x,y=y,dxy=dxy,dyx=dyx)
-#   model <- '
-# # Regression model. The b1 and b2 are labels
-# # similar to (b1) and (b2) in Mplus. These are
-# # needed to perform wald test.
-# # jobperf ~ b1*wbeing + b2*jobsat
-# #  CR.X =~ 1*y + -1*x
-# #  CR.Y =~ 1*x + -1*y
-#   x_prime ~ b1*x + b2*dyx
-#   y_prime ~ b3*y + b4*dxy
-# # Variances
-#   x ~~ x
-#   y ~~ y
-#   dyx ~~ dyx
-#   dxy ~~ dxy
-# 
-# # Covariance/correlation
-#   x ~~ y
-# '
-if(verbose){
-  
-  print(summary(x_model))
-  print(summary(y_model))
-  
-  
-}
-
-
-x.base.r.squared=summary(base_x_model)$r.squared
-y.base.r.squared=summary(base_y_model)$r.squared
-x.r.squared = summary(x_model)$r.squared
-y.r.squared = summary(y_model)$r.squared
-
-
-return(list(x_model=x_model,y_model=y_model,base_x_model=base_x_model,base_y_model=base_y_model,model=fit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=(x.r.squared - x.base.r.squared),dy.r.squared=(y.r.squared - y.base.r.squared),x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5,b21=b21,b45=b45))
-}
-
 
 statespace.sem <- function(d,type=2, step=0.25,p.value=0.01,verbose=T){
   x <- d[,2]

@@ -52,10 +52,17 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
   p2 <- read.eda(f2)
   
   d <- as.dyad(p1,p2,norm = T,cols=cols)
-  plot(d$Timestamp,d[,2],type="l",col="blue") 
-  lines(d$Timestamp,d[,3],col="red")
+  plot.dyad(p1,p2,title = dname)
   FS <- getFS(d)
   mdls <- list()
+  
+  x.baseline <- mean(d[,2],na.rm=T)
+  y.baseline <- mean(d[,3],na.rm=T)
+  
+  FUN <- function(data){
+    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline));
+  }
+  
   for(n in 1:dim(ERCodes)[[1]]){
     if(!is.na(ERCodes$Condition[[n]])){
       start = ERCodes$Start.Time[[n]]*FS
@@ -64,7 +71,7 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
         end = dim(d)[[1]]-1
       }
       print(paste("Start",start,"End",end))
-      mdls[[n]] <- computeStateSpace(d[start:end,],type = type,downsample =downsample,lag=lag )
+      mdls[[n]] <- FUN(d[start:end,])
       mdls[[n]]$Condition <- ERCodes$Condition[[n]]
       mdls[[n]]$Duration <- (ERCodes$End.Time[[n]] - ERCodes$Start.Time[[n]])
       mdls[[n]]$Start <- ERCodes$Start.Time[[n]] 
@@ -200,12 +207,145 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   return(combinedPlt)
   
 }
+statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=T,lag=0){
+  if(is.null(lag)){
+    x_prime <- Lag(x,-1*lag)
+    y_prime <- Lag(y,-1*lag)
+    
+  }
+  else {
+    x_prime <-o.Lag(x,lag=lag)
+    y_prime <- o.Lag(y,lag=lag)
+    
+  }
 
-computeStateSpace <- function(dyad,type=2,downsample=1,lag=0) {
+  s1 <- ""
+  s2 <- ""
+  
+  data <- data.frame(x_prime=x_prime,y_prime=y_prime, x=x,y=y)
+  
+  base_x_model <- x_prime ~ I(x_mu-x)
+  base_y_model <- y_prime ~ I(y_mu-y)
+  
+  
+  base_eq <- list(base_x_model,base_y_model)
+  basefit <- systemfit(list(base_x_model,base_y_model),data=data, method = "SUR")
+  
+  base_x_model <- basefit$eq[[1]]
+  base_y_model <- basefit$eq[[2]]
+  
+  if (type==3){
+    
+    x_model <- x_prime ~ I(x_mu-x) + I(y-x)
+    y_model <- y_prime ~ I(x_mu-y) + I(x-y)
+    
+    
+    eq <- list(x_model,y_model)
+    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
+    
+    x_model <- fit$eq[[1]]
+    y_model <- fit$eq[[2]]
+    
+    b0 <- o.coef(x_model,1)
+    b1 <- o.coef(x_model,2)
+    b2 <- o.coef(x_model,3)
+    b21 <- 0
+    b3 <- o.coef(y_model,1)
+    b4 <- o.coef(y_model,2)
+    b5 <- o.coef(y_model,3)
+    b45 <- 0
+  }
+  else if(type==2){
+    
+    x_model <- x_prime ~ I(x_mu-x) * I(y-x)
+    y_model <- y_prime ~ I(y_mu-y) * I(x-y)
+    
+    
+    eq <- list(x_model,y_model)
+    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
+    
+    x_model <- fit$eq[[1]]
+    y_model <- fit$eq[[2]]
+    
+    b0 <- o.coef(x_model,1)
+    b1 <- o.coef(x_model,2)
+    b2 <- o.coef(x_model,3)
+    b21 <- o.coef(x_model,4)
+    b3 <- o.coef(y_model,1)
+    b4 <- o.coef(y_model,2)
+    b5 <- o.coef(y_model,3)
+    b45 <- o.coef(y_model,4)
+  }
+  
+  else {
+    x_model <- x_prime ~  I(y-x) 
+    y_model <- y_prime ~  I(x-y)
+    
+    
+    
+    eq <- list(x_model,y_model)
+    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
+    
+    x_model <- fit$eq[[1]]
+    y_model <- fit$eq[[2]]
+    print(summary(x_model))
+    print(summary(y_model))
+    
+    
+    b0 <- o.coef(x_model,1)
+    b1 <- 0
+    b2 <- o.coef(x_model,2)
+    b3 <- o.coef(y_model,1)
+    b4 <- 0
+    b5 <- o.coef(y_model,2)
+    b21 <- 0
+    b45 <- 0
+  }
+  
+  
+  #   data <- data.frame(x_prime=x_prime,y_prime=y_prime,x=x,y=y,dxy=dxy,dyx=dyx)
+  #   model <- '
+  # # Regression model. The b1 and b2 are labels
+  # # similar to (b1) and (b2) in Mplus. These are
+  # # needed to perform wald test.
+  # # jobperf ~ b1*wbeing + b2*jobsat
+  # #  CR.X =~ 1*y + -1*x
+  # #  CR.Y =~ 1*x + -1*y
+  #   x_prime ~ b1*x + b2*dyx
+  #   y_prime ~ b3*y + b4*dxy
+  # # Variances
+  #   x ~~ x
+  #   y ~~ y
+  #   dyx ~~ dyx
+  #   dxy ~~ dxy
+  # 
+  # # Covariance/correlation
+  #   x ~~ y
+  # '
+  if(verbose){
+    
+    print(summary(x_model))
+    print(summary(y_model))
+    
+    
+  }
+  
+  
+  x.base.r.squared=summary(base_x_model)$r.squared
+  y.base.r.squared=summary(base_y_model)$r.squared
+  x.r.squared = summary(x_model)$r.squared
+  y.r.squared = summary(y_model)$r.squared
+  
+  
+  return(list(x_model=x_model,y_model=y_model,base_x_model=base_x_model,base_y_model=base_y_model,model=fit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=(x.r.squared - x.base.r.squared),dy.r.squared=(y.r.squared - y.base.r.squared),x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5,b21=b21,b45=b45))
+}
+
+
+computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL) {
   FS <- round(getFS(dyad))
   ax <- decimate(dyad[,2], downsample*FS)
   ay <- decimate(dyad[,3],downsample*FS)
-  mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag)
+  mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag,x_mu = x_mu,y_mu=y_mu)
   mdl$Timestamp <- dyad[1,"Timestamp"]
   mdl$Duration <- (max(mdl$Timestamp) - min(mdl$Timestamp))
   mdl$Start <- mdl$Timestamp[[1]] 
@@ -270,9 +410,6 @@ analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
 
 analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T, measure="EDA",type=2,downsample=1) {
   timeformat ="%Y-%m-%d %H:%M:%S"
-  FUN <- function(data){
-    return(func(data,lag=lag,type=type,downsample=downsample));
-  }
   
   if(length(dyad) > 0){
     d <- dyad
@@ -291,6 +428,13 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     d <- as.dyad(p1,p2,norm=norm,cols = c(measure))
     
   }
+  x.baseline <- mean(d[,2],na.rm=T)
+  y.baseline <- mean(d[,3],na.rm=T)
+  
+  FUN <- function(data){
+    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline));
+  }
+  
 
   if(start != ""){
     start <- strptime(start,format=timeformat)

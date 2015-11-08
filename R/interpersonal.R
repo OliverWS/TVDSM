@@ -367,7 +367,7 @@ urlForModel <- function(m) {
 
 analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_overlap=0,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),minLag=0,maxLag=5,noPlots=F,relativeToLag=-1) {
   lagList <- list()
-  n = 1;
+n = 1;
   lags <- minLag:maxLag
   for (lag in lags) {
     mdl <- analyzeDyad(f1,f2,dyad=dyad,xname=xname,yname=yname, norm=norm,window_size=window_size,window_overlap=window_overlap,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots)

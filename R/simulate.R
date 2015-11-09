@@ -11,8 +11,10 @@ CBSL.update <- function(){
   library(devtools)
   install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
 }
-simulateDyad <- function(duration=600,fs=32,lag=0,mu=1,sd=2,sr.ratio=0.5,sr=0.5,cr=1.0,i=0) {
-  
+simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,sr.ratio=0.5) {
+  sr = selfReg.coef
+  cr = coReg.coef
+  i = interaction.coef
   
   ds.predict <- function(x,y,type=2) {
     if(type == 2){
@@ -60,7 +62,10 @@ simulateDyad <- function(duration=600,fs=32,lag=0,mu=1,sd=2,sr.ratio=0.5,sr=0.5,
   return(outputData)
 }
 
-simulatePartner <- function(x.signal,fs=32,lag=0,mu=1,sd=2,sr.ratio=0.5,sr=0.5,cr=1.0,i=0) {
+simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,sr.ratio=0.5) {
+  sr = selfReg.coef
+  cr = coReg.coef
+  i = interaction.coef
   
   
   ds.predict <- function(x,y,type=2) {

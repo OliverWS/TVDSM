@@ -1,6 +1,6 @@
 
-
-library(matrixStats)
+require(signal)
+require(matrixStats)
 library(lavaan)
 
 RMSSD <- function(hr.period) {

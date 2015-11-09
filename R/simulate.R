@@ -47,7 +47,6 @@ simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inte
   print(length(timestamps))
   print(length(x))
   print(length(y))
-  lines(y.t,y,col="green")
   outputData <- data.frame(Timestamp = timestamps)
   outputData[,2] <- x
   outputData[,3] <- y
@@ -62,7 +61,7 @@ simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inte
   return(outputData)
 }
 
-simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,sr.ratio=0.5) {
+simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coefrowWeightedMeans=0,lag=0,mu=1,sd=2,sr.ratio=0.5) {
   sr = selfReg.coef
   cr = coReg.coef
   i = interaction.coef
@@ -96,7 +95,6 @@ simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inter
   print(length(timestamps))
   print(length(x))
   print(length(y))
-  lines(y.t,y,col="green")
   outputData <- data.frame(Timestamp = timestamps)
   outputData[,2] <- x
   outputData[,3] <- y

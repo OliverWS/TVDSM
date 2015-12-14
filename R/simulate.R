@@ -9,7 +9,6 @@ library(reshape)
 library(coefplot)
 library(e1071)
 library(lmerTest)
-library(plotly)
 CBSL.update <- function(){
   library(devtools)
   install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
@@ -61,9 +60,7 @@ simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inte
   g1 <- g1 + scale_y_continuous()
   g1 <- g1 + scale_x_datetime()
 
-  (gg <- ggplotly(g1))
-  print(gg)
-  return(list(plt=g1,data=outputData))
+  return(list(plt=g1,data=outputData,eq=eq))
 }
 
 simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,sr.ratio=0.95) {
@@ -110,10 +107,8 @@ simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inter
   g1 <- g1 + scale_y_continuous()
   g1 <- g1 + scale_x_datetime()
   print(g1)
-  (gg <- ggplotly(g1))
-  print(gg)
-  
-  return(list(data=outputData,plt=gg))
+
+  return(list(data=outputData,plt=g1,eq=eq))
 }
 
 
@@ -130,6 +125,7 @@ sampleSignal <- function(){
   
   return(d.sc[,2])
 }
+
 makeDyad <- function(edaData, sample_rate=0.1, start=strptime("2015-01-01 0:0:0","%Y-%m-%d %H:%M:%S"),norm=T) {
   dt <- as.difftime(sample_rate,units = "secs")
   timestamps <- seq(from = start, by=dt , length.out = dim(edaData)[1])

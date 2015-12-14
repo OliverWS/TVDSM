@@ -345,7 +345,7 @@ computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL
   FS <- round(getFS(dyad))
   ax <- decimate(dyad[,2], downsample*FS)
   ay <- decimate(dyad[,3],downsample*FS)
-  mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag,x_mu = x_mu,y_mu=y_mu)
+  mdl <- statespace.fiml(ax,ay,p.value = 0.001,type=type,lag=lag,x_mu = x_mu,y_mu=y_mu)
   mdl$Timestamp <- dyad[1,"Timestamp"]
   mdl$Duration <- (max(mdl$Timestamp) - min(mdl$Timestamp))
   mdl$Start <- mdl$Timestamp[[1]] 

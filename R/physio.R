@@ -25,9 +25,9 @@ tsDescriptives <- function(data,fs=32) {
   min.data <- min(data)
   range.data <- range(data)
   slope <- mean(diff(data))
-  try(data.ds <- decimate(data,q = 32),silent=T)
+  try(data.ds <- decimate(data,q = fs),silent=T)
   ac <- NA
-  try(ac <- acf(data.ds,lag.max=1,type="correlation")$acf[2], silent=T)
+  try(ac <- acf(data.ds,lag.max=1,type="correlation",plot = F)$acf[2], silent=T)
   
   return(list(mean=m,sd=st.dev, trend=trend,min=min.data,max=max.data,slope=slope,range=(max.data-min.data),autocorrelation=ac))
 }
@@ -54,7 +54,7 @@ dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_Dumm
     eda$Condition[which(validTimes)] <- condition
   }
   write.csv(eda,file = outputFile)
-  
+  return(eda)
 }
 
 descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
@@ -91,7 +91,7 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   
   #g2 <-ggplot(data = subset(eda, ((eda$Timestamp >= min(results$Start)) & (eda$Timestamp < max(results$End)))) ,mapping = aes(x=Timestamp,y=EDA)) + geom_line(size=1,col="#1FBFC4") + xlab("Time") + ylab("EDA")
 
-  g1 <- plotTSDescriptives(results,title=title,vars=c("mean"))
+  g1 <- plotTSDescriptives(results,title=title)
   
   #plt <- plot_grid(g1,g2,ncol=1,nrow=2,align = "h")
   print(g1)
@@ -109,8 +109,16 @@ plotTSDescriptives <- function(data,title="",vars=NULL) {
     data <- melt(as.data.frame(data),id.vars = c("Start","End","Condition"),measure.vars = vars )
     
   }
-  g1<- ggplot(data = data,mapping = aes(x=(Start + (End-Start)/2),y=value,col=variable)) + geom_line(size=1) + geom_point(size=3) + xlab("Time") + ylab("Value") + ggtitle(title)
-  g1 <- g1 + geom_rect(aes(xmin=Start,xmax=End,ymin=-1.0,ymax=-0.9, fill=Condition,col=NULL))
+  #levels(data$Condition) <- unique(data$Condition[order(data$Start)])
+  data$value[!is.finite(data$value)] <- NA
+  
+  y.max <- max(data$value, na.rm=T)
+  y.min <- min(data$value, na.rm=T)
+  yrange <- y.max - y.min
+  rect.max <- (y.min - (yrange/20.0))
+  rect.min <- rect.max - (yrange/20.0)
+  g1<- ggplot(data = data,mapping = aes(x=(Start + (End-Start)/2),y=value,col=variable)) + geom_line(size=1) + geom_point(size=3) + xlab("Time") + ylab("Parameter Value") + ggtitle(title)
+  g1 <- g1 + geom_rect(aes_string(xmin="Start",xmax="End",ymin=rect.min,ymax=rect.max, fill="Condition",col=NULL))
   g1 <- g1 + guides(colour = guide_legend(title="Parameter",ncol = 1,override.aes = list(fill=NA)), fill = guide_legend(ncol = 1)) + theme(legend.position = "right")
 
   g1 <- g1 + scale_y_continuous()
@@ -634,16 +642,14 @@ plot.statespace <- function(s,title="State Space Plot", xlabel="X Data", ylabel=
   yt <- s$mat$y
   p <- ggplot(data=data, aes(x=x,y=y))+geom_segment(aes(xend=(x+xprime), yend=(y+yprime),lineend="round", colour=(sqrt(xprime*xprime+yprime*yprime))),arrow=arrow(length=unit(.2,"cm")))+scale_colour_gradient(low="#0000CC",high="#CC0000",name="Distance")+labs(list(title=title, x=xlabel, y =ylabel))+xlim(min(xt,na.rm = T),max(xt,na.rm = T))+ylim(min(yt,na.rm = T),max(yt,na.rm = T))
   # source: http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
-  lab.1 <- expression(paste(R^2," ",xlabel,"="))
-  lab.2 <- expression(paste(R^2," ",ylabel,"="))
-  r2.x <- round(summary(s$x_model)$r.squared,digits = 2)
-  r2.y <- round(summary(s$y_model)$r.squared,digits = 2)
-  b2 <- round(standardCoefs(s$x_model)[2,2],digits=2)
-  b5 <- round(standardCoefs(s$y_model)[2,2],digits=2)
-  footnote <- substitute(paste(R^2," ",xlabel,"=", r2.x," | ",R^2," ",ylabel,"=",r2.y, " | ",beta[xlab],"=",b2," | ",beta[ylab],"=",b5))
-  g <- arrangeGrob(p, sub = textGrob(footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 16)))
-  
-  g
+#   lab.1 <- expression(paste(R^2," ",xlabel,"="))
+#   lab.2 <- expression(paste(R^2," ",ylabel,"="))
+#   r2.x <- round(summary(s$x_model)$r.squared,digits = 2)
+#   r2.y <- round(summary(s$y_model)$r.squared,digits = 2)
+#   b2 <- round(standardCoefs(s$x_model)[2,2],digits=2)
+#   b5 <- round(standardCoefs(s$y_model)[2,2],digits=2)
+#   footnote <- substitute(paste(R^2," ",xlabel,"=", r2.x," | ",R^2," ",ylabel,"=",r2.y, " | ",beta[xlab],"=",b2," | ",beta[ylab],"=",b5))
+  return(p)
   
 }
 

@@ -63,8 +63,7 @@ simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inte
 
   (gg <- ggplotly(g1))
   print(gg)
-  
-  return(list(plt=gg,data=outputData))
+  return(list(plt=g1,data=outputData))
 }
 
 simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,sr.ratio=0.95) {

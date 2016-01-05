@@ -239,7 +239,7 @@ o.scale <- function(x,use.sd=F){
   
 }
 
-as.dyad <- function(p1,p2,cols=c("EDA"),norm=F) {
+as.dyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F) {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))
   
@@ -254,7 +254,10 @@ as.dyad <- function(p1,p2,cols=c("EDA"),norm=F) {
     print("Error: p1 and p2 do not overlap")
     return()
   }
-  print(paste("Dyad Overlap: ",dyad.start,"to",dyad.end))
+  if(verbose){
+    print(paste("Dyad Overlap: ",dyad.start,"to",dyad.end))
+    
+  }
   dyad.p1 <- subset(p1,((Timestamp >= dyad.start) & (Timestamp < dyad.end)) )
   dyad.p2 <- subset(p2,((Timestamp >= dyad.start) & (Timestamp < dyad.end)) )
   l1 <- length(dyad.p1[[cols[1]]])

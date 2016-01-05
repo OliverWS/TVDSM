@@ -70,7 +70,9 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
       if(end >= dim(d)[[1]]){
         end = dim(d)[[1]]-1
       }
-      print(paste("Start",start,"End",end))
+      if(verbose){
+        print(paste("Start",start,"End",end))
+      }
       mdls[[n]] <- FUN(d[start:end,])
       mdls[[n]]$Condition <- ERCodes$Condition[[n]]
       mdls[[n]]$Duration <- (ERCodes$End.Time[[n]] - ERCodes$Start.Time[[n]])

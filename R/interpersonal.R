@@ -331,15 +331,26 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
     
     
   }
+  tst <- lrtest(basefit,fit)
+  if(tst$`Pr(>Chisq)`[[2]] < p.value) {
+    x.base.r.squared=summary(base_x_model)$r.squared
+    y.base.r.squared=summary(base_y_model)$r.squared
+    x.r.squared = summary(x_model)$r.squared
+    y.r.squared = summary(y_model)$r.squared
+  }
+  else {
+    if(verbose){
+      print(tst)
+    }
+
+    x.base.r.squared=0
+    y.base.r.squared=0
+    x.r.squared = 0
+    y.r.squared = 0
+  }
   
   
-  x.base.r.squared=summary(base_x_model)$r.squared
-  y.base.r.squared=summary(base_y_model)$r.squared
-  x.r.squared = summary(x_model)$r.squared
-  y.r.squared = summary(y_model)$r.squared
-  
-  
-  return(list(x_model=x_model,y_model=y_model,base_x_model=base_x_model,base_y_model=base_y_model,model=fit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=(x.r.squared - x.base.r.squared),dy.r.squared=(y.r.squared - y.base.r.squared),x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5,b21=b21,b45=b45))
+  return(list(x_model=x_model,y_model=y_model,base_x_model=base_x_model,base_y_model=base_y_model,model=fit,basemodel=basefit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=(x.r.squared - x.base.r.squared),dy.r.squared=(y.r.squared - y.base.r.squared),x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5,b21=b21,b45=b45))
 }
 
 
@@ -348,7 +359,7 @@ computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL
   ax <- decimate(dyad[,2], downsample*FS)
   ay <- decimate(dyad[,3],downsample*FS)
   newFS <- round(1.0/downsample)
-  mdl <- statespace.fiml(ax,ay,p.value = 0.001,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose)
+  mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose)
   mdl$Timestamp <- dyad[1,"Timestamp"]
   mdl$Duration <- (max(mdl$Timestamp) - min(mdl$Timestamp))
   mdl$Start <- mdl$Timestamp[[1]] 
@@ -460,7 +471,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   
   if(noPlots == F){
     pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F,title = paste(xname,"+",yname,"(","Lag","=",lag,")"),plotParams=plotParams)
-    pltData
+    print(pltData)
     out$plt <- pltData
   }
   

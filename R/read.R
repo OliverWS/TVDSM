@@ -21,7 +21,7 @@ read.ERCodes <- function(path){
   }
   EngageState <- data$Engage.State
   EngageState <- toupper(as.character(EngageState))
-  data$Engage.State <- EngageState
+  data$Engage.State <- as.factor(EngageState)
   return(data)
 }
 

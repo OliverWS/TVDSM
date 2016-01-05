@@ -9,18 +9,19 @@ read.ERCodes <- function(path){
   data["Time.Start"] <- as.difftime(as.character(data$Time.Start),format = "%M:%S",units = "secs")
   data["Time.End"] <- as.difftime(as.character(data$Time.End),format = "%M:%S",units = "secs")
   output <- data.frame(Timestamps=(0:as.numeric(max(data$Time.End),units="secs")))
-  output$EngageState <- NA
   for(t in output$Timestamps)
   {
     t <- which(data$Time.Start <= t)
     idx <- which((data$Time.Start >= t) & (data$Time.End <= t))
     state <- data$Engage.State[idx]
-    state <- toupper(state)
     if(!is.null(state)){
-      output$Engage.State[t+1] <- toupper(state)
+      output$Engage.State[t+1] <- state
     }
 
   }
+  EngageState <- data$Engage.State
+  EngageState <- toupper(as.character(EngageState))
+  data$Engage.State <- EngageState
   return(data)
 }
 

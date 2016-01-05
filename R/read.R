@@ -15,13 +15,12 @@ read.ERCodes <- function(path){
     t <- which(data$Time.Start <= t)
     idx <- which((data$Time.Start >= t) & (data$Time.End <= t))
     state <- data$Engage.State[idx]
-    
+    state <- toupper(state)
     if(!is.null(state)){
-      output$Engage.State[t+1] <- state
+      output$Engage.State[t+1] <- toupper(state)
     }
 
   }
-  output$Engage.State <- toupper(output$Engage.State)
   return(data)
 }
 

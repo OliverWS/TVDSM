@@ -1,5 +1,11 @@
+library(readxl)
 read.ERCodes <- function(path){
-  data <- read.csv(path,header = T)
+  if(grepl(".xls", path)){
+    data <- read_excel(path,"text")
+  }
+  else {
+    data <- read.csv(path,header = T)
+  }
   data["Time.Start"] <- as.difftime(as.character(data$Time.Start),format = "%M:%S",units = "secs")
   data["Time.End"] <- as.difftime(as.character(data$Time.End),format = "%M:%S",units = "secs")
   output <- data.frame(Timestamps=(0:as.numeric(max(data$Time.End),units="secs")))
@@ -21,7 +27,13 @@ read.ERCodes <- function(path){
 
 
 read.Codes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",fmt="%H:%M:%S"){
-  data <- read.csv(path,header = T)
+  if(grepl(".xls", path)){
+    data <- read_excel(path)
+  }
+  else {
+    data <- read.csv(path,header = T)
+  }
+  
   print(as.character(data[,startCol]))
   data$Start.Time <- as.difftime(as.character(data[,startCol]),format = fmt,units = "secs")
   data$End.Time <- as.difftime(as.character(data[,endCol]),format = fmt,units = "secs")

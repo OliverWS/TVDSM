@@ -42,7 +42,7 @@ runAnova <- function(mdls, key="Condition"){
 
 
 
-analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1){
+analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F){
   
   ERCodes <- read.Codes(codes)
   View(ERCodes)
@@ -60,7 +60,7 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
   y.baseline <- mean(d[,3],na.rm=T)
   
   FUN <- function(data){
-    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline));
+    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline,verbose=verbose));
   }
   
   for(n in 1:dim(ERCodes)[[1]]){
@@ -207,7 +207,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   return(combinedPlt)
   
 }
-statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=T,lag=0){
+statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=F,lag=0){
   if(is.null(lag)){
     x_prime <- Lag(x,-1*lag)
     y_prime <- Lag(y,-1*lag)
@@ -341,11 +341,11 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
 }
 
 
-computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL) {
+computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL,verbose=F) {
   FS <- round(getFS(dyad))
   ax <- decimate(dyad[,2], downsample*FS)
   ay <- decimate(dyad[,3],downsample*FS)
-  mdl <- statespace.fiml(ax,ay,p.value = 0.001,type=type,lag=lag,x_mu = x_mu,y_mu=y_mu)
+  mdl <- statespace.fiml(ax,ay,p.value = 0.001,type=type,lag=lag,x_mu = x_mu,y_mu=y_mu,verbose=verbose)
   mdl$Timestamp <- dyad[1,"Timestamp"]
   mdl$Duration <- (max(mdl$Timestamp) - min(mdl$Timestamp))
   mdl$Start <- mdl$Timestamp[[1]] 

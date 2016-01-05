@@ -16,6 +16,10 @@ library(Hmisc)
 library(grid)
 library(signal)
 library(gridExtra)
+CBSL.update <- function(){
+  library(devtools)
+  install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
+}
 
 ggCaterpillar <- function(re, QQ=TRUE, likeDotplot=TRUE) {
   require(ggplot2)

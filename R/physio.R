@@ -268,7 +268,7 @@ o.coef <- function(mdl,c=2,cutoff=0.05,useD=F){
   }
 }
 
-statespace <- function(x,y,type=2, step=0.25,p.value=0.01){
+statespace <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=F){
   #(Xt+1 – Xt)= b0+b1(Xt)+b2(Yt)+e
   #(Yt+1 – Yt)= b3+b4(Yt)+b5(Xt)+e
   x_prime <-o.Lag(x)
@@ -393,11 +393,13 @@ else if (type == 5) {
   yy <- c(min(y),max(y))
 
 
-
-  print(s1)
-  print(summary(x_model))
-  print(s2)
-  print(summary(y_model))
+  if(verbose){
+    print(s1)
+    print(summary(x_model))
+    print(s2)
+    print(summary(y_model))
+    
+  }
 
 
   xvals <- seq(min(x,na.rm = T),max(x,na.rm = T),step)

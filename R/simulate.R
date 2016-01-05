@@ -9,10 +9,6 @@ library(reshape)
 library(coefplot)
 library(e1071)
 library(lmerTest)
-CBSL.update <- function(){
-  library(devtools)
-  install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
-}
 simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,trend=0,sr.ratio=0.95) {
   sr = selfReg.coef
   cr = coReg.coef
@@ -110,7 +106,27 @@ simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inter
 
   return(list(data=outputData,plt=g1,eq=eq))
 }
+o.scale <- function(x,use.sd=F){
+  if(use.sd){
+    sx <- (x - min(x, na.rm=T))/sd(x,na.rm = T)
+    
+  }
+  else {
+    sx <- (x - min(x, na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T))    
+  }
+  return(sx)
+  
+}
 
+o.smooth <- function(x,window=10){
+  mat <- matrix(nrow=length(x),ncol = window)
+  for(n in 1:window){
+    l <- n - window/2
+    mat[,n] <- Lag(x,l)
+  }
+  return(rowWeightedMeans(mat,w=gausswin(window),na.rm = T))
+  
+}
 
 
 bootstrapSimulation <- function(n=100) {

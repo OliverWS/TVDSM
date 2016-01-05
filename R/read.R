@@ -21,7 +21,7 @@ read.ERCodes <- function(path){
     }
 
   }
-  
+  output$Engage.State <- toupper(output$Engage.State)
   return(data)
 }
 

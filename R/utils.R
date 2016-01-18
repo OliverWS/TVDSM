@@ -1,4 +1,4 @@
-#o.residuals
+
 require(psych)
 require(xtable)
 require(ascii)
@@ -852,16 +852,17 @@ o.anova.table <- function(formula,sig_cutoff=FALSE)
 
 
 
-o.window.list <- function(x, window_size, window_overlap=0, FUN, na.rm=T) {
+o.window.list <- function(x, window_size, window_step=0, FUN, na.rm=T) {
   x <- as.data.frame(x)
   lx <- dim(x)[1]
+  window_overlap = window_size - window_step
   output_length = lx/(window_size- window_overlap/2)
   output = list()
   n = 1
-  step = window_size-window_overlap
+  step = window_step
   for(i in seq(1,lx, step)){
     start = i
-    end = i + step
+    end = i + window_size
     if(end > lx){
       end = lx
       break
@@ -879,29 +880,33 @@ o.window.list <- function(x, window_size, window_overlap=0, FUN, na.rm=T) {
   return(output)
 }
 
-
-o.window <- function(x, window_size, window_overlap=0, FUN, na.rm=T) {
+o.window <- function(x, window_size, window_step=0, FUN, na.rm=T) {
   x <- as.vector(x)
-  output_length = length(x)/(window_size- window_overlap/2)
+  lx <- length(x)
+  window_overlap = window_size - window_step
+  output_length = lx/(window_size- window_overlap/2)
   output = vector(length=output_length)
   n = 0
-  step = window_size-window_overlap
-  for(i in seq(1,length(x), step)){
+  step = window_step
+  for(i in seq(1,lx, step)){
     start = i
-    end = i + step
-    if(end > length(x)){
-      end = length(x)
+    end = i + window_size
+    if(end > lx){
+      end = lx
+      break
     }
-    output[n] <- FUN(x[start:end])
+    else {
+      output[n] <- NA
+      try(expr = output[n] <- FUN(x[start:end,]),silent = F)
+    }
+    
+    
     n = n+1
   }
+  output <- output[1:n]
   
   return(output)
 }
-
-
-
-
 
 
 

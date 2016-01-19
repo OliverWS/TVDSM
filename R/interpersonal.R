@@ -5,7 +5,7 @@ library(reshape)
 library(e1071)
 library(lmerTest)
 library(cowplot)
-
+library(systemfit)
 
 runAnova <- function(mdls, key="Condition"){
   condition <- get.key(mdls,key)

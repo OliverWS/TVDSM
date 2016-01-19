@@ -860,7 +860,6 @@ o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T)
   output = list()
   n = 1
   step = window_step
-  print(paste("lx:",lx,"| step:",step))
   for(i in seq(1,lx, step)){
     start = i
     end = i + window_size

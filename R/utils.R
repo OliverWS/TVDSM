@@ -852,7 +852,7 @@ o.anova.table <- function(formula,sig_cutoff=FALSE)
 
 
 
-o.window.list <- function(x, window_size, window_step=0, FUN, na.rm=T) {
+o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T) {
   x <- as.data.frame(x)
   lx <- dim(x)[1]
   window_overlap = window_size - window_step
@@ -860,6 +860,7 @@ o.window.list <- function(x, window_size, window_step=0, FUN, na.rm=T) {
   output = list()
   n = 1
   step = window_step
+  print(paste("lx:",lx,"| step:",step))
   for(i in seq(1,lx, step)){
     start = i
     end = i + window_size
@@ -880,7 +881,7 @@ o.window.list <- function(x, window_size, window_step=0, FUN, na.rm=T) {
   return(output)
 }
 
-o.window <- function(x, window_size, window_step=0, FUN, na.rm=T) {
+o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T) {
   x <- as.vector(x)
   lx <- length(x)
   window_overlap = window_size - window_step

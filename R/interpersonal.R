@@ -174,7 +174,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   end <- as.POSIXct(get.key(data,key="End"),origin = "1970-01-01")
   
   params.df <- data.frame(Timestamps=timestamps,b1=b1,b2=b2,b4=b4,b5=b5,b21=b21,b45=b45,x.r2=x.r2,y.r2=y.r2,Condition=ES,start=start,end=end)
-  
+  len <- length(params.df$Timestamps)
   params1 <- melt(subset(params.df,select=c("Timestamps","b1","b2", "b4","b5","b21","b45")),id.vars = c("Timestamps"))
   params2 <- melt(subset(params.df,select=c("Timestamps","x.r2","y.r2","Condition","start","end")),id.vars = c("Timestamps","start","end","Condition"))
   
@@ -189,8 +189,17 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
     label.theme = element_text(size=15,angle=0),label.hjust=0,label.vjust=0),title.theme=element_text(size=15,angle=0))
   x_min = min(start)
   x_max = max(end)
-  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + geom_point(size=3) + xlab("Time") + ylab("Coefficient") + ggtitle(title) +glegend1 +gstyle 
-  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + geom_point(size=3) + xlab("Time") + ylab(bquote(R^2)) + ggtitle(title) + glegend2 + gstyle
+  point_size = 3*(50.0/len)
+  if(point_size > 3) point_size = 3.0
+  
+  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time") + ylab("Coefficient") + ggtitle(title) +glegend1 +gstyle 
+  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time") + ylab(bquote(R^2)) + ggtitle(title) + glegend2 + gstyle
+  
+  if(point_size > 1.25) {
+    plt1 <- plt1 + geom_point(size=point_size) 
+    plt2 <- plt2 + geom_point(size=point_size) 
+  }
+  
   if(by.condition){
     plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=-0.05,ymax=0.0,xmin=start,xmax=end),linetype=0,alpha=0.5)
   }
@@ -304,26 +313,7 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
     b45 <- 0
   }
   
-  
-  #   data <- data.frame(x_prime=x_prime,y_prime=y_prime,x=x,y=y,dxy=dxy,dyx=dyx)
-  #   model <- '
-  # # Regression model. The b1 and b2 are labels
-  # # similar to (b1) and (b2) in Mplus. These are
-  # # needed to perform wald test.
-  # # jobperf ~ b1*wbeing + b2*jobsat
-  # #  CR.X =~ 1*y + -1*x
-  # #  CR.Y =~ 1*x + -1*y
-  #   x_prime ~ b1*x + b2*dyx
-  #   y_prime ~ b3*y + b4*dxy
-  # # Variances
-  #   x ~~ x
-  #   y ~~ y
-  #   dyx ~~ dyx
-  #   dxy ~~ dxy
-  # 
-  # # Covariance/correlation
-  #   x ~~ y
-  # '
+ 
   if(verbose){
     
     print(summary(x_model))
@@ -379,12 +369,12 @@ urlForModel <- function(m) {
 }
 
 
-analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),minLag=0,maxLag=5,noPlots=F,relativeToLag=-1) {
+analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),measure="EDA", downsample=1, minLag=0,maxLag=5,noPlots=F,relativeToLag=-1) {
   lagList <- list()
 n = 1;
   lags <- minLag:maxLag
   for (lag in lags) {
-    mdl <- analyzeDyad(f1,f2,dyad=dyad,xname=xname,yname=yname, norm=norm,window_size=window_size,window_step=window_step,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots)
+    mdl <- analyzeDyad(f1,f2,dyad=dyad,xname=xname,yname=yname, norm=norm,window_size=window_size,window_step=window_step,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots,measure = measure,downsample = downsample)
     mdlSummary <- mdl$summary
     mdlSummary$lag <- lag
     lagList[[lag+1]] <- mdlSummary

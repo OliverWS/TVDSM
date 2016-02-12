@@ -35,5 +35,7 @@ Imports:
 	psych,
 	xtable,
 	readxl,
-	systemfit
+	systemfit,
+	plotly,
+	coefplot
 		

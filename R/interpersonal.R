@@ -88,8 +88,8 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
   
 
   
-  plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams)
-  
+  plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams)
+  print(plt)
   
   
   
@@ -354,7 +354,7 @@ computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL
   mdl$Duration <- (max(mdl$Timestamp) - min(mdl$Timestamp))
   mdl$Start <- mdl$Timestamp[[1]] 
   mdl$End <- max(mdl$Timestamp)
-  
+
   return(mdl)
 }
 
@@ -412,7 +412,7 @@ n = 1;
 }
 
 
-analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T, measure="EDA",type=2,downsample=1) {
+analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=2,downsample=1) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   
   if(length(dyad) > 0){
@@ -460,15 +460,14 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   out <- list()
   
   if(noPlots == F){
-    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F,title = paste(xname,"+",yname,"(","Lag","=",lag,")"),plotParams=plotParams)
+    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F,title = pltTitle,plotParams=plotParams)
     print(pltData)
     out$plt <- pltData
   }
-  
+  n <- length(get.key(data,"x.r.squared"))
   mdls <- data
-  n <- length(get.key(mdls,"x.r.squared"))
   mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n), x.r.squared=get.key(mdls,"x.r.squared"),y.r.squared=get.key(mdls,"y.r.squared"),dx.r.squared=get.key(mdls,"dx.r.squared"),dy.r.squared=get.key(mdls,"dy.r.squared"))
-  out$mdls <- data
+  out$mdls <- mdls
   out$summary <- mdlData
   return(out)
 }

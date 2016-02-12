@@ -27,7 +27,7 @@ read.ERCodes <- function(path){
 
 
 read.Codes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",fmt="%H:%M:%S"){
-  if(grepl(".xls", path)){
+if(grepl(".xls", path) || grepl(".xlsx", path)){
     data <- read_excel(path)
   }
   else {

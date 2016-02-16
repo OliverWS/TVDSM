@@ -20,6 +20,13 @@ CBSL.update <- function(){
   library(devtools)
   install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
 }
+plotDyad <- function(d, title="",ylabel="EDA") {
+  data <- melt(d,id.vars=c("Timestamp"))
+  g <- ggplot(data,aes(x=Timestamp,y=value,col=variable)) + geom_line(size=1) + ylab(ylabel) + xlab("Time")
+  g <- g + ggtitle(title)
+  print(g)
+  return(g)
+}
 
 ggCaterpillar <- function(re, QQ=TRUE, likeDotplot=TRUE) {
   require(ggplot2)

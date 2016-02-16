@@ -42,7 +42,7 @@ runAnova <- function(mdls, key="Condition"){
 
 
 
-analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F){
+analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end=""){
   
   ERCodes <- read.Codes(codes)
   View(ERCodes)
@@ -52,6 +52,23 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
   p2 <- read.eda(f2)
   
   d <- as.dyad(p1,p2,norm = T,cols=cols)
+  
+  timeformat ="%Y-%m-%d %H:%M:%S"
+
+  if(start != ""){
+    start <- strptime(start,format=timeformat)
+  }
+  else {
+    start <- min(d$Timestamp) 
+  }
+  if(end != ""){
+    end <- strptime(end,format=timeformat)
+  }
+  else {
+    end <- max(d$Timestamp)
+  }
+  d <- subset(d,((Timestamp >= start) & (Timestamp < end)) )
+
   plot.dyad(p1,p2,title = dname)
   FS <- getFS(d)
   mdls <- list()

@@ -83,27 +83,23 @@ plot.eda <- function(data,title="EDA Data",show_acc=F, show_raw_acc=F) {
   
   
 }
-
-
-plot.dyad <- function(p1,p2,title="Dyad") {
-  colors <- c("#2CC4FF","#DD6DAE")
-  p1.name <- deparse(substitute(p1))
-  p2.name <- deparse(substitute(p2))
-  
-  
-  data <- as.dyad(p1,p2)
-  cols <- colnames(data)
-  colnames(data) <- c("Timestamp","P1.EDA","P2.EDA")
-  ggplot(data=data, aes(x=Timestamp, y=P1.EDA)) + geom_line(aes(x = Timestamp, y=P1.EDA),colour="#2CC4FF")+ geom_line(aes(x = Timestamp, y=P2.EDA),colour="#DD6DAE")+ xlab("Time") + ggtitle(paste(p1.name,"&",p2.name)) + ylab("EDA (uS)")
+plotDyad <- function(d, title="",ylabel="EDA",legend_label="Participant") {
+  data <- melt(d,id.vars=c("Timestamp"),variable_name = legend_label)
+  g <- ggplot(data,aes_string(x="Timestamp",y="value",col=legend_label)) + geom_line(size=1) + ylab(ylabel) + xlab("Time")
+  g <- g + ggtitle(title)
+  print(g)
+  return(g)
 }
+
 
 
 plotEDAByCondition <- function(eda, codes, title="") {
   
-    eda <- read.eda(eda)
-
+  eda <- read.eda(eda)
   g1 <- ggplot(data=eda, aes(x=Timestamp, y=EDA)) + geom_line(aes(x = Timestamp, y=EDA),colour="#2CC4FF")+  xlab("Time") + ggtitle(title) + ylab("EDA (uS)")
-  g1 <- g1 + geom_rect(aes(xmin=`Start Time`,xmax=`End Time`,ymin=-1.0,ymax=0, fill=Condition,col=NULL),data=codes)
+  g1 <- g1 + geom_rect(data=codes, aes(xmin=`Start Time`,xmax=`End Time`,ymin=-1.0,ymax=0, fill=Condition,col=NULL))
+  
+  print(g1)
   return(g1)
   
 }

@@ -14,9 +14,11 @@ linearTrend <- function(data) {
   trend <- coef(mdl)[[2]]
   return(trend)
 }
+se <- function(x) sqrt(var(x)/length(x))
 
 tsDescriptives <- function(data,fs=32) {
   m <- mean(data, na.rm=T)
+  st.err <- se(data)
   st.dev <- sd(data,na.rm=T)
   #Compute linear trend
   trend<-NA
@@ -29,11 +31,11 @@ tsDescriptives <- function(data,fs=32) {
   ac <- NA
   try(ac <- acf(data.ds,lag.max=1,type="correlation",plot = F)$acf[2], silent=T)
   
-  return(list(mean=m,sd=st.dev, trend=trend,min=min.data,max=max.data,slope=slope,range=(max.data-min.data),autocorrelation=ac))
+  return(list(mean=m,se=st.err, sd=st.dev, trend=trend,min=min.data,max=max.data,slope=slope,range=(max.data-min.data),autocorrelation=ac))
 }
 
 
-dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv")) {
+dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv",sep="",saveFile=F)) {
   
   if(typeof(codes) == "character"){
     conditions <- read.Codes(codes)
@@ -45,17 +47,28 @@ dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_Dumm
   fs <- getFS(eda)
   nConditions <- dim(conditions)[1]
   tz <- attr(eda$Timestamp[1],"tz")
-  eda$Condition <- 0
+  eda$Condition <- NA
   for (i in 1:nConditions) {
     start <- conditions[["Start Time"]][i]
     end <- conditions[["End Time"]][i]
-    condition <- conditions[["Condition"]][i]
+    condition <- as.character(conditions[["Condition"]][i])
     validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
     eda$Condition[which(validTimes)] <- condition
   }
-  write.csv(eda,file = outputFile)
+  # if(saveFile){
+  #   for (i in 2:nConditions) {
+  #     condition.2 <- as.character(conditions[["Condition"]][i])
+  #     condition.1 <- as.character(conditions[["Condition"]][i-1])
+  #     sub <- subset(eda, ((eda$Condition == condition.2) | (eda$Condition == condition.1)))
+  #     write.csv(sub,file = paste(filename,"_DummyCoded_",i-1,"&",i,".csv"),quote = T)
+  #     
+  #   }
+  #   write.csv(eda,file = outputFile,quote = T)
+  #   
+  # }
   return(eda)
 }
+
 
 descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   
@@ -100,7 +113,7 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   
 }
 
-
+TSDescriptivesByCondition <- descriptivesByCondition
 plotTSDescriptives <- function(data,title="",vars=NULL) {
   if(is.null(vars)){
     data <- melt(as.data.frame(data),id.vars = c("Start","End","Condition"), )
@@ -125,6 +138,10 @@ plotTSDescriptives <- function(data,title="",vars=NULL) {
   g1 <- g1 + scale_x_datetime()
 
   return(g1)
+}
+
+
+interruptedTimeSeries <- function(data, col.data="EDA", col.condition="Condition") {
 }
 
 

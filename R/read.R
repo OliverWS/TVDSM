@@ -37,7 +37,9 @@ if(grepl(".xls", path) || grepl(".xlsx", path)){
   print(as.character(data[,startCol]))
   data$Start.Time <- as.difftime(as.character(data[,startCol]),format = fmt,units = "secs")
   data$End.Time <- as.difftime(as.character(data[,endCol]),format = fmt,units = "secs")
-
+  data$Condition <-factor(data$Condition, levels =data$Condition[order(data$`Start Time`, data$Condition)], ordered=TRUE)
+  data$Condition <- factor(data$Condition[,drop=TRUE])
+  
   return(data)
 }
 

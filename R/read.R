@@ -43,7 +43,7 @@ if(grepl(".xls", path) || grepl(".xlsx", path)){
   return(data)
 }
 
-read.RTCodes <- function(path="ConditionTimes.csv",startCol="Start Time",endCol="End Time",fmt="%y-%m-%d %H:%M:%S"){
+read.RTCodes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",fmt="%y-%m-%d %H:%M:%S"){
   if(grepl(".xls", path) || grepl(".xlsx", path)){
     data <- read_excel(path)
   }

@@ -67,7 +67,7 @@ analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c
   
   if (useRealTime) {
     ERCodes <- read.RTCodes(codes)
-    ERCodes$Start.Time <- (as.POSIXct(ERCodes$Start.Time) - as.POSIXct(start))
+    ERCodes$Start.Time <- (as.POSIXct(ERCodes$Start.Time) - as.POSIXct(start))*3600.0
     ERCodes$End.Time <- (as.POSIXct(ERCodes$End.Time) - as.POSIXct(start))*3600.0
   }
   else {

@@ -76,7 +76,6 @@ analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c
   
   View(ERCodes)
 
-  plot.dyad(p1,p2,title = dname)
   FS <- getFS(d)
   mdls <- list()
   

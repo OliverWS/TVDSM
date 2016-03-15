@@ -42,11 +42,7 @@ runAnova <- function(mdls, key="Condition"){
 
 
 
-analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end=""){
-  
-  ERCodes <- read.Codes(codes)
-  View(ERCodes)
-  
+analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end=""){
   
   p1 <- read.eda(f1)
   p2 <- read.eda(f2)
@@ -68,6 +64,17 @@ analyzeByCondition <- function(f1="",f2="",codes="",type=2,cols=c("EDA"),dname="
     end <- max(d$Timestamp)
   }
   d <- subset(d,((Timestamp >= start) & (Timestamp < end)) )
+  
+  if (useRealTime) {
+    ERCodes <- read.RTCodes(codes)
+    ERCodes$Start.Time <- as.difftime(as.POSIXct(ERCodes$Start.Time) - as.POSIXct(start),units = "secs")
+    ERCodes$End.Time <- as.difftime(as.POSIXct(ERCodes$End.Time) - as.POSIXct(start), units = "secs")
+  }
+  else {
+    ERCodes <- read.Codes(codes)
+  }
+  
+  View(ERCodes)
 
   plot.dyad(p1,p2,title = dname)
   FS <- getFS(d)
@@ -429,7 +436,7 @@ n = 1;
 }
 
 
-analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=2,downsample=1) {
+analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=2,downsample=1, x.baseline=NA, y.baseline=NA) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   
   if(length(dyad) > 0){
@@ -449,8 +456,9 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     d <- as.dyad(p1,p2,norm=norm,cols = c(measure))
     
   }
-  x.baseline <- mean(d[,2],na.rm=T)
-  y.baseline <- mean(d[,3],na.rm=T)
+  
+  if(is.na(x.baseline)) x.baseline <- mean(d[,2],na.rm=T)
+  if(is.na(y.baseline)) y.baseline <- mean(d[,3],na.rm=T)
   
   FUN <- function(data){
     return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline));

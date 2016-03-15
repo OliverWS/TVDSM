@@ -43,6 +43,24 @@ if(grepl(".xls", path) || grepl(".xlsx", path)){
   return(data)
 }
 
+read.RTCodes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",fmt="%y-%m-%d %H:%M:%S"){
+  if(grepl(".xls", path) || grepl(".xlsx", path)){
+    data <- read_excel(path)
+  }
+  else {
+    data <- read.csv(path,header = T)
+  }
+  
+  print(as.character(data[,startCol]))
+  data$Start.Time <- as.character.POSIXt(as.character(data[,startCol]),format = fmt)
+  data$End.Time <- as.character.POSIXt(as.character(data[,endCol]),format = fmt)
+  data$Condition <-factor(data$Condition, levels =data$Condition[order(data$`Start Time`, data$Condition)], ordered=TRUE)
+  data$Condition <- factor(data$Condition[,drop=TRUE])
+  
+  return(data)
+}
+
+
 
 
 read.ibutton <- function(path,header=T) {

@@ -31,13 +31,12 @@ if(grepl(".xls", path) || grepl(".xlsx", path)){
     data <- read_excel(path)
   }
   else {
-    data <- read.csv(path,header = T)
+    data <- read.csv(path,header = T,blank.lines.skip = T)
   }
-  
-  print(as.character(data[,startCol]))
+  data <- na.omit(data)
   data$Start.Time <- as.difftime(as.character(data[,startCol]),format = fmt,units = "secs")
   data$End.Time <- as.difftime(as.character(data[,endCol]),format = fmt,units = "secs")
-  data$Condition <-factor(data$Condition, levels =data$Condition[order(data$`Start Time`, data$Condition)], ordered=TRUE)
+  data$Condition <-factor(data$Condition, levels =data$Condition[order(data[,startCol], data$Condition)], ordered=TRUE)
   data$Condition <- factor(data$Condition[,drop=TRUE])
   
   return(data)
@@ -48,10 +47,10 @@ read.RTCodes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol=
     data <- read_excel(path)
   }
   else {
-    data <- read.csv(path,header = T)
+    data <- read.csv(path,header = T,blank.lines.skip = T)
   }
   
-  print(as.character(data[,startCol]))
+  data <- na.omit(data)
   data$Start.Time <- as.character.POSIXt(as.character(data[,startCol]),format = fmt)
   data$End.Time <- as.character.POSIXt(as.character(data[,endCol]),format = fmt)
   data$Condition <-factor(data$Condition, levels =data$Condition[order(data[,startCol], data$Condition)], ordered=TRUE)

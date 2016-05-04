@@ -9,6 +9,8 @@ library(reshape)
 library(coefplot)
 library(e1071)
 library(lmerTest)
+library(progress)
+
 simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,trend=0,sr.ratio=0.95) {
   sr = selfReg.coef
   cr = coReg.coef
@@ -189,5 +191,50 @@ examples <- function(){
 }
 
 
-
-
+runFalsePairings <- function(participantAList, participantBList, window_size=60, window_step=60, downsample=1, lag=0) {
+  n <- length(participantAList)
+  nFalse = 1
+  truePairs <- list()
+  falsePairs <- list()
+  nPossiblePairs = n*n*1.0
+  nTotal = 0
+  
+  pb <- progress_bar$new(total = nPossiblePairs)
+  
+  
+  for(i in 1:n) {
+    personA = participantAList[[i]]
+    aName = personA
+    personB = participantBList[[i]]
+    bName = personB
+    #print(paste("True:",aName,"<=>",bName))
+    
+    truePairs[[i]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, window_size = window_size, window_step = window_step, lag = lag,noPlots = T)
+    for(j in 1:n){
+      if(j != i){
+        personB = participantBList[[j]]
+        bName = personB
+        nTotal = nTotal+1
+        if(j > i){
+          #print(paste("False:",aName,"<=>",bName))
+          falsePairs[[nTotal]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, simulate = T, window_size = window_size, window_step = window_step, lag = lag)
+        }
+      }
+      pb$tick()
+    }
+    
+  }
+  
+  trueDataX <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
+  trueDataY <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
+  falseDataX <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
+  falseDataY <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
+  trueData <- c(unlist(trueDataX), unlist(trueDataY))
+  falseData <- c(unlist(falseDataX), unlist(falseDataY))
+  print(t.test(trueData,falseData,))
+  close(pb)
+  return(list(truePairs=truePairs, falsePairs=falsePairs))
+  
+}
+  
+  

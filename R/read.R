@@ -96,10 +96,12 @@ read.reda <- function(file) {
   #attr(data,"class") <- "eda"
   return(data)
 }
+
+
 read.eda <- function(file) {
   #First lets read the file header info
-  sample_rate <- as.numeric(scan(file, skip = 4, nlines = 1,sep = ":",strip.white = T,what = list("character","numeric"))[[2]]) # only 1 line after the skipped one
-  st <- scan(file, skip = 5, nlines = 1,sep = " ",strip.white = T,what = "character",) # only 1 line after the skipped one
+  sample_rate <- as.numeric(scan(file, skip = 4, nlines = 1,sep = ":",strip.white = T, quiet=T, what = list("character","numeric"))[[2]]) # only 1 line after the skipped one
+  st <- scan(file, skip = 5, nlines = 1,sep = " ",strip.white = T, quiet=T, what = "character",) # only 1 line after the skipped one
   start_date <- st[3]
   start_time <- st[4]
   tz <- as.numeric(strsplit(st[5],":")[[1]][2])
@@ -107,10 +109,10 @@ read.eda <- function(file) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   start <- strptime(timestr,format=timeformat)
   dt <- as.difftime(as.character(1.0/sample_rate),format = "%OS")
-  FIELDS <- scan(file, skip = 6, nlines = 1,sep = "|",strip.white = T,what = "character") # only 1 line after the skipped one
+  FIELDS <- scan(file, skip = 6, nlines = 1,sep = "|",strip.white = T, quiet=T, what = "character") # only 1 line after the skipped one
   FIELDS[1:6] <- c("Z","Y","X","Battery","Temperature","EDA")
   FIELDS[length(FIELDS)] <- strsplit(FIELDS[length(FIELDS)],split = " ")[[1]]
-  data <- as.data.frame(read.csv(file,header = F,sep = ",",skip=8,col.names=FIELDS))
+  data <- as.data.frame(read.csv(file,header = F,sep = ",",skip=8,col.names=FIELDS,))
   data <- na.exclude(data)
   timestamps <- seq(from = start, by=dt , along.with = data$EDA)
   data$Timestamp <- timestamps
@@ -118,6 +120,40 @@ read.eda <- function(file) {
   #attr(data,"class") <- "eda"
   return(data)
 }
+
+save.eda <- function(data, filename) {
+  # Log File Created by Q Analytics - (c) 2011 Affectiva Inc.
+  # File Version: 1.01
+  # Firmware Version: 1.81
+  # UUID: AQL181320DU
+  # Sampling Rate: 32
+  # Start Time: 2015-05-12 16:31:47 Offset:-04
+  # Z-axis | Y-axis | X-axis | Battery | °Celsius | EDA(uS) 
+  # ---------------------------------------------------------
+  
+  sampleRate = getFS(data)
+  startTime = min(data$Timestamp)
+  timeString = strftime(startTime, format="%Y-%m-%d %H:%M:%S Offset:%z")
+  
+  header = c(
+    "Log File Created by CBS Toolkit",
+    "File Version: 1.01",
+    "Firmware Version: 1.81",
+    "UUID: AQL0000000",
+    paste("Sampling Rate:", round(sampleRate),sep=" "),
+    paste("Start Time:",timeString, sep=" "),
+    "Z-axis | Y-axis | X-axis | Battery | °Celsius | EDA(uS)",
+    "---------------------------------------------------------"
+  )
+  writeLines(header,con=filename,sep="\r\n")
+  
+  data.sub <- subset(data,select = c("Z","Y","X","Battery","Temperature","EDA"))
+  write.table(data.sub,file = filename,append = T,sep = ",",row.names = F, col.names = F, quote = F,eol = "\r\n",na = "-1.0")
+  
+  
+}
+write.eda <- save.eda
+
 
 read.actiwave <- function(file) {
   

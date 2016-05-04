@@ -435,24 +435,24 @@ n = 1;
 }
 
 
-analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=2,downsample=1, x.baseline=NA, y.baseline=NA) {
+analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=2,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   
   if(length(dyad) > 0){
     d <- dyad
   }
   else {
+    p1 <- read.eda(f1)
+    p2 <- read.eda(f2)
+    
     if(simulate){
-      p1 <- f1
-      p2 <- f2
+      d <- as.simulateddyad(p1,p2,norm=norm,cols = c(measure))
     }
     else {
-      p1 <- read.eda(f1)
-      p2 <- read.eda(f2)
+      d <- as.dyad(p1,p2,norm=norm,cols = c(measure),verbose = verbose)
     }
     
     
-    d <- as.dyad(p1,p2,norm=norm,cols = c(measure))
     
   }
   

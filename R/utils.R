@@ -900,7 +900,6 @@ o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verb
     pb <- progress_bar$new(
       format = "[:bar] :percent eta: :eta",
       clear = F, total = output_length)
-    )
 
     
   }

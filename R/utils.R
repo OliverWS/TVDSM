@@ -860,7 +860,7 @@ o.anova.table <- function(formula,sig_cutoff=FALSE)
 
 
 
-o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T) {
+o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verbose=F) {
   x <- as.data.frame(x)
   lx <- dim(x)[1]
   window_overlap = window_size - window_step
@@ -868,7 +868,17 @@ o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T)
   output = list()
   n = 1
   step = window_step
+  if(verbose){
+    pb <- progress_bar$new(
+      format = "[:bar] :percent eta: :eta",
+      clear = F, total = output_length)
+
+    
+  }
+
   for(i in seq(1,lx, step)){
+    if(verbose){pb$tick()}
+
     start = i
     end = i + window_size
     if(end > lx){

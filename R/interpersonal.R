@@ -6,6 +6,7 @@ library(e1071)
 library(lmerTest)
 library(cowplot)
 library(systemfit)
+library(progress)
 
 runAnova <- function(mdls, key="Condition"){
   condition <- get.key(mdls,key)
@@ -85,16 +86,15 @@ analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c
   FUN <- function(data){
     return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline,verbose=verbose));
   }
-  
+  if(verbose){
+    pb <- progress_bar$new(total = dim(ERCodes)[[1]])
+  }
   for(n in 1:dim(ERCodes)[[1]]){
     if(!is.na(ERCodes$Condition[[n]])){
       start = ERCodes$Start.Time[[n]]*FS
       end = ERCodes$End.Time[[n]]*FS
       if(end >= dim(d)[[1]]){
         end = dim(d)[[1]]-1
-      }
-      if(verbose){
-        print(paste("Start",start,"End",end))
       }
       mdls[[n]] <- FUN(d[start:end,])
       mdls[[n]]$Condition <- ERCodes$Condition[[n]]
@@ -105,7 +105,9 @@ analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c
       mdls[[n]]$dyad.name <- dname 
       
     }
-    
+    if(verbose){
+      pb$tick()
+    }
     
   }
   
@@ -446,7 +448,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     p2 <- read.eda(f2)
     
     if(simulate){
-      d <- as.simulateddyad(p1,p2,norm=norm,cols = c(measure))
+      d <- as.simulateddyad(p1,p2,norm=norm,cols = c(measure), verbose=verbose)
     }
     else {
       d <- as.dyad(p1,p2,norm=norm,cols = c(measure),verbose = verbose)
@@ -480,7 +482,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   
   fs <- getFS(d)
   
-  data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN,na.rm = na.rm)
+  data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN,na.rm = na.rm,verbose=verbose)
   out <- list()
   
   if(noPlots == F){

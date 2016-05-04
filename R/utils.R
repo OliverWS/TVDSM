@@ -16,6 +16,7 @@ library(Hmisc)
 library(grid)
 library(signal)
 library(gridExtra)
+library(progress)
 CBSL.update <- function(){
   library(devtools)
   install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
@@ -887,7 +888,7 @@ o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T)
   return(output)
 }
 
-o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T) {
+o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verbose=F) {
   x <- as.vector(x)
   lx <- length(x)
   window_overlap = window_size - window_step
@@ -895,7 +896,17 @@ o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T) {
   output = vector(length=output_length)
   n = 0
   step = window_step
+  if(verbose){
+    pb <- progress_bar$new(
+      format = "[:bar] :percent eta: :eta",
+      clear = F, total = output_length)
+    )
+
+    
+  }
+  
   for(i in seq(1,lx, step)){
+    if(verbose){pb$tick()}
     start = i
     end = i + window_size
     if(end > lx){

@@ -196,31 +196,32 @@ runFalsePairings <- function(participantAList, participantBList, window_size=60,
   nFalse = 1
   truePairs <- list()
   falsePairs <- list()
-  nPossiblePairs = n*n*1.0
+  nPossiblePairs = n*n
   nTotal = 0
-  
-  pb <- progress_bar$new(total = nPossiblePairs)
-  
-  
+  print(paste("Running TVDSM on",n,"true pairs and",nPossiblePairs,"false pairs",sep = " "))
+  pb <- progress_bar$new(
+    format = "Processing :what :spin [:bar] :percent eta: :eta",
+    clear = F, total = nPossiblePairs)
+  msg <- ""
+  pb$tick(0)
   for(i in 1:n) {
     personA = participantAList[[i]]
     aName = personA
-    personB = participantBList[[i]]
-    bName = personB
-    #print(paste("True:",aName,"<=>",bName))
-    
-    truePairs[[i]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, window_size = window_size, window_step = window_step, lag = lag,noPlots = T)
     for(j in 1:n){
+      personB = participantBList[[j]]
+      bName = personB
+      msg <- paste(aName,"<=>",bName)
+      pb$tick(tokens = list(what=msg))
+      
       if(j != i){
-        personB = participantBList[[j]]
-        bName = personB
         nTotal = nTotal+1
         if(j > i){
-          #print(paste("False:",aName,"<=>",bName))
           falsePairs[[nTotal]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, simulate = T, window_size = window_size, window_step = window_step, lag = lag)
         }
       }
-      pb$tick()
+      else {
+        truePairs[[i]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, window_size = window_size, window_step = window_step, lag = lag,noPlots = T)
+      }
     }
     
   }
@@ -232,9 +233,24 @@ runFalsePairings <- function(participantAList, participantBList, window_size=60,
   trueData <- c(unlist(trueDataX), unlist(trueDataY))
   falseData <- c(unlist(falseDataX), unlist(falseDataY))
   print(t.test(trueData,falseData,))
-  close(pb)
+  
+  
   return(list(truePairs=truePairs, falsePairs=falsePairs))
   
 }
+
+
+compareSimulatedDyads <- function(pairs){
+  truePairs <- pairs$truePairs
+  falsePairs <- pairs$falsePairs
   
+  trueDataX <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
+  trueDataY <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
+  falseDataX <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
+  falseDataY <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
+  trueData <- c(unlist(trueDataX), unlist(trueDataY))
+  falseData <- c(unlist(falseDataX), unlist(falseDataY))
+  print(t.test(trueData,falseData,))
+  
+}
   

@@ -244,7 +244,7 @@ read.empatica.temp <- function(file) {
   data
 }
 
-as.simulateddyad <- function(p1,p2,cols=c("EDA"),norm=F) {
+as.simulateddyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F) {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))
   
@@ -259,7 +259,9 @@ as.simulateddyad <- function(p1,p2,cols=c("EDA"),norm=F) {
     print("Error: p1 and p2 do not overlap")
     return()
   }
-  print(paste("Dyad Overlap: ",dyad.start,"to",dyad.end))
+  if(verbose){
+    print(paste("Dyad Overlap: ",dyad.start,"to",dyad.end))
+  }
   dyad.p1 <- p1[1:dyad.end,]
   dyad.p2 <- p2[1:dyad.end,]
   dyad <- data.frame(Timestamp=dyad.p1$Timestamp)

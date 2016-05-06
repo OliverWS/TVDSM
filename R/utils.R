@@ -1,4 +1,4 @@
-
+require(systemfit)
 require(psych)
 require(xtable)
 require(ascii)

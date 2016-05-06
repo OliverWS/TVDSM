@@ -134,7 +134,7 @@ save.eda <- function(data, filename) {
   sampleRate = getFS(data)
   startTime = min(data$Timestamp)
   timeString = strftime(startTime, format="%Y-%m-%d %H:%M:%S Offset:%z")
-  
+  timeString = strtrim(timeString,str_length(timeString)-2)
   header = c(
     "Log File Created by CBS Toolkit",
     "File Version: 1.01",

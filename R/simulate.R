@@ -10,7 +10,7 @@ library(coefplot)
 library(e1071)
 library(lmerTest)
 library(progress)
-
+library(stringr)
 simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,trend=0,sr.ratio=0.95) {
   sr = selfReg.coef
   cr = coReg.coef
@@ -225,32 +225,62 @@ runFalsePairings <- function(participantAList, participantBList, window_size=60,
     }
     
   }
-  
-  trueDataX <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
-  trueDataY <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
-  falseDataX <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
-  falseDataY <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
-  trueData <- c(unlist(trueDataX), unlist(trueDataY))
-  falseData <- c(unlist(falseDataX), unlist(falseDataY))
-  print(t.test(trueData,falseData,))
-  
-  
-  return(list(truePairs=truePairs, falsePairs=falsePairs))
+  out <- list(truePairs=truePairs, falsePairs=falsePairs)
+  compareSimulatedDyads(out)
+  return(out)
   
 }
 
 
-compareSimulatedDyads <- function(pairs){
+compareSimulatedDyads <- function(pairs,title="True vs. Simulated Dyads"){
   truePairs <- pairs$truePairs
   falsePairs <- pairs$falsePairs
+  customMean <- function(x){
+    return(mean(x,na.rm=T))
+  }
+  xname <- function(a){
+    try(return(str_split(a$name[[1]],pattern = "(\\+)")[[1]][1]))
+    return(NA)
+  }
+  yname <- function(a){
+    try(return(str_split(a$name[[1]],pattern = "(\\+)")[[1]][2]))
+    return(NA)
+  }
   
-  trueDataX <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
-  trueDataY <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
-  falseDataX <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dx.r.squared", as.list = T), mean)
-  falseDataY <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dy.r.squared",as.list = T), mean)
-  trueData <- c(unlist(trueDataX), unlist(trueDataY))
-  falseData <- c(unlist(falseDataX), unlist(falseDataY))
-  print(t.test(trueData,falseData,))
+  trueDataX <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dx.r.squared", as.list = T), customMean)
+  trueDataXName <- lapply(get.key(truePairs, "summary",as.list = T), xname)
+  trueDataY <- lapply(get.key(get.key(truePairs, "summary",as.list = T), "dy.r.squared",as.list = T), customMean)
+  trueDataYName <- lapply(get.key(truePairs, "summary",as.list = T), yname)
   
+  falseDataX <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dx.r.squared", as.list = T), customMean)
+  falseDataXName <- lapply(get.key(falsePairs, "summary",as.list = T), xname)
+  
+  falseDataY <- lapply(get.key(get.key(falsePairs, "summary",as.list = T), "dy.r.squared",as.list = T), customMean)
+  falseDataYName <- lapply(get.key(falsePairs, "summary",as.list = T), yname)
+  
+  
+  #trueData <- na.omit(rowMeans(cbind(unlist(trueDataX), unlist(trueDataY)),na.rm = T))
+  #falseData <- na.omit(rowMeans(cbind(unlist(falseDataX), unlist(falseDataY)),na.rm = T))
+
+  trueData <- c(unlist(trueDataX),unlist(trueDataY))
+  falseData <- c(unlist(falseDataX),unlist(falseDataY)) 
+  
+  
+  
+  
+  df <- rbind.data.frame(data.frame(value=trueData, type="True Pair", name=c(unlist(trueDataXName),unlist(trueDataYName))),data.frame(value=falseData,type="Simulated Pair", name=c(unlist(falseDataXName),unlist(falseDataYName))))
+  df <- na.omit(df)
+  
+  print(sd(trueData,na.rm = T))
+  print(sd(falseData,na.rm = T))
+  print(t.test(trueData,falseData,var.equal = T))
+  View(df)
+
+  print(paste("Total pairs:",nrow(df)))
+  o.hist(df$value,group = df$type)
+  
+  
+  p <- ggplot(df, aes(type, value)) + geom_point()
+  p +   stat_summary(fun.data = "mean_cl_boot", geom = "crossbar", width = 0.3) + ggtitle(title)
 }
   

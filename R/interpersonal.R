@@ -207,10 +207,12 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   params1 <- melt(subset(params.df,select=c("Timestamps","b1","b2", "b4","b5","b21","b45")),id.vars = c("Timestamps"))
   params2 <- melt(subset(params.df,select=c("Timestamps","x.r2","y.r2","Condition","start","end")),id.vars = c("Timestamps","start","end","Condition"))
   
-  if(is.na(params1$b21) & is.na(params1$b45)){
-    glegend1 <- scale_colour_discrete(name  ="Variable",
+  if(is.na(params.df$b21) & is.na(params.df$b45)){
+    param.labels <- c(bquote(Delta~R[.(xname)]^2),bquote(Delta~R[.(yname)]^2))
+    param.labels <- c(bquote(.(xname)[S-R]), bquote(.(xname)[Co-R]),bquote(.(yname)[S-R]),bquote(.(yname)[Co-R]))
+    glegend1 <- scale_colour_discrete(name  ="Coefficient",
                                       breaks=c("b1","b2", "b4","b5"),
-                                      labels=c(expression(alpha[S-R]), expression(alpha[Co-R]),expression(beta[S-R]),expression(beta[Co-R])))
+                                      labels=param.labels)
     
   }
   else {
@@ -229,8 +231,8 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   point_size = 3*(50.0/len)
   if(point_size > 3) point_size = 3.0
   
-  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time") + ylab("Coefficient") + ggtitle(title) +glegend1 +gstyle 
-  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time") + ylab(bquote(R^2)) + ggtitle(title) + glegend2 + gstyle
+  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time")  + ggtitle(title) +glegend1 +gstyle 
+  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time")  + ggtitle(title) + glegend2 + gstyle
   
   if(point_size > 1.25) {
     plt1 <- plt1 + geom_point(size=point_size) 

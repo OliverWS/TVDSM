@@ -1,23 +1,24 @@
-require(lmtest)
-require(systemfit)
-require(psych)
-require(xtable)
-require(ascii)
-require(ggplot2)
-require(mvnormtest)
-require(lawstat)
-require(foreign)
-require(MASS)
-require(car)
-require(lsr)
-require(gvlma)
-require(lattice)
-require(lme4)
-require(Hmisc)
-require(grid)
-require(signal)
-require(gridExtra)
-require(progress)
+library(psych)
+library(xtable)
+library(ascii)
+library(ggplot2)
+library(mvnormtest)
+library(lawstat)
+library(foreign)
+library(MASS)
+library(car)
+library(lsr)
+library(gvlma)
+library(lattice)
+library(lme4)
+library(Hmisc)
+library(grid)
+library(signal)
+library(gridExtra)
+library(progress)
+library(systemfit)
+library(lmtest)
+
 CBSL.update <- function(){
   library(devtools)
   install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
@@ -31,7 +32,7 @@ plotDyad <- function(d, title="",ylabel="EDA") {
 }
 
 ggCaterpillar <- function(re, QQ=TRUE, likeDotplot=TRUE) {
-  require(ggplot2)
+  library(ggplot2)
   f <- function(x) {
     pv   <- attr(x, "postVar")
     cols <- 1:(dim(pv)[1])
@@ -725,7 +726,7 @@ o.assumptions <- function(y,group=NULL,type="ANOVA",sig=0.05,n_threshold=30) {
 o.isnorm <- function(y,sig=0.05,n_threshold=30) {
   print("Testing Assumption of Normality Using Shapiro–Wilk",quote=FALSE)
   if(length(y) < 3){
-    print("Shaprio test requires N > 2",quote=FALSE)
+    print("Shaprio test librarys N > 2",quote=FALSE)
     return(FALSE)
   }
   isnorm <- shapiro.test(na.omit(y))
@@ -920,23 +921,32 @@ o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verb
 
     
   }
-  
-  for(i in seq(1,lx, step)){
-    if(verbose){pb$tick()}
-    start = i
-    end = i + window_size
-    if(end > lx){
-      end = lx
-      break
-    }
-    else {
-      output[n] <- NA
-      try(expr = output[n] <- FUN(x[start:end,]),silent = F)
-    }
+  if(window_size < lx){
     
-    
-    n = n+1
+    for(i in seq(1,lx, step)){
+      if(verbose){pb$tick()}
+      start = i
+      end = i + window_size
+      if(end > lx){
+        end = lx
+        break
+      }
+      else {
+        output[n] <- NA
+        try(expr = output[n] <- FUN(x[start:end,]),silent = F)
+      }
+      
+      
+      n = n+1
+    }
   }
+  else {
+    warning(paste("Specified window length",window_size," is larger than data length", lx,"; truncating to:",lx))
+    output[n] <- NA
+    try(expr = output[n] <- FUN(x),silent = F)
+  }
+  
+  
   output <- output[1:n]
   
   return(output)

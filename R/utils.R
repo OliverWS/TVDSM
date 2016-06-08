@@ -876,7 +876,7 @@ o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T,
     
   }
   
-  if(step < lx){
+  if(window_size < lx){
     for(i in seq(1,lx, step)){
       if(verbose){pb$tick()}
       
@@ -890,7 +890,6 @@ o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T,
         output[[n]] <- NA
         try(expr = output[[n]] <- FUN(x[start:end,]),silent = F)
       }
-      
       
       n = n+1
     }

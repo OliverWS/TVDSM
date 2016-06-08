@@ -232,8 +232,16 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   point_size = 3*(50.0/len)
   if(point_size > 3) point_size = 3.0
   x_label <- "Time"
-  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title) +glegend1 +gstyle 
-  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title) + glegend2 + gstyle
+  title.1 <- title
+  if(plotParams){
+    title.2 <- NULL
+  }
+  else {
+    title.2 <- title
+  }
+  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title.1) +glegend1 +gstyle 
+  
+  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title.2) + glegend2 + gstyle
   
   if(point_size > 1.25) {
     plt1 <- plt1 + geom_point(size=point_size) 

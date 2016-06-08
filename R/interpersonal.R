@@ -288,11 +288,11 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
     b0 <- o.coef(x_model,1)
     b1 <- o.coef(x_model,2)
     b2 <- o.coef(x_model,3)
-    b21 <- 0
+    b21 <- NA
     b3 <- o.coef(y_model,1)
     b4 <- o.coef(y_model,2)
     b5 <- o.coef(y_model,3)
-    b45 <- 0
+    b45 <- NA
   }
   else if(type==2){
     

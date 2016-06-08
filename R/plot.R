@@ -94,6 +94,8 @@ plotDyad <- function(d, title="",ylabel="EDA",legend_label="Participant") {
 
 
 
+
+
 plotEDAByCondition <- function(eda, codes, title="") {
   
   eda <- read.eda(eda)

@@ -296,6 +296,27 @@ o.scale <- function(x,use.sd=F){
   
 }
 
+
+read.dyad <- function(f,sample_rate=32.0,p1.name=NULL,p2.name=NULL,start=strptime("2016-01-01 0:0:0","%Y-%m-%d %H:%M:%S"), readFunction=read.csv){
+  data <- as.data.frame(readFunction(f))
+  if(is.null(p1.name)){
+    p1.name <- colnames(data)[1]
+  }
+  if(is.null(p2.name)){
+    p2.name <- colnames(data)[2]
+  }
+  
+  sample_period=1.0/sample_rate
+  nSamples = dim(data)[1]
+  dt <- as.difftime(sample_period,units = "secs")
+  timestamps <- seq(from = start, by=dt , length.out = nSamples)
+  outputData <- data.frame(Timestamp = timestamps)
+  outputData[,2] <- data[,1]
+  outputData[,3] <- data[,2]
+  colnames(outputData) <- c("Timestamp",p1.name,p2.name)
+  return(na.omit(outputData))
+}
+
 as.dyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F) {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))

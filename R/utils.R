@@ -875,26 +875,33 @@ o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T,
 
     
   }
-
-  for(i in seq(1,lx, step)){
-    if(verbose){pb$tick()}
-
-    start = i
-    end = i + window_size
-    if(end > lx){
-      end = lx
-      break
-    }
-    else {
-      output[[n]] <- NA
-      try(expr = output[[n]] <- FUN(x[start:end,]),silent = F)
-    }
-
-    
-    n = n+1
-  }
-  output <- output[1:n]
   
+  if(step < lx){
+    for(i in seq(1,lx, step)){
+      if(verbose){pb$tick()}
+      
+      start = i
+      end = i + window_size
+      if(end > lx){
+        end = lx
+        break
+      }
+      else {
+        output[[n]] <- NA
+        try(expr = output[[n]] <- FUN(x[start:end,]),silent = F)
+      }
+      
+      
+      n = n+1
+    }
+  }
+  else {
+    warning(paste("Specified window length",window_size," is larger than data length", lx,"; truncating to:",lx))
+    output[[n]] <- NA
+    try(expr = output[[n]] <- FUN(x),silent = F)
+  }
+
+  output <- output[1:n]
   return(output)
 }
 

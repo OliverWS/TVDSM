@@ -202,14 +202,23 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   end <- as.POSIXct(get.key(data,key="End"),origin = "1970-01-01")
   
   params.df <- data.frame(Timestamps=timestamps,b1=b1,b2=b2,b4=b4,b5=b5,b21=b21,b45=b45,x.r2=x.r2,y.r2=y.r2,Condition=ES,start=start,end=end)
+  
   len <- length(params.df$Timestamps)
   params1 <- melt(subset(params.df,select=c("Timestamps","b1","b2", "b4","b5","b21","b45")),id.vars = c("Timestamps"))
   params2 <- melt(subset(params.df,select=c("Timestamps","x.r2","y.r2","Condition","start","end")),id.vars = c("Timestamps","start","end","Condition"))
   
-  glegend1 <- scale_colour_discrete(name  ="Variable",
-                                    breaks=c("b1","b2","b21", "b4","b5","b45"),
-                                    labels=c(expression(alpha[S-R]), expression(alpha[Co-R]),expression(alpha[I]),expression(beta[S-R]),expression(beta[Co-R]),expression(beta[I])))
-  
+  if(is.na(params1$b21) & is.na(params1$b45)){
+    glegend1 <- scale_colour_discrete(name  ="Variable",
+                                      breaks=c("b1","b2", "b4","b5"),
+                                      labels=c(expression(alpha[S-R]), expression(alpha[Co-R]),expression(beta[S-R]),expression(beta[Co-R])))
+    
+  }
+  else {
+    glegend1 <- scale_colour_discrete(name  ="Variable",
+                                      breaks=c("b1","b2","b21", "b4","b5","b45"),
+                                      labels=c(expression(alpha[S-R]), expression(alpha[Co-R]),expression(alpha[I]),expression(beta[S-R]),expression(beta[Co-R]),expression(beta[I])))
+  }
+
   glegend2 <- scale_colour_discrete(name  ="Variable",
                                     breaks=c("x.r2","y.r2"),
                                     labels=r2.labels)

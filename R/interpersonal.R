@@ -217,12 +217,12 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   else {
     param.labels <- c(bquote(.(xname)[S-R]), bquote(.(xname)[Co-R]), bquote(.(xname)[I]), bquote(.(yname)[S-R]),bquote(.(yname)[Co-R]),bquote(.(yname)[I]))
     
-    glegend1 <- scale_colour_discrete(name  = expression(beta),
+  glegend1 <- scale_colour_discrete(name  = expression(beta),
                                       breaks=c("b1","b2","b21", "b4","b5","b45"),
                                       labels=param.labels)
   }
 
-  glegend2 <- scale_colour_discrete(name  ="Variable",
+  glegend2 <- scale_colour_discrete(name  = bquote(Delta~R^2),
                                     breaks=c("x.r2","y.r2"),
                                     labels=r2.labels)
   gstyle <- guides(colour = guide_legend(
@@ -231,9 +231,9 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   x_max = max(end)
   point_size = 3*(50.0/len)
   if(point_size > 3) point_size = 3.0
-  
-  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time") + ylab(NULL) + ggtitle(title) +glegend1 +gstyle 
-  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab("Time") + ylab(NULL) + ggtitle(title) + glegend2 + gstyle
+  x_label <- strftime(start,format="%A, %B %Y")
+  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title) +glegend1 +gstyle 
+  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title) + glegend2 + gstyle
   
   if(point_size > 1.25) {
     plt1 <- plt1 + geom_point(size=point_size) 

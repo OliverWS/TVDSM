@@ -266,6 +266,22 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   return(combinedPlt)
   
 }
+
+
+
+plot.density <- function(data,group="Dyad", xname='Particpant 1 Beta', yname="Participant 2 Beta") {
+  x.beta <- get.key(data, key="b2")
+  y.beta <- get.key(data, key="b4")
+
+  kp1 <- kde2d(x.beta,y.beta,n=500)
+  contour(kp1, col='blue',)
+  title(paste("Kernel Density Plots -", group), ylab=yname, xlab=xname)
+  
+  gg <- ggplot(data=kp1,mapping = aes(x,y,z)) + geom_contour()
+  print(gg)
+}
+
+
 statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=F,lag=0){
   if(is.null(lag)){
     x_prime <- Lag(x,-1*lag)
@@ -293,7 +309,29 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
   base_x_model <- basefit$eq[[1]]
   base_y_model <- basefit$eq[[2]]
   
-  if (type==3){
+  if (type==4){
+    
+    x_model <- x_prime ~ x + y
+    y_model <- y_prime ~ y + x
+    
+    
+    eq <- list(x_model,y_model)
+    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
+    
+    x_model <- fit$eq[[1]]
+    y_model <- fit$eq[[2]]
+    
+    b0 <- o.coef(x_model,1)
+    b1 <- o.coef(x_model,2)
+    b2 <- o.coef(x_model,3)
+    b21 <- NA
+    b3 <- o.coef(y_model,1)
+    b4 <- o.coef(y_model,2)
+    b5 <- o.coef(y_model,3)
+    b45 <- NA
+  }
+  
+  else if (type==3){
     
     x_model <- x_prime ~ I(x_mu-x) + I(y-x)
     y_model <- y_prime ~ I(x_mu-y) + I(x-y)

@@ -11,6 +11,8 @@ library(systemfit)
 
 library(progress)
 
+source("~/git/CBSL.R/R/Dynamical_Correlation.R")
+
 runAnova <- function(mdls, key="Condition"){
   condition <- get.key(mdls,key)
   
@@ -44,44 +46,65 @@ runAnova <- function(mdls, key="Condition"){
   return(mmdl.x)
 }
 
+validateConditionTimes <- function(d,codes,timeformat ="%m/%d/%y %H:%M:%S"){
+  start.ctime <- as.POSIXct(d$Timestamp[[1]])
+  end.ctime <- as.POSIXct(d$Timestamp[[length(d$Timestamp)]])
+  
+  codes$Start.Time.CTime <- as.POSIXct(codes$Start.Time,format=timeformat)
+  codes$End.Time.CTime <- as.POSIXct(codes$End.Time,format=timeformat)
+  
+  for(n in 1:dim(codes)[[1]]){
+    st = codes$Start.Time.CTime[[n]]
+    et = codes$End.Time.CTime[[n]]
+    if((st < start.ctime) | (et > end.ctime)){
+      msg <- paste0("Error: times for condition '",codes$Condition[[n]],"' (",strftime(st,format = timeformat), " to ", strftime(et,format=timeformat),") are outside start/end times for dyad (",strftime(start.ctime,format=timeformat)," to ",strftime(end.ctime,format=timeformat),")")
+      stop(msg,call. = F,domain = NA)
+    }
+  }
+}
 
-
-analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end=""){
+analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%m/%d/%y %H:%M:%S"){
   
   p1 <- read.eda(f1)
   p2 <- read.eda(f2)
   
   d <- as.dyad(p1,p2,norm = T,cols=cols)
   
-  timeformat ="%Y-%m-%d %H:%M:%S"
 
   if(start != ""){
     start <- strptime(start,format=timeformat)
   }
   else {
-    start <- min(d$Timestamp) 
+    start <- d$Timestamp[[1]]
   }
   if(end != ""){
     end <- strptime(end,format=timeformat)
   }
   else {
-    end <- max(d$Timestamp)
+    end <- d$Timestamp[[length(d$Timestamp)]]
   }
   d <- subset(d,((Timestamp >= start) & (Timestamp < end)) )
+ 
   
   if (useRealTime) {
     ERCodes <- read.RTCodes(codes)
-    ERCodes$Start.Time <- difftime(as.POSIXct(ERCodes$Start.Time),as.POSIXct(start), units = "secs")
-    ERCodes$End.Time <- difftime(as.POSIXct(ERCodes$End.Time),as.POSIXct(start), units="secs")
+    validateConditionTimes(d,ERCodes) #Check that condition times don't exceed dyad start/end times and throw meaningful error messages
+    
+    start.ctime <- as.POSIXct(start,format=timeformat)
+    end.ctime <- as.POSIXct(end,format=timeformat)
+    if(verbose){print(paste("Dyad valid from ",start,"to",end,"with duration of",round(difftime(end.ctime,start.ctime,units="secs")),"seconds"))}
+    ERCodes$Start.Time <- difftime(as.POSIXct(ERCodes$Start.Time,format=timeformat),start.ctime, units = "secs")
+    ERCodes$End.Time <- difftime(as.POSIXct(ERCodes$End.Time,format=timeformat),start.ctime, units="secs")
   }
   else {
     ERCodes <- read.Codes(codes)
   }
   
-  View(ERCodes)
+  if(verbose){View(ERCodes)}
 
   FS <- getFS(d)
   mdls <- list()
+  
   
   x.baseline <- mean(d[,2],na.rm=T)
   y.baseline <- mean(d[,3],na.rm=T)
@@ -118,10 +141,11 @@ analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c
   
   plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams)
   print(plt)
+  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n),Condition=get.key(mdls,"Condition"), Start=get.key(mdls,"Start"),End=get.key(mdls,"End"), x.r.squared=get.key(mdls,"dx.r.squared"),y.r.squared=get.key(mdls,"dy.r.squared"),x.selfreg=get.key(mdls,"b1"),x.coreg=get.key(mdls,"b2"),x.interaction=get.key(mdls,"b21"),y.selfreg=get.key(mdls,"b4"),y.coreg=get.key(mdls,"b5"),y.interaction=get.key(mdls,"b45"))
   
+  output <- list(mdls=mdls,summary=mdlData,plt=plt)
   
-  
-  return(mdls)
+  return(output)
   
 }
 
@@ -436,10 +460,10 @@ computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL
   ay <- decimate(dyad[,3],downsample*FS)
   newFS <- round(1.0/downsample)
   mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose)
-  mdl$Timestamp <- dyad[1,"Timestamp"]
-  mdl$Duration <- (max(mdl$Timestamp) - min(mdl$Timestamp))
-  mdl$Start <- mdl$Timestamp[[1]] 
-  mdl$End <- max(mdl$Timestamp)
+  mdl$Timestamp <- min(dyad$Timestamp)
+  mdl$Duration <- (max(dyad$Timestamp) - min(dyad$Timestamp))
+  mdl$Start <- min(dyad$Timestamp)
+  mdl$End <- max(dyad$Timestamp)
 
   return(mdl)
 }
@@ -574,7 +598,14 @@ describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
 saveInterpersonalData <- function(dyadData, outputFilename=NULL){
   timeformat ="%Y-%m-%d %H:%M:%S"
   d <- dyadData$mdls
-  data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01"), format=timeformat), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+  tz <- attr(d[[1]]$Timestamp,"tz")
+  if(is.null(d[[1]]$Condition)){
+    data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+  }
+  else {
+    data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+  }
+  
   if(is.null(outputFilename)){
     outputFilename <- paste(as.character(dyadData$summary$name[[1]]),".csv",sep="")
   }
@@ -584,7 +615,7 @@ saveInterpersonalData <- function(dyadData, outputFilename=NULL){
 
   
   write.csv(data,file = outputFilename)
-  
+  return(data)
 }
 
 saveDataForGraphing <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
@@ -595,3 +626,31 @@ saveDataForGraphing <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
   write.csv(data.frame(Timestamp=data$Timestamp, R2=data$dy.r.squared),file = yfname)
 }
 
+
+
+dynamicalCorrelation <- function(a_files, b_files,read_func=read.eda,cols=c("EDA"),sr=32,randPairs=F){
+  n <- length(a_files)
+  dyads <- list()
+  nrows <- 0
+  
+  for (i in 1:n) {
+    a.raw <- read_func(a_files[[i]])
+    b.raw <- read_func(b_files[[i]])
+    d <- as.dyad(a.raw,b.raw,cols=cols)
+    dyads[[i]] <- d
+    if(nrows < nrow(d)){nrows = nrow(d)}
+  }
+  a_mat <- matrix(data=NA, nrow = nrows, ncol = n)
+  b_mat <- matrix(data=NA, nrow = nrows, ncol = n)
+  for(j in 1:n){
+    d <-dyads[[j]] 
+    a_mat[1:nrow(d),j] <-d[1:nrow(d),2]
+    b_mat[1:nrow(d),j] <-d[1:nrow(d),3]
+  }
+  t <-seq(from=0,to=nrows/sr,length.out=nrows)
+  
+  #results.test <- ind_DC(a_mat,b_mat,t,na=T)
+  results.boot <- boot_test_DC(a_mat,b_mat,t,ms = T,randPairs = randPairs)
+  
+  return(results.boot)
+}

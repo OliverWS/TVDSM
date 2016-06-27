@@ -66,15 +66,15 @@ plot.eda <- function(data,title="EDA Data",show_acc=F, show_raw_acc=F) {
   eda <- ggplot(data=data, aes(x=Timestamp,y=EDA)) + geom_line(aes(x = Timestamp, y=EDA), colour="#2CC4FF") + xlab("Time") + ylab("EDA") + ggtitle(title) #+ geom_area(aes(x = Timestamp, y=EDA), fill="#B6E1F2")
   if(show_acc) {
     if(show_raw_acc){
-      acc <- ggplot(data=data) + geom_line(aes(x = Timestamp, y=X),colour="red") + geom_line(aes(x = Timestamp, y=Y),colour="green") + geom_line(aes(x = Timestamp, y=Z),color="blue") + xlab("Time") + ylab("Acc") +  ggtitle("Accelerometer")
+      acc <- ggplot(data=data) + geom_line(aes(x = Timestamp, y=X),colour="red") + geom_line(aes(x = Timestamp, y=Y),colour="green") + geom_line(aes(x = Timestamp, y=Z),color="blue") + xlab("Time") + ylab("Acc") 
       
     }
     else{
       data$Movement <- sqrt(data$X*data$X+data$Y*data$Y+data$Z*data$Z)
-      acc <- ggplot(data=data) + geom_line(aes(x = Timestamp, y=Movement),colour="red") + xlab("Time") + ylab("Movment") +  ggtitle("Accelerometer")
+      acc <- ggplot(data=data) + geom_line(aes(x = Timestamp, y=Movement),colour="red") + xlab("Time") + ylab("Motion")
       
     }
-    return(multiplot(eda,acc))
+    return(plot_grid(eda,acc,ncol=1,rel_heights = c(3,1)))
     
   }
   else {

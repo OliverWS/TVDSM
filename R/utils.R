@@ -16,8 +16,6 @@ library(grid)
 library(signal)
 library(gridExtra)
 library(progress)
-library(systemfit)
-library(lmtest)
 
 CBSL.update <- function(){
   library(devtools)
@@ -860,6 +858,16 @@ o.anova.table <- function(formula,sig_cutoff=FALSE)
   return(result)
 }
 
+## A helper function that tests whether an object is either NULL _or_ 
+## a list of NULLs
+is.NullOb <- function(x) is.null(x) | all(sapply(x, is.null))
+
+## Recursively step down into list, removing all such objects 
+rmNullObs <- function(x) {
+  x <- Filter(Negate(is.NullOb), x)
+  lapply(x, function(x) if (is.list(x)) rmNullObs(x) else x)
+}
+
 
 
 o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verbose=F) {
@@ -902,7 +910,7 @@ o.window.list <- function(x, window_size, window_step=window_size, FUN, na.rm=T,
     try(expr = output[[n]] <- FUN(x),silent = F)
   }
 
-  output <- output[1:n]
+  output <- rmNullObs(output)
   return(output)
 }
 
@@ -947,7 +955,7 @@ o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verb
   }
   
   
-  output <- output[1:n]
+  output <- rmNullObs(output)
   
   return(output)
 }
@@ -960,8 +968,35 @@ o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verb
 o.pbcopy <- function(x){
   write.table(file = pipe("pbcopy"), x, sep = "\t",quote=F)
 }
+critical.r <- function( n, alpha = .05 ) {
+  df <- n - 2
+  critical.t <- qt(alpha/2, df, lower.tail = F)
+  critical.r <- sqrt( (critical.t^2) / ( (critical.t^2) + df ) )
+  return(critical.r)
+}
 
 
+o.corplot <- function(data) {
+  source("https://raw.githubusercontent.com/briatte/ggcorr/master/ggcorr.R")
+  
+  data <- as.data.frame(data)
+  cutoff <- critical.r(nrow(data))
+  low = "#3B9AB2"
+  mid = "#EEEEEE"
+  high = "#F21A00"
+  
+  gg <- ggcorr(data, geom = "blank", label = F, hjust = 1,layout.exp = 1.1) + 
+    geom_tile(aes_string(fill = "coefficient", alpha = paste("abs(coefficient) >", cutoff))) +
+ #   scale_alpha_manual(values = c("TRUE" = 0.75, "FALSE" = 0)) +
+    scale_fill_gradient2("r", low = low, mid = mid, high = high, midpoint = 0, limits = c(-1, 1)) +
+    geom_text(aes(x, y, label = label),
+              color = "black", size = 4,
+              show.legend = FALSE) +
+  guides(alpha=F)
+  
+  print(gg)
+  return(gg)
+}
 
 
 

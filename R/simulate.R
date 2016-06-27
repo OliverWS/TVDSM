@@ -191,7 +191,7 @@ examples <- function(){
 }
 
 
-runFalsePairings <- function(participantAList, participantBList, window_size=60, window_step=60, downsample=1, lag=0) {
+runFalsePairings <- function(participantAList, participantBList, window_size=60, window_step=window_size, downsample=1, lag=0,type=3) {
   n <- length(participantAList)
   nFalse = 1
   truePairs <- list()
@@ -216,11 +216,11 @@ runFalsePairings <- function(participantAList, participantBList, window_size=60,
       if(j != i){
         nTotal = nTotal+1
         if(j > i){
-          falsePairs[[nTotal]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, simulate = T, window_size = window_size, window_step = window_step, lag = lag)
+          falsePairs[[nTotal]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, simulate = T, window_size = window_size, window_step = window_step, lag = lag,type = type)
         }
       }
       else {
-        truePairs[[i]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, window_size = window_size, window_step = window_step, lag = lag,noPlots = T)
+        truePairs[[i]] <- analyzeDyad(f1 = personA, f2=personB,xname = aName, yname = bName, window_size = window_size, window_step = window_step, lag = lag,noPlots = F,type = type)
       }
     }
     
@@ -280,7 +280,7 @@ compareSimulatedDyads <- function(pairs,title="True vs. Simulated Dyads"){
   o.hist(df$value,group = df$type)
   
   
-  p <- ggplot(df, aes(type, value)) + geom_point()
+  p <- ggplot(df, aes(type, value,col=type)) + geom_point()
   p +   stat_summary(fun.data = "mean_cl_boot", geom = "crossbar", width = 0.3) + ggtitle(title)
 }
   

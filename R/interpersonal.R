@@ -11,7 +11,6 @@ library(systemfit)
 
 library(progress)
 
-source("~/git/CBSL.R/R/Dynamical_Correlation.R")
 
 runAnova <- function(mdls, key="Condition"){
   condition <- get.key(mdls,key)
@@ -62,6 +61,27 @@ validateConditionTimes <- function(d,codes,timeformat ="%m/%d/%y %H:%M:%S"){
     }
   }
 }
+
+#' Perform TVDSM analysis on a dyad by condition
+#'
+#' @param f1 path to csv file with data for participant 1
+#' @param f2 path to csv file with data for participant 2
+#' @param codes path to csv file with condition timing data
+#' @param useRealTime treat condition times listed in condition timing sheet as calendar times, e.g. "1/2/16 13:23:45"
+#' @param type the type of TVDSM analysis to use
+#' @param cols a vector indicating which columns to select from each file when creating a dyad
+#' @param dname a string indicating a friendly name for the dyad (used in plots and summary data frame)
+#' @param p1.name a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f1}
+#' @param p2.name a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f2}
+#' @param plotParams should model coefficients be ploted
+#' @param lag the lag to be used in the TVDSM analysis (in seconds)
+#' @param downsample the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)
+#' @param lag the lag to be used in the TVDSM analysis (in seconds)
+#' @return a list containing models (mdls), plot (plt), and a summary data frame (summary)
+#' @export
+#' @examples
+#' analyzeByCondition("PersonA.csv","PersonB.csv",codes="ConditionTimes.csv")
+
 
 analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%m/%d/%y %H:%M:%S"){
   
@@ -520,6 +540,36 @@ n = 1;
   return(output)
   
 }
+
+
+
+#' Perform TVDSM analysis on a dyad by condition
+#'
+#' @param f1 path to csv file with data for participant 1
+#' @param f2 path to csv file with data for participant 2
+#' @param dyad if a valid dyad object is provided (produced via \code{\link{as.dyad}}), analysis will be run on the dyad directly, and \code{f1} and \code{f2} will be ignored
+#' @param type the type of TVDSM analysis to use
+#' @param dname a string indicating a friendly name for the dyad (used in plots and summary data frame)
+#' @param xname a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f1}
+#' @param yname a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f2}
+#' @param norm should participant data be standardized prior to TVDSM analysis
+#' @param window_size the size of the sliding window to use for TVDSM analysis, in seconds
+#' @param window_step the increment to be used when sliding \code{window_size}, in seconds
+#' @param measure a string indicating which column to select from each file when creating a dyad
+#' @param pltTitle pass a string to override plot title
+#' @param plotParams should model coefficients be ploted
+#' @param noPlots if true, plots will not be generated
+#' @param lag the lag to be used in the TVDSM analysis (in seconds)
+#' @param downsample the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)
+#' @param x.baseline provide a value to be treated as baseline for participant 1 in TVDSM analysis. Defaults to mean of participant 1's data.
+#' @param y.baseline provide a value to be treated as baseline for participant 2 in TVDSM analysis. Defaults to mean of participant 2's data.
+#' @param downsample the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)
+#' @return a list containing models (mdls), plot (plt), and a summary data frame (summary)
+#' @export
+#' @examples
+#' #Perform TVDSM analysis using a 5 minute sliding window incremented every 10 second, with a lag of 5 seconds
+#' analyzeDyad("PersonA.csv","PersonB.csv",window_size=5*60, window_step=10,lag=5)
+
 
 
 analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=2,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F) {

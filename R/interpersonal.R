@@ -348,7 +348,7 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
   
   
   base_eq <- list(base_x_model,base_y_model)
-  basefit <- systemfit(list(base_x_model,base_y_model),data=data, method = "SUR")
+  basefit <- systemfit(base_eq,data=data, method = "SUR")
   
   base_x_model <- basefit$eq[[1]]
   base_y_model <- basefit$eq[[2]]
@@ -382,7 +382,7 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
     
     
     eq <- list(x_model,y_model)
-    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
+    fit <- systemfit(eq,data=data, method = "SUR")
     
     x_model <- fit$eq[[1]]
     y_model <- fit$eq[[2]]

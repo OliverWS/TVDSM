@@ -378,7 +378,7 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
   else if (type==3){
     
     x_model <- x_prime ~ I(x_mu-x) + I(y-x)
-    y_model <- y_prime ~ I(x_mu-y) + I(x-y)
+    y_model <- y_prime ~ I(y_mu-y) + I(x-y)
     
     
     eq <- list(x_model,y_model)

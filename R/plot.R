@@ -106,3 +106,40 @@ plotEDAByCondition <- function(eda, codes, title="") {
   return(g1)
   
 }
+
+
+gghist <- function(x,groups=NULL) {
+  
+  norm.test <- function(data) {
+    w <- shapiro.test(data)
+    if(w$p.value < 0.001){
+      p.label = paste0("p ",format.pval(pv=w$p.value,digits=3, eps=0.001))
+    }
+    else {
+      p.label = paste0("p = ",format.pval(pv=w$p.value,digits = 3,eps=0.001))
+    }
+    
+    label = paste0("W = ",format(w$statistic,digits=3), ", ",p.label)
+   return( label)
+  }
+  x.mu <- mean(x,na.rm=T)
+  x.sd <- sd(x,na.rm=T)
+  if(!is.null(groups)) {
+    plt <- ggplot(aes(x=x,fill=group),data = data.frame(x=x,group=groups)) + geom_density(alpha=0.5)
+
+  }
+  else {
+    plt <- ggplot(aes(x=x),data = data.frame(x=x)) + geom_density(col="darkgray",fill="gray",lwd=1)
+    plt <- plt + stat_function(fun = dnorm, colour = "red",args = list(mean=x.mu,sd=x.sd))
+    
+    y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
+    x.range <- ggplot_build(plt)$panel$ranges[[1]]$x.range
+    
+    text.y <- y.range[1] + (y.range[2]-y.range[1])*0.1
+    text.x <- x.range[1] + (x.range[2] - x.range[1])*0.5
+    plt <- plt + annotate("text",x=text.x,y= text.y,label=norm.test(x),size=5)
+  }
+  
+  
+  return(plt)
+}

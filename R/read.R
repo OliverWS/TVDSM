@@ -1,4 +1,6 @@
 library(readxl)
+library(edfReader)
+library(lubridate)
 read.ERCodes <- function(path){
   if(grepl(".xls", path)){
     data <- read_excel(path,"text")
@@ -41,6 +43,7 @@ if(grepl(".xls", path) || grepl(".xlsx", path)){
   
   return(data)
 }
+
 
 read.RTCodes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",fmt="%y-%m-%d %H:%M:%S"){
   if(grepl(".xls", path) || grepl(".xlsx", path)){
@@ -154,7 +157,41 @@ save.eda <- function(data, filename) {
 }
 write.eda <- save.eda
 
+read.csvdata <- function(file) {
+  
+  timeformat ="%Y-%m-%d %H:%M:%OS"
+  data <- as.data.frame(read.csv(file,header = T,sep = ","))
+  data$Timestamp <- ymd_hms(data$Timestamp,tz = "EST5EDT")
+  return(data)
+}
 
+
+read.biosync <- function(file) {
+  
+  timeformat ="%Y-%m-%d %H:%M:%OS"
+  data <- as.data.frame(read.csv(file,header = T,sep = ","))
+  data$Timestamp <- gsub("(.*)\\:", "\\1.", data$Timestamp)
+  data$Timestamp <- ymd_hms(data$Timestamp,tz = "EST5EDT")
+  return(data)
+}
+
+read.edf <- function(file){
+  header = edfReader::readEdfHeader(file)
+  data = edfReader::readEdfSignals(header,signals = "Ordinary")
+  
+  output <- list()
+  for(signal in data){
+    safe_name <- make.names(signal$label)
+    start <- strptime(signal$startTime, format="%Y-%m-%d %H:%M:%S")
+    sample_rate <- signal$sRate
+    dt <- as.difftime(as.character(1.0/sample_rate),format = "%OS")
+    timestamps <- seq(from = start, by=dt , along.with = signal$signal) 
+    df <- data.frame(Timestamp=timestamps)
+    df[[safe_name]] <- signal$signal
+    output[[safe_name]] <- df
+  }
+  return(output)
+}
 read.actiwave <- function(file) {
   
   timeformat ="%m/%d/%Y %H:%M:%S"

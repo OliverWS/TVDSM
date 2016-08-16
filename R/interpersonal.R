@@ -45,7 +45,7 @@ runAnova <- function(mdls, key="Condition"){
   return(mmdl.x)
 }
 
-validateConditionTimes <- function(d,codes,timeformat ="%m/%d/%y %H:%M:%S"){
+validateConditionTimes <- function(d,codes,timeformat ="%Y-%m-%d %H:%M:%S"){
   start.ctime <- as.POSIXct(d$Timestamp[[1]])
   end.ctime <- as.POSIXct(d$Timestamp[[length(d$Timestamp)]])
   
@@ -83,12 +83,18 @@ validateConditionTimes <- function(d,codes,timeformat ="%m/%d/%y %H:%M:%S"){
 #' analyzeByCondition("PersonA.csv","PersonB.csv",codes="ConditionTimes.csv")
 
 
-analyzeByCondition <- function(f1="",f2="",codes="",useRealTime=F, type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%m/%d/%y %H:%M:%S"){
+analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%Y-%m-%d %H:%M:%S"){
   
-  p1 <- read.eda(f1)
-  p2 <- read.eda(f2)
-  
-  d <- as.dyad(p1,p2,norm = T,cols=cols)
+  if(length(dyad) > 0){
+    d <- dyad
+  }
+  else {
+    p1 <- read.eda(f1)
+    p2 <- read.eda(f2)
+    d <- as.dyad(p1,p2,norm = T,cols=cols)
+    
+  }
+
   
 
   if(start != ""){
@@ -352,11 +358,42 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
   
   base_x_model <- basefit$eq[[1]]
   base_y_model <- basefit$eq[[2]]
-  
-  if (type==4){
+  if (type==5){
     
-    x_model <- x_prime ~ x + y
-    y_model <- y_prime ~ y + x
+    base_x_model <- x_prime ~ 0 + I(x_mu-x)
+    base_y_model <- y_prime ~ 0 + I(y_mu-y)
+    
+    
+    base_eq <- list(base_x_model,base_y_model)
+    basefit <- systemfit(base_eq,data=data, method = "SUR")
+    
+    base_x_model <- basefit$eq[[1]]
+    base_y_model <- basefit$eq[[2]]
+    
+    x_model <- x_prime ~ 0 + I(x_mu-x) + I(y-x)
+    y_model <- y_prime ~ 0 + I(y_mu-y) + I(x-y)
+    
+    
+    eq <- list(x_model,y_model)
+    fit <- systemfit(eq,data=data, method = "SUR")
+    
+    x_model <- fit$eq[[1]]
+    y_model <- fit$eq[[2]]
+    
+    b0 <- NA
+    b1 <- o.coef(x_model,1)
+    b2 <- o.coef(x_model,2)
+    b21 <- NA
+    b3 <- NA
+    b4 <- o.coef(y_model,1)
+    b5 <- o.coef(y_model,2)
+    b45 <- NA
+  }
+  
+  else if (type==4){
+    
+    x_model <- x_prime ~ I(x_mu-x) + y_prime
+    y_model <- y_prime ~ I(y_mu-y) + x_prime
     
     
     eq <- list(x_model,y_model)
@@ -374,6 +411,28 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
     b5 <- o.coef(y_model,3)
     b45 <- NA
   }
+  else if (type==4.5){
+    
+    x_model <- x_prime ~ I(x_mu-x) * y_prime
+    y_model <- y_prime ~ I(y_mu-y) * x_prime
+    
+    
+    eq <- list(x_model,y_model)
+    fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
+    
+    x_model <- fit$eq[[1]]
+    y_model <- fit$eq[[2]]
+    
+    b0 <- o.coef(x_model,1)
+    b1 <- o.coef(x_model,2)
+    b2 <- o.coef(x_model,3)
+    b21 <- o.coef(x_model,4)
+    b3 <- o.coef(y_model,1)
+    b4 <- o.coef(y_model,2)
+    b5 <- o.coef(y_model,3)
+    b45 <- o.coef(y_model,4)
+  }
+  
   
   else if (type==3){
     
@@ -462,9 +521,9 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
     if(verbose){
       print(tst)
     }
-
     x.base.r.squared=0
     y.base.r.squared=0
+    
     x.r.squared = 0
     y.r.squared = 0
   }
@@ -627,7 +686,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   }
   n <- length(get.key(data,"x.r.squared"))
   mdls <- data
-  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n), x.r.squared=get.key(mdls,"x.r.squared"),y.r.squared=get.key(mdls,"y.r.squared"),dx.r.squared=get.key(mdls,"dx.r.squared"),dy.r.squared=get.key(mdls,"dy.r.squared"))
+  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),start=get.key(mdls,"Start"),end=get.key(mdls,"End"),name=rep_len(dname,n), x.r.squared=get.key(mdls,"x.r.squared"),y.r.squared=get.key(mdls,"y.r.squared"),dx.r.squared=get.key(mdls,"dx.r.squared"),dy.r.squared=get.key(mdls,"dy.r.squared"))
   out$mdls <- mdls
   out$summary <- mdlData
   return(out)
@@ -645,15 +704,30 @@ describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
   return(o.describeBy(interdependence, group,tex = F,digits = 3))
 }
 
-saveInterpersonalData <- function(dyadData, outputFilename=NULL){
-  timeformat ="%Y-%m-%d %H:%M:%S"
+saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname="a",bname="b"){
+  timeformat ="%Y-%m-%dT%H:%M:%S%z"
   d <- dyadData$mdls
   tz <- attr(d[[1]]$Timestamp,"tz")
   if(is.null(d[[1]]$Condition)){
-    data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+    if(I3.only){
+      a.name <- paste0("P-",aname,"_I3")
+      b.name <- paste0("P-",bname,"_I3")
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat))
+      data[a.name] <- get.key(d,"dx.r.squared")
+      data[b.name] <- get.key(d,"dy.r.squared")
+    }
+    else {
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat), a_I3=get.key(d,"dx.r.squared"),b_I3=get.key(d,"dy.r.squared"),a_selfreg=get.key(d,"b1"),a_coreg=get.key(d,"b2"),a_interaction=get.key(d,"b21"),b_selfreg=get.key(d,"b4"),b_coreg=get.key(d,"b5"),b_interaction=get.key(d,"b45"))
+    }
   }
   else {
-    data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+    if(I3.only){
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"))
+      
+    }
+    else {
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+    }
   }
   
   if(is.null(outputFilename)){
@@ -664,7 +738,7 @@ saveInterpersonalData <- function(dyadData, outputFilename=NULL){
   #data$b.name <- abnames[2]
 
   
-  write.csv(data,file = outputFilename)
+  write.csv(data,file = outputFilename,row.names=FALSE,quote = F)
   return(data)
 }
 

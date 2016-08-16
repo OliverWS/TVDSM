@@ -11,6 +11,7 @@ library(e1071)
 library(lmerTest)
 library(progress)
 library(stringr)
+library(compute.es)
 simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,trend=0,sr.ratio=0.95) {
   sr = selfReg.coef
   cr = coReg.coef
@@ -273,14 +274,18 @@ compareSimulatedDyads <- function(pairs,title="True vs. Simulated Dyads"){
   
   print(sd(trueData,na.rm = T))
   print(sd(falseData,na.rm = T))
-  print(t.test(trueData,falseData,var.equal = T))
-  View(df)
-
+  t <- t.test(trueData,falseData,var.equal = T)
+  print(t)
+  es = compute.es::tes(t$statistic,length(trueData),length(falseData))
+  t$es <- es
+  print(paste0("Cohen's d = ",es$d))
   print(paste("Total pairs:",nrow(df)))
+  
   o.hist(df$value,group = df$type)
   
   
   p <- ggplot(df, aes(type, value,col=type)) + geom_point()
   p +   stat_summary(fun.data = "mean_cl_boot", geom = "crossbar", width = 0.3) + ggtitle(title)
+  return(list(df=df,plt=p,ttest=t))
 }
   

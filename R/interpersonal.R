@@ -83,7 +83,7 @@ validateConditionTimes <- function(d,codes,timeformat ="%Y-%m-%d %H:%M:%S"){
 #' analyzeByCondition("PersonA.csv","PersonB.csv",codes="ConditionTimes.csv")
 
 
-analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, type=2,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%Y-%m-%d %H:%M:%S"){
+analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, type=4,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%Y-%m-%d %H:%M:%S"){
   
   if(length(dyad) > 0){
     d <- dyad
@@ -162,10 +162,12 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
     }
     
   }
+  startD = ERCodes$Start.Time[[1]]*FS
+  endD = ERCodes$End.Time[[dim(ERCodes)[1]]]*FS
   
-
+  rawD <- d[start:end,]
   
-  plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams)
+  plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams,rawData = rawD)
   print(plt)
   mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n),Condition=get.key(mdls,"Condition"), Start=get.key(mdls,"Start"),End=get.key(mdls,"End"), x.r.squared=get.key(mdls,"dx.r.squared"),y.r.squared=get.key(mdls,"dy.r.squared"),x.selfreg=get.key(mdls,"b1"),x.coreg=get.key(mdls,"b2"),x.interaction=get.key(mdls,"b21"),y.selfreg=get.key(mdls,"b4"),y.coreg=get.key(mdls,"b5"),y.interaction=get.key(mdls,"b45"))
   
@@ -223,7 +225,7 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
 }
 
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T,plotParams=T) {
+plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T,plotParams=T,rawData=NULL) {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -283,11 +285,14 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   if(point_size > 3) point_size = 3.0
   x_label <- "Time"
   title.1 <- title
-  if(plotParams){
+  if(plotParams == T){
     title.2 <- NULL
   }
-  else {
+  else if(plotParams == F){
     title.2 <- title
+  }
+  else {
+    title.2 <- NULL
   }
   plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title.1) +glegend1 +gstyle 
   
@@ -299,12 +304,16 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   }
   
   if(by.condition){
-    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=-0.05,ymax=0.0,xmin=start,xmax=end),linetype=0,alpha=0.5)
+    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=-0.05,ymax=0.0,xmin=start,xmax=end),linetype=0,alpha=0.5) 
   }
   plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max))
   plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) 
-  if(plotParams){
+  if(plotParams == T){
     combinedPlt <- plot_grid(plt1,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
+  }
+  else if(plotParams == "raw"){
+    plt.raw <- plotDyad(rawData,title = title,ylabel = "")
+    combinedPlt <- plot_grid(plt.raw,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
   }
   else {
     combinedPlt <- plt2
@@ -533,12 +542,25 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
 }
 
 
-computeStateSpace <- function(dyad,type=2,downsample=1,lag=0,x_mu=NULL,y_mu=NULL,verbose=F) {
+computeStateSpace <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL,verbose=F) {
   FS <- round(getFS(dyad))
   ax <- decimate(dyad[,2], downsample*FS)
   ay <- decimate(dyad[,3],downsample*FS)
   newFS <- round(1.0/downsample)
-  mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose)
+  mdl <- list(
+    x.base.r.squared=0,
+    y.base.r.squared=0,
+    x.r.squared=0, 
+    y.r.squared=0,
+    dx.r.squared=NA,
+    dy.r.squared=NA,
+    x.eq="s1",y.eq="s2",
+    b0=NA,b1=NA,b2=NA,b3=NA,b4=NA,b5=NA,b21=NA,b45=NA)
+  
+  tryCatch(mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose),
+           error=function(e){
+             print(e)
+           })
   mdl$Timestamp <- min(dyad$Timestamp)
   mdl$Duration <- (max(dyad$Timestamp) - min(dyad$Timestamp))
   mdl$Start <- min(dyad$Timestamp)
@@ -558,26 +580,28 @@ urlForModel <- function(m) {
 }
 
 
-analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),measure="EDA", downsample=1, minLag=0,maxLag=5,noPlots=F,relativeToLag=-1) {
+analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),measure="EDA", downsample=1, minLag=0,maxLag=5,noPlots=F,relativeToLag=-1,type=4,plotParams=T,pltTitle=NULL) {
   lagList <- list()
 n = 1;
   lags <- minLag:maxLag
+  mdls <- list()
   for (lag in lags) {
-    mdl <- analyzeDyad(f1,f2,dyad=dyad,xname=xname,yname=yname, norm=norm,window_size=window_size,window_step=window_step,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots,measure = measure,downsample = downsample)
+    mdl <- analyzeDyad(f1,f2,dyad=dyad,xname=xname,yname=yname, norm=norm,window_size=window_size,window_step=window_step,start=start, end=end,func=func,na.rm=na.rm,simulate=simulate,dname=dname,lag=lag,noPlots = noPlots,plotParams = plotParams, pltTitle = pltTitle, measure = measure,downsample = downsample,type = type)
     mdlSummary <- mdl$summary
     mdlSummary$lag <- lag
-    lagList[[lag+1]] <- mdlSummary
+    lagList[[n]] <- mdlSummary
+    mdls[[n]] <- mdl
     n = n+1
   }
   
-  output <- lagList[[minLag+1]]
+  output <- lagList[[1]]
   dxVals <- get.key(lagList,key = "dx.r.squared",as.list = T)
   dyVals <- get.key(lagList,key = "dy.r.squared",as.list = T)
   
   dxValsByLag <- unlist(do.call(cbind,dxVals))
   dyValsByLag <- unlist(do.call(cbind,dyVals))
-  dxOptimalLag <- apply(dxValsByLag,1,which.max) -1 #Compensate for lack of 0 indexing in R
-  dyOptimalLag <- apply(dyValsByLag,1,which.max) -1 #Compensate for lack of 0 indexing in R
+  dxOptimalLag <- lags[apply(dxValsByLag,1,which.max)] #Compensate for lack of 0 indexing in R
+  dyOptimalLag <- lags[apply(dyValsByLag,1,which.max)] #Compensate for lack of 0 indexing in R
   
   if(relativeToLag > -1){
     dxOptimal <- rowMaxs(dxValsByLag) - dxValsByLag[,relativeToLag+1]
@@ -596,7 +620,7 @@ n = 1;
   
   print(plot.lagparams(output,xname=xname,yname=yname,title=paste(xname,"&",yname)))
   
-  return(output)
+  return(list(output=output,mdls=mdls))
   
 }
 
@@ -631,7 +655,7 @@ n = 1;
 
 
 
-analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=2,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F) {
+analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=4,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F, codes="",useRealTime=F, incTSD=F) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   
   if(length(dyad) > 0){
@@ -654,9 +678,16 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   
   if(is.na(x.baseline)) x.baseline <- mean(d[,2],na.rm=T)
   if(is.na(y.baseline)) y.baseline <- mean(d[,3],na.rm=T)
+  fs <- getFS(d)
   
+  FUN_TSD <- function(data){
+    out <- func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline)
+    out$xTSD <- tsDescriptives(data[,2],fs=fs)
+    out$yTSD <- tsDescriptives(data[,3],fs=fs)
+    return(out)
+  }
   FUN <- function(data){
-    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline));
+    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline))
   }
   
 
@@ -675,14 +706,55 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   d <- subset(d,((Timestamp >= start) & (Timestamp < end)) )
   
   fs <- getFS(d)
+  if(incTSD){
+    data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN_TSD,na.rm = na.rm,verbose=verbose)
+  }
+  else {
+    data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN,na.rm = na.rm,verbose=verbose)
+  }
+  if(codes != ""){
+    
+    if (useRealTime) {
+      ERCodes <- read.RTCodes(codes)
+      validateConditionTimes(d,ERCodes) #Check that condition times don't exceed dyad start/end times and throw meaningful error messages
+      
+      start.ctime <- as.POSIXct(start,format=timeformat)
+      end.ctime <- as.POSIXct(end,format=timeformat)
+      if(verbose){print(paste("Dyad valid from ",start,"to",end,"with duration of",round(difftime(end.ctime,start.ctime,units="secs")),"seconds"))}
+      ERCodes$Start.Time <- difftime(as.POSIXct(ERCodes$Start.Time,format=timeformat),start.ctime, units = "secs")
+      ERCodes$End.Time <- difftime(as.POSIXct(ERCodes$End.Time,format=timeformat),start.ctime, units="secs")
+    }
+    
+    else {
+      ERCodes <- read.Codes(codes)
+    }
+    l <- dim(ERCodes)[1]
+    ERCodes[l+1,] <- c(NA,-1,-1)
+    addNA(ERCodes$Condition)
+    for(n in 1:length(data)){
+      if(is.na(data[[n]]) == F){
+        dt <- data[[n]]$Start - start
+        data[[n]]$Condition <- ERCodes$Condition[[l+1]]
+        for (i in 1:l) {
+          if( (dt >= ERCodes[i,"Start.Time"]) & (dt < ERCodes[i,"End.Time"])){
+            data[[n]]$Condition <- ERCodes$Condition[[i]]
+          }
+        }
+      }
+    }
+    
+  }
   
-  data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN,na.rm = na.rm,verbose=verbose)
+  
+  
   out <- list()
   
   if(noPlots == F){
-    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = F,title = pltTitle,plotParams=plotParams)
+    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=d)
     print(pltData)
     out$plt <- pltData
+    out$rawPlot <- plotDyad(d,ylabel = measure,title = pltTitle)
+    
   }
   n <- length(get.key(data,"x.r.squared"))
   mdls <- data
@@ -704,11 +776,20 @@ describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
   return(o.describeBy(interdependence, group,tex = F,digits = 3))
 }
 
-saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname="a",bname="b"){
+saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname="a",bname="b",by.condition=F){
   timeformat ="%Y-%m-%dT%H:%M:%S%z"
   d <- dyadData$mdls
   tz <- attr(d[[1]]$Timestamp,"tz")
-  if(is.null(d[[1]]$Condition)){
+  if( (is.null(d[[1]]$Condition) == F) & by.condition ){
+    if(I3.only){
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"))
+      
+    }
+    else {
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+    }
+  }
+  else {
     if(I3.only){
       a.name <- paste0("P-",aname,"_I3")
       b.name <- paste0("P-",bname,"_I3")
@@ -719,15 +800,7 @@ saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname
     else {
       data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat), a_I3=get.key(d,"dx.r.squared"),b_I3=get.key(d,"dy.r.squared"),a_selfreg=get.key(d,"b1"),a_coreg=get.key(d,"b2"),a_interaction=get.key(d,"b21"),b_selfreg=get.key(d,"b4"),b_coreg=get.key(d,"b5"),b_interaction=get.key(d,"b45"))
     }
-  }
-  else {
-    if(I3.only){
-      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"))
-      
-    }
-    else {
-      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
-    }
+    
   }
   
   if(is.null(outputFilename)){

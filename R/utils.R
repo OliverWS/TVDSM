@@ -969,7 +969,7 @@ critical.r <- function( n, alpha = .05 ) {
 }
 
 
-o.corplot <- function(data) {
+o.corplot <- function(data, as.cormat = F) {
   source("https://raw.githubusercontent.com/briatte/ggcorr/master/ggcorr.R")
   
   data <- as.data.frame(data)
@@ -978,14 +978,26 @@ o.corplot <- function(data) {
   mid = "#EEEEEE"
   high = "#F21A00"
   
-  gg <- ggcorr(data, geom = "blank", label = F, hjust = 1,layout.exp = 1.1) + 
-    geom_tile(aes_string(fill = "coefficient", alpha = paste("abs(coefficient) >", cutoff))) +
- #   scale_alpha_manual(values = c("TRUE" = 0.75, "FALSE" = 0)) +
-    scale_fill_gradient2("r", low = low, mid = mid, high = high, midpoint = 0, limits = c(-1, 1)) +
-    geom_text(aes(x, y, label = label),
-              color = "black", size = 4,
-              show.legend = FALSE) +
-  guides(alpha=F)
+  if(as.cormat){
+    gg <- ggcorr(data=NULL, cor_martrix=data, geom = "blank", label = F, hjust = 1,layout.exp = 1.1) + 
+      geom_tile(aes_string(fill = "coefficient", alpha = paste("abs(coefficient) >", cutoff))) +
+      #   scale_alpha_manual(values = c("TRUE" = 0.75, "FALSE" = 0)) +
+      scale_fill_gradient2("r", low = low, mid = mid, high = high, midpoint = 0, limits = c(-1, 1)) +
+      geom_text(aes(x, y, label = label),
+                color = "black", size = 4,
+                show.legend = FALSE) +
+      guides(alpha=F)
+  }
+  else {
+    gg <- ggcorr(data, geom = "blank", label = F, hjust = 1,layout.exp = 1.1) + 
+      geom_tile(aes_string(fill = "coefficient", alpha = paste("abs(coefficient) >", cutoff))) +
+      #   scale_alpha_manual(values = c("TRUE" = 0.75, "FALSE" = 0)) +
+      scale_fill_gradient2("r", low = low, mid = mid, high = high, midpoint = 0, limits = c(-1, 1)) +
+      geom_text(aes(x, y, label = label),
+                color = "black", size = 4,
+                show.legend = FALSE) +
+      guides(alpha=F)
+  }
   
   return(gg)
 }

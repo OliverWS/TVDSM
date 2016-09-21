@@ -354,7 +354,7 @@ read.dyad <- function(f,sample_rate=32.0,p1.name=NULL,p2.name=NULL,start=strptim
   return(na.omit(outputData))
 }
 
-as.dyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F) {
+as.dyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F,na.interpolate=T,interpolation.method=na.spline) {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))
   
@@ -392,6 +392,12 @@ as.dyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F) {
     else {
       dyad[[cname.1]] <- dyad.p1[[c]]
       dyad[[cname.2]] <- dyad.p2[[c]]
+    }
+    
+    if(na.interpolate){
+      dyad[[cname.1]] <- interpolation.method(dyad[[cname.1]])
+      dyad[[cname.2]] <- interpolation.method(dyad[[cname.2]])
+      
     }
 
   }

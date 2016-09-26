@@ -84,7 +84,7 @@ validateConditionTimes <- function(d,codes,timeformat ="%Y-%m-%d %H:%M:%S"){
 
 
 analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, type=4,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%Y-%m-%d %H:%M:%S"){
-  
+  measure = cols[0]
   if(length(dyad) > 0){
     d <- dyad
   }
@@ -98,29 +98,29 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
   
 
   if(start != ""){
-    start <- strptime(start,format=timeformat)
+    start <- strptime(start,format=timeformat,tz = "")
   }
   else {
     start <- d$Timestamp[[1]]
   }
   if(end != ""){
-    end <- strptime(end,format=timeformat)
+    end <- strptime(end,format=timeformat,tz = "")
   }
   else {
     end <- d$Timestamp[[length(d$Timestamp)]]
   }
-  d <- subset(d,((Timestamp >= start) & (Timestamp < end)) )
+  d <- subset(d,((Timestamp >= start) & (Timestamp <= end)) )
  
   
   if (useRealTime) {
     ERCodes <- read.RTCodes(codes)
     validateConditionTimes(d,ERCodes) #Check that condition times don't exceed dyad start/end times and throw meaningful error messages
     
-    start.ctime <- as.POSIXct(start,format=timeformat)
-    end.ctime <- as.POSIXct(end,format=timeformat)
+    start.ctime <- as.POSIXct(start,format=timeformat,tz = "")
+    end.ctime <- as.POSIXct(end,format=timeformat,tz = "")
     if(verbose){print(paste("Dyad valid from ",start,"to",end,"with duration of",round(difftime(end.ctime,start.ctime,units="secs")),"seconds"))}
-    ERCodes$Start.Time <- difftime(as.POSIXct(ERCodes$Start.Time,format=timeformat),start.ctime, units = "secs")
-    ERCodes$End.Time <- difftime(as.POSIXct(ERCodes$End.Time,format=timeformat),start.ctime, units="secs")
+    ERCodes$Start <- difftime(as.POSIXct(ERCodes$Start.Time,format=timeformat,tz = ""),start.ctime, units = "secs")
+    ERCodes$End <- difftime(as.POSIXct(ERCodes$End.Time,format=timeformat,tz = ""),start.ctime, units="secs")
   }
   else {
     ERCodes <- read.Codes(codes)
@@ -143,17 +143,17 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
   }
   for(n in 1:dim(ERCodes)[[1]]){
     if(!is.na(ERCodes$Condition[[n]])){
-      start = ERCodes$Start.Time[[n]]*FS
-      end = ERCodes$End.Time[[n]]*FS
+      start = ERCodes$Start[[n]]*FS
+      end = ERCodes$End[[n]]*FS
       if(end >= dim(d)[[1]]){
         end = dim(d)[[1]]-1
       }
       mdls[[n]] <- FUN(d[start:end,])
       mdls[[n]]$Condition <- ERCodes$Condition[[n]]
-      mdls[[n]]$Duration <- (ERCodes$End.Time[[n]] - ERCodes$Start.Time[[n]])
+      mdls[[n]]$Duration <- (ERCodes$End[[n]] - ERCodes$Start[[n]])
       mdls[[n]]$Start <- ERCodes$Start.Time[[n]] 
       mdls[[n]]$End <- ERCodes$End.Time[[n]] 
-      mdls[[n]]$Timestamp <- ERCodes$Start.Time[[n]] + (ERCodes$End.Time[[n]] - ERCodes$Start.Time[[n]])/2
+      mdls[[n]]$Timestamp <- as.POSIXct(ERCodes$Start.Time[[n]],tz = "") + (ERCodes$End[[n]] - ERCodes$Start[[n]])/2
       mdls[[n]]$dyad.name <- dname 
       
     }
@@ -162,16 +162,17 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
     }
     
   }
-  startD = ERCodes$Start.Time[[1]]*FS
-  endD = ERCodes$End.Time[[dim(ERCodes)[1]]]*FS
+  startD = ERCodes$Start[[1]]*FS
+  endD = ERCodes$End[[dim(ERCodes)[1]]]*FS
   
   rawD <- d[start:end,]
-  
+  colnames(rawD) <- c("Timestamp",p1.name,p2.name)
+
   plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams,rawData = rawD)
   print(plt)
   mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n),Condition=get.key(mdls,"Condition"), Start=get.key(mdls,"Start"),End=get.key(mdls,"End"), x.r.squared=get.key(mdls,"dx.r.squared"),y.r.squared=get.key(mdls,"dy.r.squared"),x.selfreg=get.key(mdls,"b1"),x.coreg=get.key(mdls,"b2"),x.interaction=get.key(mdls,"b21"),y.selfreg=get.key(mdls,"b4"),y.coreg=get.key(mdls,"b5"),y.interaction=get.key(mdls,"b45"))
   
-  output <- list(mdls=mdls,summary=mdlData,plt=plt)
+  output <- list(mdls=mdls,summary=mdlData,plt=plt,rawPlot=plotDyad(rawD,ylabel =measure,title = dname))
   
   return(output)
   
@@ -225,7 +226,7 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
 }
 
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T,plotParams=T,rawData=NULL) {
+plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T,rawData=NULL) {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -277,7 +278,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   glegend2 <- scale_colour_discrete(name  = "Effect Size",
                                     breaks=c("x.r2","y.r2"),
                                     labels=r2.labels)
-  gstyle <- guides(colour = guide_legend(
+  gstyle <- guides(colour = guide_legend(override.aes=list(fill=NA),
     label.theme = element_text(size=15,angle=0),label.hjust=0,label.vjust=0),title.theme=element_text(size=15,angle=0))
   x_min = min(start)
   x_max = max(end)
@@ -302,16 +303,30 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
     plt1 <- plt1 + geom_point(size=point_size) 
     plt2 <- plt2 + geom_point(size=point_size) 
   }
-  
-  if(by.condition){
-    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=-0.05,ymax=0.0,xmin=start,xmax=end),linetype=0,alpha=0.5) 
-  }
   plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max))
   plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) 
+  
+  
+  if(by.condition){
+    CONDITION_HEIGHT <- ggrel.y(plt=plt2, y= 0.1)
+    y.min <- ggrel.y(plt=plt2, y= 0)
+    
+    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=(y.min - CONDITION_HEIGHT),ymax=y.min,xmin=start,xmax=end),linetype=0,alpha=0.75) 
+    if(autoscale == F){
+      plt2 <- plt2 + ylim(ggrel.y(plt=plt2, y= 0),1)
+    }
+    
+  }
+  else {
+    if(autoscale == F){
+      plt2 <- plt2 + ylim(0,1)
+    }
+  }
   if(plotParams == T){
     combinedPlt <- plot_grid(plt1,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
   }
   else if(plotParams == "raw"){
+    colnames(rawData) <- c("Timestamp",xname,yname)
     plt.raw <- plotDyad(rawData,title = title,ylabel = "")
     combinedPlt <- plot_grid(plt.raw,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
   }
@@ -703,7 +718,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   else {
     end <- max(d$Timestamp)
   }
-  d <- subset(d,((Timestamp >= start) & (Timestamp < end)) )
+  d <- subset(d,((Timestamp >= start) & (Timestamp <= end)) )
   
   fs <- getFS(d)
   if(incTSD){
@@ -721,22 +736,22 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
       start.ctime <- as.POSIXct(start,format=timeformat)
       end.ctime <- as.POSIXct(end,format=timeformat)
       if(verbose){print(paste("Dyad valid from ",start,"to",end,"with duration of",round(difftime(end.ctime,start.ctime,units="secs")),"seconds"))}
-      ERCodes$Start.Time <- difftime(as.POSIXct(ERCodes$Start.Time,format=timeformat),start.ctime, units = "secs")
-      ERCodes$End.Time <- difftime(as.POSIXct(ERCodes$End.Time,format=timeformat),start.ctime, units="secs")
+      ERCodes$Start <- difftime(as.POSIXct(ERCodes$Start.Time,format=timeformat),start.ctime, units = "secs")
+      ERCodes$End <- difftime(as.POSIXct(ERCodes$End.Time,format=timeformat),start.ctime, units="secs")
     }
     
     else {
       ERCodes <- read.Codes(codes)
     }
     l <- dim(ERCodes)[1]
-    ERCodes[l+1,] <- c(NA,-1,-1)
+    ERCodes[l+1,] <- c(NA,-1,-1,-1,-1)
     addNA(ERCodes$Condition)
     for(n in 1:length(data)){
       if(is.na(data[[n]]) == F){
         dt <- data[[n]]$Start - start
         data[[n]]$Condition <- ERCodes$Condition[[l+1]]
         for (i in 1:l) {
-          if( (dt >= ERCodes[i,"Start.Time"]) & (dt < ERCodes[i,"End.Time"])){
+          if( (dt >= ERCodes[i,"Start"]) & (dt < ERCodes[i,"End"])){
             data[[n]]$Condition <- ERCodes$Condition[[i]]
           }
         }
@@ -753,6 +768,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=d)
     print(pltData)
     out$plt <- pltData
+    colnames(d) <- c("Timestamp",xname,yname)
+    
     out$rawPlot <- plotDyad(d,ylabel = measure,title = pltTitle)
     
   }
@@ -771,12 +788,12 @@ describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
   
   group <- c(rep_len(xname,length(dx)),rep_len(yname,length(dy)),rep_len("Dyad",length(dy)))
   interdependence <- c(dx,dy,dyad)
-  data <- data.frame(Participant=group,R2=interdependence)
+  data <- data.frame(Participant=group,I3=interdependence)
   
   return(o.describeBy(interdependence, group,tex = F,digits = 3))
 }
 
-saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname="a",bname="b",by.condition=F){
+saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname=NULL,bname=NULL,by.condition=F){
   timeformat ="%Y-%m-%dT%H:%M:%S%z"
   d <- dyadData$mdls
   tz <- attr(d[[1]]$Timestamp,"tz")
@@ -786,7 +803,15 @@ saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname
       
     }
     else {
-      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),Condition=get.key(d,"Condition"), a.r.squared=get.key(d,"dx.r.squared"),b.r.squared=get.key(d,"dy.r.squared"),a.selfreg=get.key(d,"b1"),a.coreg=get.key(d,"b2"),a.interaction=get.key(d,"b21"),b.selfreg=get.key(d,"b4"),b.coreg=get.key(d,"b5"),b.interaction=get.key(d,"b45"))
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat),
+                         Condition=get.key(d,"Condition"))
+      
+      data[paste0(aname,".I3")]=get.key(d,"dx.r.squared")
+      data[paste0(bname,".I3")]=get.key(d,"dy.r.squared")
+      data[paste0(aname,".SelfReg")]=get.key(d,"b1")
+      data[paste0(aname,".CoReg")]=get.key(d,"b2")
+      data[paste0(bname,".SelfReg")]=get.key(d,"b4")
+      data[paste0(bname,".CoReg")]=get.key(d,"b5")
     }
   }
   else {
@@ -798,7 +823,13 @@ saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname
       data[b.name] <- get.key(d,"dy.r.squared")
     }
     else {
-      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat), a_I3=get.key(d,"dx.r.squared"),b_I3=get.key(d,"dy.r.squared"),a_selfreg=get.key(d,"b1"),a_coreg=get.key(d,"b2"),a_interaction=get.key(d,"b21"),b_selfreg=get.key(d,"b4"),b_coreg=get.key(d,"b5"),b_interaction=get.key(d,"b45"))
+      data <- data.frame(Timestamp=strftime(as.POSIXlt(as.numeric(get.key(d, "Timestamp" )),origin = "1970-01-01",tz = tz), format=timeformat))
+      data[paste0(aname,".I3")]=get.key(d,"dx.r.squared")
+      data[paste0(bname,".I3")]=get.key(d,"dy.r.squared")
+      data[paste0(aname,".SelfReg")]=get.key(d,"b1")
+      data[paste0(aname,".CoReg")]=get.key(d,"b2")
+      data[paste0(bname,".SelfReg")]=get.key(d,"b4")
+      data[paste0(bname,".CoReg")]=get.key(d,"b5")
     }
     
   }

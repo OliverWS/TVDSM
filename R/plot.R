@@ -299,6 +299,19 @@ plotMetric <- function(data,metric,group,sig.cutoff=0.05) {
   
 }
 
+ggrel.x <- function(plt=last_plot(),x=0.5){
+  x.range <- ggplot_build(plt)$panel$ranges[[1]]$x.range
+  coord.x = min(x.range) + (max(x.range) - min(x.range))*x
+  return(coord.x)
+  
+}
+
+ggrel.y <- function(plt=last_plot(),y=0.5){
+  y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
+  coord.y = min(y.range) + (max(y.range) - min(y.range))*y
+  return(coord.y)
+  
+}
 
 annotate.relative <- function(plt=last_plot(),geom="text",x=0.5,y=0.1,...){
   x.range <- ggplot_build(plt)$panel$ranges[[1]]$x.range

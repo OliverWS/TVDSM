@@ -83,7 +83,7 @@ validateConditionTimes <- function(d,codes,timeformat ="%Y-%m-%d %H:%M:%S"){
 #' analyzeByCondition("PersonA.csv","PersonB.csv",codes="ConditionTimes.csv")
 
 
-analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, type=4,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%Y-%m-%d %H:%M:%S"){
+analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, type=4,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%Y-%m-%d %H:%M:%S", ...){
   measure = cols[0]
   if(length(dyad) > 0){
     d <- dyad
@@ -124,6 +124,8 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
   }
   else {
     ERCodes <- read.Codes(codes)
+    ERCodes$Start <- ERCodes$Start.Time
+    ERCodes$End <- ERCodes$End.Time
   }
   
   if(verbose){View(ERCodes)}
@@ -136,7 +138,10 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
   y.baseline <- mean(d[,3],na.rm=T)
   
   FUN <- function(data){
-    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline,verbose=verbose));
+    out <- func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline,verbose=verbose)
+    out$xTSD <- tsDescriptives(data[,2],fs=FS)
+    out$yTSD <- tsDescriptives(data[,3],fs=FS)
+    return(out);
   }
   if(verbose){
     pb <- progress_bar$new(total = dim(ERCodes)[[1]])
@@ -153,7 +158,7 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
       mdls[[n]]$Duration <- (ERCodes$End[[n]] - ERCodes$Start[[n]])
       mdls[[n]]$Start <- ERCodes$Start.Time[[n]] 
       mdls[[n]]$End <- ERCodes$End.Time[[n]] 
-      mdls[[n]]$Timestamp <- as.POSIXct(ERCodes$Start.Time[[n]],tz = "") + (ERCodes$End[[n]] - ERCodes$Start[[n]])/2
+      mdls[[n]]$Timestamp <- ERCodes$Start.Time[[n]] + (ERCodes$End[[n]] - ERCodes$Start[[n]])/2
       mdls[[n]]$dyad.name <- dname 
       
     }
@@ -162,13 +167,13 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
     }
     
   }
-  startD = ERCodes$Start[[1]]*FS
-  endD = ERCodes$End[[dim(ERCodes)[1]]]*FS
+  startD = min(ERCodes$Start)*FS
+  endD = max(ERCodes$End)*FS
   
-  rawD <- d[start:end,]
+  rawD <- d[startD:endD,]
   colnames(rawD) <- c("Timestamp",p1.name,p2.name)
 
-  plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams,rawData = rawD)
+  plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams,rawData = rawD, ...)
   print(plt)
   mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n),Condition=get.key(mdls,"Condition"), Start=get.key(mdls,"Start"),End=get.key(mdls,"End"), x.r.squared=get.key(mdls,"dx.r.squared"),y.r.squared=get.key(mdls,"dy.r.squared"),x.selfreg=get.key(mdls,"b1"),x.coreg=get.key(mdls,"b2"),x.interaction=get.key(mdls,"b21"),y.selfreg=get.key(mdls,"b4"),y.coreg=get.key(mdls,"b5"),y.interaction=get.key(mdls,"b45"))
   
@@ -226,7 +231,7 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
 }
 
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T,rawData=NULL) {
+plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL) {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -265,6 +270,10 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
     glegend1 <- scale_colour_discrete(name  = "Beta Coefficents",
                                       breaks=c("b1","b2", "b4","b5"),
                                       labels=param.labels)
+    glegend1.gray <- scale_shape_discrete(name  = "Beta Coefficents",
+                                        breaks=c("b1","b2", "b4","b5"),
+                                        labels=param.labels)
+    
     
   }
   else {
@@ -273,13 +282,31 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   glegend1 <- scale_colour_discrete(name  = "Coefficients",
                                       breaks=c("b1","b2","b21", "b4","b5","b45"),
                                       labels=param.labels)
+  glegend1.gray <-  scale_shape_discrete(name  = "Coefficients",
+                                                 breaks=c("b1","b2","b21", "b4","b5","b45"),
+                                                 labels=param.labels)
+    
+  
   }
-
   glegend2 <- scale_colour_discrete(name  = "Effect Size",
                                     breaks=c("x.r2","y.r2"),
                                     labels=r2.labels)
-  gstyle <- guides(colour = guide_legend(override.aes=list(fill=NA),
-    label.theme = element_text(size=15,angle=0),label.hjust=0,label.vjust=0),title.theme=element_text(size=15,angle=0))
+  glegend2.gray <-scale_shape_discrete(name  = "Effect Size",
+                                     breaks=c("x.r2","y.r2"),
+                                     labels=r2.labels)
+    
+  
+
+  if(grayscale){
+    gstyle <- guides(colour = guide_legend(override.aes=list(fill=NA,size=5,linetype=0),
+                                           label.theme = element_text(size=15,angle=0),label.hjust=0,label.vjust=0),title.theme=element_text(size=15,angle=0))
+  }
+  else {
+    gstyle <- guides(colour = guide_legend(override.aes=list(fill=NA),
+                                           label.theme = element_text(size=15,angle=0),label.hjust=0,label.vjust=0),title.theme=element_text(size=15,angle=0))
+  }
+
+  
   x_min = min(start)
   x_max = max(end)
   point_size = 3*(50.0/len)
@@ -295,23 +322,39 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   else {
     title.2 <- NULL
   }
-  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title.1) +glegend1 +gstyle 
   
-  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=1) + xlab(x_label) + ylab(NULL) + ggtitle(title.2) + glegend2 + gstyle
+  line_size = 1
+  if(grayscale) line_size = 0.75
+  plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=line_size) + xlab(x_label) + ylab(NULL) + ggtitle(title.1) +glegend1 +gstyle 
+  
+  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=line_size) + xlab(x_label) + ylab(NULL) + ggtitle(title.2) + glegend2 + gstyle
   
   if(point_size > 1.25) {
-    plt1 <- plt1 + geom_point(size=point_size) 
-    plt2 <- plt2 + geom_point(size=point_size) 
+    if(grayscale){
+      plt1 <- plt1 + geom_point(size=point_size,aes(shape=variable)) 
+      plt2 <- plt2 + geom_point(size=point_size,aes(shape=variable)) 
+    }
+    else {
+      plt1 <- plt1 + geom_point(size=point_size) 
+      plt2 <- plt2 + geom_point(size=point_size) 
+    }
   }
   plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max))
   plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) 
   
+  if(grayscale){
+    plt1 <- plt1 + glegend1.gray
+    plt2 <- plt2 + glegend2.gray
+  }
   
   if(by.condition){
     CONDITION_HEIGHT <- ggrel.y(plt=plt2, y= 0.1)
     y.min <- ggrel.y(plt=plt2, y= 0)
     
     plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=(y.min - CONDITION_HEIGHT),ymax=y.min,xmin=start,xmax=end),linetype=0,alpha=0.75) 
+    if(grayscale){
+      plt2 <- plt2 + scale_fill_grey()
+    }
     if(autoscale == F){
       plt2 <- plt2 + ylim(ggrel.y(plt=plt2, y= 0),1)
     }
@@ -670,7 +713,7 @@ n = 1;
 
 
 
-analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=4,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F, codes="",useRealTime=F, incTSD=F) {
+analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=4,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F, codes="",useRealTime=F, incTSD=T, ...) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   
   if(length(dyad) > 0){
@@ -742,6 +785,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     
     else {
       ERCodes <- read.Codes(codes)
+      ERCodes$Start  <- ERCodes$Start.Time
+      ERCodes$End <- ERCodes$End.Time
     }
     l <- dim(ERCodes)[1]
     ERCodes[l+1,] <- c(NA,-1,-1,-1,-1)
@@ -765,12 +810,12 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   out <- list()
   
   if(noPlots == F){
-    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=d)
+    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=d, ...)
     print(pltData)
     out$plt <- pltData
     colnames(d) <- c("Timestamp",xname,yname)
     
-    out$rawPlot <- plotDyad(d,ylabel = measure,title = pltTitle)
+    out$rawPlot <- plotDyad(d,ylabel = measure,title = pltTitle, ...)
     
   }
   n <- length(get.key(data,"x.r.squared"))

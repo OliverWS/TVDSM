@@ -88,10 +88,13 @@ plot.eda <- function(data,title="EDA Data",show_acc=F, show_raw_acc=F) {
   
   
 }
-plotDyad <- function(d, title="",ylabel="EDA",legend_label="Participant") {
+plotDyad <- function(d, title="",ylabel="EDA",legend_label="Participant", grayscale=F) {
   data <- melt(d,id.vars=c("Timestamp"),variable_name = legend_label)
   g <- ggplot(data,aes_string(x="Timestamp",y="value",col=legend_label)) + geom_line(size=1) + ylab(ylabel) + xlab("Time")
   g <- g + ggtitle(title)
+  if(grayscale){
+    g <- g + scale_color_grey()
+  }
   print(g)
   return(g)
 }
@@ -320,4 +323,14 @@ annotate.relative <- function(plt=last_plot(),geom="text",x=0.5,y=0.1,...){
   coord.y = min(y.range) + (max(y.range) - min(y.range))*y
   
   return(annotate(geom=geom,x = coord.x,y=coord.y,...))
+}
+
+scatter_plot <- function(x,y,data){
+  p<- ggplot(data[1:12,], aes_string(x=x, y=y)) +
+    geom_point() +    # Use hollow circles
+    # geom_text(aes(label=ID),nudge_y=0.005) +
+    geom_smooth(method="lm",se=T)    # Don't add shaded confidence region
+  cor.all <- cor_fun(data[[x]], data[[y]])
+  p <- p + annotate.relative(geom="label", plt = p,y=0.95,x=0.9,label=cor.all,hjust="right")
+  p
 }

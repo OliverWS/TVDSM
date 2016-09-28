@@ -27,12 +27,13 @@ tsDescriptives <- function(data,fs=32) {
   max.data <- max(data)
   min.data <- min(data)
   range.data <- range(data)
-  slope <- mean(diff(data))
+  slope <- sum(diff(data))
+  slopeRatio <- sum(diff(data) > 0)/length(data)
   try(data.ds <- decimate(data,q = fs),silent=T)
   ac <- NA
   try(ac <- acf(data.ds,lag.max=1,type="correlation",plot = F)$acf[2], silent=T)
   
-  return(list(mean=m,se=st.err, sd=st.dev, var=var(data,na.rm=T), trend=trend,min=min.data,max=max.data,slope=slope,range=(max.data-min.data),autocorrelation=ac))
+  return(list(mean=m,se=st.err, sd=st.dev, var=var(data,na.rm=T), trend=trend,min=min.data,max=max.data,slope=slope,slopeRatio=slopeRatio,range=(max.data-min.data),autocorrelation=ac))
 }
 
 

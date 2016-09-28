@@ -222,7 +222,7 @@ read.empatica <- function(path) {
   bvp <- read.empatica.bvp(file.path(path,"BVP.csv"))
   ibi <- read.empatica.ibi(file.path(path,"IBI.csv"))
   temp <- read.empatica.ibi(file.path(path,"IBI.csv"))
-  eda <- read.empatica.ibi(file.path(path,"EDA.csv"))
+  eda <- read.empatica.eda(file.path(path,"EDA.csv"))
   
   data <- list(ACC=acc,BVP=bvp,EDA=eda,TEMP=temp,IBI=ibi)
   attr(data,"class") <- "eda"
@@ -263,7 +263,7 @@ read.empatica.ibi <- function(file){
   start <- as.POSIXct(x = start_s,origin = "1970-01-01")
   dt <- as.difftime(raw$V1[2:length(raw$V1)],units = "secs")
   timestamps <- start+dt
-  ibi <- raw$V2[2:length(raw$V2)]
+  ibi <- as.numeric(raw$V2[2:length(raw$V2)])
   data <- data.frame(Timestamp=timestamps, IBI=ibi)
   data
 }

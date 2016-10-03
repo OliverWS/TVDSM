@@ -158,7 +158,7 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
       mdls[[n]]$Duration <- (ERCodes$End[[n]] - ERCodes$Start[[n]])
       mdls[[n]]$Start <- ERCodes$Start.Time[[n]] 
       mdls[[n]]$End <- ERCodes$End.Time[[n]] 
-      mdls[[n]]$Timestamp <- ERCodes$Start.Time[[n]] + (ERCodes$End[[n]] - ERCodes$Start[[n]])/2
+      mdls[[n]]$Timestamp <- as.POSIXct(ERCodes$Start.Time[[n]],tz="") +  mdls[[n]]$Duration/2
       mdls[[n]]$dyad.name <- dname 
       
     }
@@ -167,10 +167,10 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
     }
     
   }
-  startD = min(ERCodes$Start)*FS
-  endD = max(ERCodes$End)*FS
+  startD = min(ERCodes$Start.Time)
+  endD = max(ERCodes$End.Time)
   
-  rawD <- d[startD:endD,]
+  rawD <- subset(d,((Timestamp >= startD) & (Timestamp <= endD)) )
   colnames(rawD) <- c("Timestamp",p1.name,p2.name)
 
   plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams,rawData = rawD, ...)
@@ -401,21 +401,25 @@ plot.density <- function(data,group="Dyad", xname='Particpant 1 Beta', yname="Pa
 
 statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=F,lag=0){
   if(is.null(lag)){
-    x_prime <- Lag(x,-1*lag)
-    y_prime <- Lag(y,-1*lag)
+    x_prime <-o.Lag(x,lag=0)
+    y_prime <- o.Lag(y,lag=0)
+    x_prime.zLag <- o.Lag(x,lag=0)
+    y_prime.zLag <- o.Lag(y,lag=0)
     
   }
   else {
     x_prime <-o.Lag(x,lag=lag)
     y_prime <- o.Lag(y,lag=lag)
+    x_prime.zLag <- o.Lag(x,lag=0)
+    y_prime.zLag <- o.Lag(y,lag=0)
     
   }
 
   s1 <- ""
   s2 <- ""
   
-  data <- data.frame(x_prime=x_prime,y_prime=y_prime, x=x,y=y)
-  
+  data <- data.frame(x_prime=x_prime,y_prime=y_prime, x=x,y=y,x_prime.zLag=x_prime.zLag,y_prime.zLag=y_prime.zLag)
+  data <- na.omit(data)
   base_x_model <- x_prime ~ I(x_mu-x)
   base_y_model <- y_prime ~ I(y_mu-y)
   
@@ -459,8 +463,8 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
   
   else if (type==4){
     
-    x_model <- x_prime ~ I(x_mu-x) + y_prime
-    y_model <- y_prime ~ I(y_mu-y) + x_prime
+    x_model <- x_prime ~ I(x_mu-x) + y_prime.zLag
+    y_model <- y_prime ~ I(y_mu-y) + x_prime.zLag
     
     
     eq <- list(x_model,y_model)

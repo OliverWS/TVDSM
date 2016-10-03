@@ -88,7 +88,7 @@ plot.eda <- function(data,title="EDA Data",show_acc=F, show_raw_acc=F) {
   
   
 }
-plotDyad <- function(d, title="",ylabel="EDA",legend_label="Participant", grayscale=F) {
+plotDyad <- function(d, title="",ylabel="EDA",legend_label="Participant", grayscale=F,...) {
   data <- melt(d,id.vars=c("Timestamp"),variable_name = legend_label)
   g <- ggplot(data,aes_string(x="Timestamp",y="value",col=legend_label)) + geom_line(size=1) + ylab(ylabel) + xlab("Time")
   g <- g + ggtitle(title)
@@ -97,6 +97,15 @@ plotDyad <- function(d, title="",ylabel="EDA",legend_label="Participant", graysc
   }
   print(g)
   return(g)
+}
+
+
+plotlyDyad <- function(d, title="",ylabel="EDA",legend_label="Participant", grayscale=F,...) {
+  data <- melt(d,id.vars=c("Timestamp"),variable_name = legend_label)
+  p <- plot_ly(data, x = "Timestamp", y="value",color=legend_label)
+  add_lines(p)
+  print(p)
+  return(p)
 }
 
 

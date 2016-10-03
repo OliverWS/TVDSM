@@ -1,6 +1,32 @@
 library(readxl)
 library(edfReader)
 library(lubridate)
+
+read.IBI <- function(file, startTime="1970-01-01 0:0:0",start=strptime(startTime,"%Y-%m-%d %H:%M:%S",tz = "")){
+  raw <- read.csv(file,header = F)
+  ibi.secs <- (raw$V1/1000.0)
+  timestamps <- start + as.difftime(ibi.secs,units = "secs")
+  IBI <- c(NA,diff(raw$V1))
+  data <- data.frame(Timestamp=timestamps, IBI=IBI)
+  data
+}
+
+read.IBI.TS <- function(file, startTime="1970-01-01 0:0:0",start=strptime(startTime,"%Y-%m-%d %H:%M:%S",tz = "")){
+  data <- read.IBI(file,startTime = startTime,start=start)
+  end <- max(data$Timestamp)
+  dt <- as.difftime(as.character(1.0),format = "%OS")
+  tstamps.secs <- seq(from = start, by=dt ,to = end)
+  output <- data.frame(Timestamp=tstamps.secs, IBI=NA)
+  for (n in seq_along(tstamps.secs)) {
+    t = tstamps.secs[n]
+    try(output$IBI[n] <- mean(data$IBI[which((data$Timestamp >= t) & (data$Timestamp < (t + dt)))],na.rm = T))
+  }
+  output$HR <- 60.0/(output$IBI/1000.0)
+  return(output)
+  
+}
+
+
 read.ERCodes <- function(path){
   if(grepl(".xls", path)){
     data <- read_excel(path,"text")

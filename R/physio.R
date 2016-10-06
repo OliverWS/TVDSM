@@ -65,7 +65,8 @@ dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_Dumm
     #   write.csv(sub,file = paste(filename,"_DummyCoded_",i-1,"&",i,".csv"),quote = T)
     # 
     # }
-    write.csv(eda,file = outputFile,quote = T)
+    eda$Timestamp <- strftime(eda$Timestamp, format="%Y-%m-%dT%H:%M:%OS3")
+    write.csv(as.data.frame(eda), file = outputFile,col.names = T,row.names = F)
 
   }
   return(eda)

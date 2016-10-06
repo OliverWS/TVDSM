@@ -619,7 +619,7 @@ computeStateSpace <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL
     x.eq="s1",y.eq="s2",
     b0=NA,b1=NA,b2=NA,b3=NA,b4=NA,b5=NA,b21=NA,b45=NA)
   
-  tryCatch(mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose),
+tryCatch(mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose),
            error=function(e){
              print(e)
            })

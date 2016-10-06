@@ -238,8 +238,14 @@ dyad.statespacegraph <- function(p1,p2,norm=T,epoch=1, step=0.25, title="State S
 
 }
 
-o.Lag <- function(x,lag=0) {
-  dx <- (Lag(x,(-1*lag)-1) - Lag(x,(-1*lag)+1))/2
+o.Lag <- function(x,lag=0, robust=F) {
+  if(robust){
+    dx <- (Lag(x,(-1*lag)-1) - Lag(x,(-1*lag)+1))/2
+  }
+  else {
+    dx <- Lag(x,(-1*lag)-1) -  Lag(x,(-1*lag))
+  }
+  
   return(dx)
 }
 

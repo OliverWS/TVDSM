@@ -255,6 +255,28 @@ read.empatica <- function(path) {
   return(data)
 }
 
+read.e4 <- function(path) {
+  FIELDS <- c("Z","Y","X","Battery","Temperature","EDA")
+  FILES <- c("ACC.csv","BVP.csv","EDA.csv","TEMP.csv","IBI.csv")
+  #First lets read the file header info
+  acc <- read.empatica.acc(file.path(path,"ACC.csv"))
+  bvp <- read.empatica.bvp(file.path(path,"BVP.csv"))
+  ibi <- read.empatica.ibi(file.path(path,"IBI.csv"))
+  temp <- read.empatica.temp(file.path(path,"TEMP.csv"))
+  eda <- read.empatica.eda(file.path(path,"EDA.csv"))
+  hr <- ead.empatica.hr(file.path(path,"HR.csv"))
+  df <- data.frame(Timestamp=bvp$Timestamp)
+  df$EDA <- interp(eda$EDA,q = 8,n = 5)
+  df$BVP <- bvp$BVP
+  df$X <- interp(acc$X,q = 2,n = 5)
+  df$Y <- interp(acc$Y,q = 2,n = 5)
+  df$Z <- interp(acc$Z,q = 2,n = 5)
+  df$Temp <- interp(temp$Temp,q = 8,n = 5)
+  df$HR <- interp(temp$HR,q = 64,n = 5)
+  return(df)
+}
+
+
 read.empatica.eda <- function(file){
   raw <- read.csv(file,header = F)
   start_s <- raw$V1[1]
@@ -268,7 +290,15 @@ read.empatica.eda <- function(file){
 }
 
 read.empatica.acc <- function(file){
-  
+  raw <- read.csv(file,header = F)
+  start_s <- raw$V1[1]
+  sample_rate <- as.numeric(raw$V1[2])
+  data <- data.frame(X=raw$V1[3:length(raw$V1)],Y=raw$V2[3:length(raw$V2)],Z=raw$V3[3:length(raw$V3)])
+  start <- as.POSIXct(x = start_s, origin = "1970-01-01")
+  dt <- as.difftime(as.character(1.0/sample_rate),format = "%OS")
+  timestamps <- seq(from = start, by=dt , along.with = data$X) 
+  data$Timestamp <- timestamps
+  data
 }
 
 read.empatica.bvp <- function(file){
@@ -280,6 +310,16 @@ read.empatica.bvp <- function(file){
   dt <- as.difftime(as.character(1.0/sample_rate),format = "%OS")
   timestamps <- seq(from = start, by=dt , along.with = data$BVP) 
   data$Timestamp <- timestamps
+  data
+}
+read.empatica.hr <- function(file){
+  raw <- read.csv(file,header = F)
+  start_s <- raw$V1[1]
+  start <- as.POSIXct(x = start_s,origin = "1970-01-01")
+  dt <- as.difftime(raw$V1[2:length(raw$V1)],units = "secs")
+  timestamps <- start+dt
+  HR <- as.numeric(raw$V2[2:length(raw$V2)])
+  data <- data.frame(Timestamp=timestamps, HR=HR)
   data
 }
 

@@ -57,17 +57,17 @@ dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_Dumm
     validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
     eda$Condition[which(validTimes)] <- condition
   }
-  # if(saveFile){
-  #   for (i in 2:nConditions) {
-  #     condition.2 <- as.character(conditions[["Condition"]][i])
-  #     condition.1 <- as.character(conditions[["Condition"]][i-1])
-  #     sub <- subset(eda, ((eda$Condition == condition.2) | (eda$Condition == condition.1)))
-  #     write.csv(sub,file = paste(filename,"_DummyCoded_",i-1,"&",i,".csv"),quote = T)
-  #     
-  #   }
-  #   write.csv(eda,file = outputFile,quote = T)
-  #   
-  # }
+  if(saveFile){
+    # for (i in 2:nConditions) {
+    #   condition.2 <- as.character(conditions[["Condition"]][i])
+    #   condition.1 <- as.character(conditions[["Condition"]][i-1])
+    #   sub <- subset(eda, ((eda$Condition == condition.2) | (eda$Condition == condition.1)))
+    #   write.csv(sub,file = paste(filename,"_DummyCoded_",i-1,"&",i,".csv"),quote = T)
+    # 
+    # }
+    write.csv(eda,file = outputFile,quote = T)
+
+  }
   return(eda)
 }
 

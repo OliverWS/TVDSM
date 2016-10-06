@@ -37,7 +37,7 @@ tsDescriptives <- function(data,fs=32) {
 }
 
 
-dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv",sep="",saveFile=F)) {
+dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv",sep=""),saveFile=F) {
   
   if(typeof(codes) == "character"){
     conditions <- read.Codes(codes)

@@ -175,7 +175,20 @@ analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, typ
 
   plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams,rawData = rawD, ...)
   print(plt)
-  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),name=rep_len(dname,n),Condition=get.key(mdls,"Condition"), Start=get.key(mdls,"Start"),End=get.key(mdls,"End"), x.r.squared=get.key(mdls,"dx.r.squared"),y.r.squared=get.key(mdls,"dy.r.squared"),x.selfreg=get.key(mdls,"b1"),x.coreg=get.key(mdls,"b2"),x.interaction=get.key(mdls,"b21"),y.selfreg=get.key(mdls,"b4"),y.coreg=get.key(mdls,"b5"),y.interaction=get.key(mdls,"b45"))
+  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),
+                        name=rep_len(dname,n),
+                        Condition=get.key(mdls,"Condition"), 
+                        Start=get.key(mdls,"Start"),
+                        End=get.key(mdls,"End"), 
+                        x.r.squared=get.key(mdls,"dx.r.squared"),
+                        y.r.squared=get.key(mdls,"dy.r.squared"),
+                        x.selfreg=get.key(mdls,"b1"),
+                        x.coreg=get.key(mdls,"b2"),
+                        x.interaction=get.key(mdls,"b21"),
+                        y.selfreg=get.key(mdls,"b4"),
+                        y.coreg=get.key(mdls,"b5"),
+                        y.interaction=get.key(mdls,"b45")
+                        )
   
   output <- list(mdls=mdls,summary=mdlData,plt=plt,rawPlot=plotDyad(rawD,ylabel =measure,title = dname))
   
@@ -351,7 +364,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
     CONDITION_HEIGHT <- ggrel.y(plt=plt2, y= 0.1)
     y.min <- ggrel.y(plt=plt2, y= 0)
     
-    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=(y.min - CONDITION_HEIGHT),ymax=y.min,xmin=start,xmax=end),linetype=0,alpha=0.75) 
+    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=(y.min - CONDITION_HEIGHT),ymax=y.min,xmin=start,xmax=end),linetype=0,alpha=1) 
     if(grayscale){
       plt2 <- plt2 + scale_fill_grey()
     }
@@ -766,8 +779,11 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     end <- max(d$Timestamp)
   }
   d <- subset(d,((Timestamp >= start) & (Timestamp <= end)) )
-  
   fs <- getFS(d)
+  if (window_size <= 0) {
+    window_size <- length(d$Timestamp)/fs
+    window_step <- window_size
+  }
   if(incTSD){
     data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN_TSD,na.rm = na.rm,verbose=verbose)
   }
@@ -788,14 +804,14 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     }
     
     else {
-      ERCodes <- read.Codes(codes)
+      ERCodes <- read.Codes(codes,...)
       ERCodes$Start  <- ERCodes$Start.Time
       ERCodes$End <- ERCodes$End.Time
     }
     l <- dim(ERCodes)[1]
     ERCodes[l+1,] <- c(NA,-1,-1,-1,-1)
     addNA(ERCodes$Condition)
-    for(n in 1:length(data)){
+    for(n in length(data):1){
       if(is.na(data[[n]]) == F){
         dt <- data[[n]]$Start - start
         data[[n]]$Condition <- ERCodes$Condition[[l+1]]
@@ -824,7 +840,27 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   }
   n <- length(get.key(data,"x.r.squared"))
   mdls <- data
-  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),start=get.key(mdls,"Start"),end=get.key(mdls,"End"),name=rep_len(dname,n), x.r.squared=get.key(mdls,"x.r.squared"),y.r.squared=get.key(mdls,"y.r.squared"),dx.r.squared=get.key(mdls,"dx.r.squared"),dy.r.squared=get.key(mdls,"dy.r.squared"))
+  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),
+                        name=rep_len(dname,n),
+                        Start=get.key(mdls,"Start"),
+                        End=get.key(mdls,"End"), 
+                        dx.r.squared=get.key(mdls,"dx.r.squared"),
+                        dy.r.squared=get.key(mdls,"dy.r.squared"),
+                        x.selfreg=get.key(mdls,"b1"),
+                        x.coreg=get.key(mdls,"b2"),
+                        x.interaction=get.key(mdls,"b21"),
+                        y.selfreg=get.key(mdls,"b4"),
+                        y.coreg=get.key(mdls,"b5"),
+                        y.interaction=get.key(mdls,"b45")
+                        
+  )
+  if(incTSD){
+    df.xTSD <- ldply(mdls,.fun = function(d){return(as.data.frame(d$xTSD))})
+    df.yTSD <- ldply(mdls,.fun = function(d){return(as.data.frame(d$yTSD))})
+    colnames(df.xTSD) <- paste0("x.",colnames(df.xTSD))
+    colnames(df.yTSD) <- paste0("y.",colnames(df.yTSD))
+    mdlData <- as.data.frame(cbind(mdlData,df.xTSD,df.yTSD))
+  }
   out$mdls <- mdls
   out$summary <- mdlData
   return(out)
@@ -930,4 +966,84 @@ dynamicalCorrelation <- function(a_files, b_files,read_func=read.eda,cols=c("EDA
   results.boot <- boot_test_DC(a_mat,b_mat,t,ms = T,randPairs = randPairs)
   
   return(results.boot)
+}
+
+
+
+
+generateI3Mat <- function(data, outputFile=NULL){
+  timestamps = data[[1]][[1]]$summary$timestamp
+  nWindows <- length(data[[1]][[1]]$summary$dx.r.squared)
+  ids <- unique(union(names(data),unlist(lapply(data, names))))
+  
+  nParticipants <- length(ids)
+  
+  mat <- array(data = 0,dim = c(nParticipants,nParticipants,nWindows),dimnames = list(P1=ids,P2=ids,Time=timestamps))
+  tsd <- list()
+  for (P1 in names(data)) {
+    P1.data <- data[[P1]]
+    for (P2 in names(P1.data)){
+      P2.data <- P1.data[[P2]]
+      print(paste0("mat[",P1,",",P2,",]"))
+      #Swap dx and dy so that the I3 values for a given row represent effect of P_row on P_col
+      mat[P1,P2,] <- P2.data$summary$dy.r.squared
+      mat[P2,P1,] <- P2.data$summary$dx.r.squared
+      if(dim(P2.data$summary)[2] > 8){
+        tsd[[P1]] <- P2.data$summary[,13:23]
+        tsd[[P2]] <- P2.data$summary[,24:34]
+        colnames(tsd[[P1]]) <- str_sub(colnames(tsd[[P1]]),start=3)
+        colnames(tsd[[P2]]) <- str_sub(colnames(tsd[[P2]]),start=3)
+      }
+    }
+  }
+  
+  mat[,,][mat < 0] <- 0
+  output = list(legend=ids,I3Mat=mat,timestamps=timestamps)
+  if(length(tsd) > 0){
+    output$tsd <- tsd
+  }
+
+  if(is.null(outputFile) == F){
+    write(toJSON(output,matrix = "columnmajor",pretty = T,na = NULL,factor = "string"),file = outputFile)
+  }
+  
+  return(output)
+}
+
+
+analyzeGroup <- function(files,window_size=60,window_step=10,...){
+  if(dir.exists(files)){
+    files <-list.files(path = files,pattern = "\\.csv$",full.names = T)
+  }
+  files <- sort(files,decreasing = T)
+  filenames <- basename(files)
+  nTotal = 0
+  nFiles = length(files) 
+  output <- list()
+  ids <- str_sub(filenames,end = -5)
+  physioData <- list()
+  for (f in files) {
+    physioData[[f]] <- read.eda(f)
+  }
+  startTime <- as.POSIXct(max(unlist(lapply(physioData, function(d){return(min(d$Timestamp))}))),origin="1970-01-01")
+  endTime <- as.POSIXct(min(unlist(lapply(physioData, function(d){return(max(d$Timestamp))}))),origin="1970-01-01")
+  print(paste0("Overlap Start: ",strftime(startTime,format = "%Y-%m-%d %H:%M:%S")," | Overlap End: ",strftime(endTime,format = "%Y-%m-%d %H:%M:%S")))
+  for(i in 1:(nFiles-1)) {
+    personA = files[i]
+    aName = ids[i]
+    idx2 = i+1
+    output[[aName]] <- list()
+    for(j in idx2:nFiles){
+      personB = files[j]
+      bName = ids[j]
+      nTotal = nTotal+1
+      d <- as.dyad(physioData[[personA]],physioData[[personB]])
+      d <- subset(d,((Timestamp >= startTime) & (Timestamp <= endTime)) )
+      if(j > i){
+        try(output[[aName]][[bName]]<- analyzeDyad(dyad = d,xname=aName,yname=bName,window_size = window_size,window_step = window_step, type = 4,lag = 0,plotParams = "raw",measure="EDA",...))
+      }
+    }
+  }
+  
+  return(output)
 }

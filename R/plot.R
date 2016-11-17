@@ -335,7 +335,18 @@ annotate.relative <- function(plt=last_plot(),geom="text",x=0.5,y=0.1,...){
 }
 
 scatter_plot <- function(x,y,data){
-  p<- ggplot(data[1:12,], aes_string(x=x, y=y)) +
+  cor_fun <- function(x,y,method="pearson"){
+    r = NULL
+    try((r = cor.test(x,y,method = method)))
+    if (is.null(r)) {
+      return("r = 0, p = n.s.")
+    }
+    else {
+      return(paste0("r = ",round(r$estimate,2),", ",p.format(r$p.value)))
+    }
+  }
+  
+  p<- ggplot(data, aes_string(x=x, y=y)) +
     geom_point() +    # Use hollow circles
     # geom_text(aes(label=ID),nudge_y=0.005) +
     geom_smooth(method="lm",se=T)    # Don't add shaded confidence region

@@ -54,7 +54,7 @@ read.ERCodes <- function(path){
 }
 
 
-read.Codes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",fmt="%H:%M:%S"){
+read.Codes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",conditionCol="Condition",fmt="%H:%M:%S",...){
 if(grepl(".xls", path) || grepl(".xlsx", path)){
     data <- read_excel(path)
   }
@@ -64,7 +64,7 @@ if(grepl(".xls", path) || grepl(".xlsx", path)){
   data <- na.omit(data)
   data$Start.Time <- as.difftime(as.character(data[,startCol]),format = fmt,units = "secs")
   data$End.Time <- as.difftime(as.character(data[,endCol]),format = fmt,units = "secs")
-  data$Condition <-factor(data$Condition, levels =data$Condition[order(data[,startCol], data$Condition)], ordered=TRUE)
+  data$Condition <-factor(data[,conditionCol], levels =data[,conditionCol][order(data[,startCol], data$Condition)], ordered=TRUE)
   data$Condition <- factor(data$Condition[,drop=TRUE])
   
   return(data)

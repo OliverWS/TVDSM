@@ -66,7 +66,7 @@ dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_Dumm
     # 
     # }
     eda$Timestamp <- strftime(eda$Timestamp, format="%Y-%m-%dT%H:%M:%OS3")
-    write.csv(as.data.frame(eda), file = outputFile,col.names = T,row.names = F)
+    write.csv(as.data.frame(eda), file = outputFile,col.names = T,row.names = F,)
 
   }
   return(eda)
@@ -87,8 +87,8 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   results <- list()
   tz <- attr(eda$Timestamp[1],"tz")
   for (i in 1:nConditions) {
-    start <- conditions[["Start Time"]][i]
-    end <- conditions[["End Time"]][i]
+    start <- conditions[["Start.Time"]][i]
+    end <- conditions[["End.Time"]][i]
     condition <- conditions[["Condition"]][i]
     validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
     data <- subset(eda,validTimes)
@@ -107,10 +107,10 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   
   #g2 <-ggplot(data = subset(eda, ((eda$Timestamp >= min(results$Start)) & (eda$Timestamp < max(results$End)))) ,mapping = aes(x=Timestamp,y=EDA)) + geom_line(size=1,col="#1FBFC4") + xlab("Time") + ylab("EDA")
 
-  g1 <- plotTSDescriptives(results,title=title)
+  try(g1 <- plotTSDescriptives(results,title=title))
   
   #plt <- plot_grid(g1,g2,ncol=1,nrow=2,align = "h")
-  print(g1)
+  try(print(g1))
   return(results)
   
   

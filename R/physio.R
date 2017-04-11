@@ -37,23 +37,25 @@ tsDescriptives <- function(data,fs=32) {
 }
 
 
-dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv",sep=""),saveFile=F) {
+dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv",sep=""),saveFile=F,codeFunc=read.RTCodes,startCol="Start.Time",endCol="End.Time",conditionCol="Condition",timeformat="%Y-%m-%d %H:%M:%S") {
   
   if(typeof(codes) == "character"){
-    conditions <- read.Codes(codes)
+    conditions <- codeFunc(codes)
   }
   else {
     conditions <- codes
   }
+  conditions[[startCol]] <-  strptime(conditions[[startCol]], format=timeformat)
+  conditions[[endCol]] <-  strptime(conditions[[endCol]], format=timeformat)
   eda <- read.eda(file = filename)
   fs <- getFS(eda)
   nConditions <- dim(conditions)[1]
   tz <- attr(eda$Timestamp[1],"tz")
   eda$Condition <- NA
   for (i in 1:nConditions) {
-    start <- conditions[["Start Time"]][i]
-    end <- conditions[["End Time"]][i]
-    condition <- as.character(conditions[["Condition"]][i])
+    start <- conditions[[startCol]][i]
+    end <- conditions[[endCol]][i]
+    condition <- as.character(conditions[[conditionCol]][i])
     validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
     eda$Condition[which(validTimes)] <- condition
   }
@@ -73,23 +75,26 @@ dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_Dumm
 }
 
 
-descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
+descriptivesByCondition <- function(filename, codes,col="EDA",title=filename,codeFunc=read.RTCodes,startCol="Start.Time",endCol="End.Time",conditionCol="Condition",timeformat="%Y-%m-%d %H:%M:%S") {
   
   if(typeof(codes) == "character"){
-    conditions <- read.Codes(codes)
+    conditions <- codeFunc(codes)
   }
   else {
     conditions <- codes
   }
   eda <- read.eda(file = filename)
+  conditions[[startCol]] <-  strptime(conditions[[startCol]], format=timeformat)
+  conditions[[endCol]] <-  strptime(conditions[[endCol]], format=timeformat)
+  
   fs <- getFS(eda)
   nConditions <- dim(conditions)[1]
   results <- list()
   tz <- attr(eda$Timestamp[1],"tz")
   for (i in 1:nConditions) {
-    start <- conditions[["Start.Time"]][i]
-    end <- conditions[["End.Time"]][i]
-    condition <- conditions[["Condition"]][i]
+    start <- conditions[[startCol]][i]
+    end <- conditions[[endCol]][i]
+    condition <- conditions[[conditionCol]][i]
     validTimes <- ((eda$Timestamp >= start) & (eda$Timestamp < end))
     data <- subset(eda,validTimes)
     desc <- tsDescriptives(data[[col]])
@@ -101,9 +106,9 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename) {
   rownames(results) <- NULL
   #Fix weird issue where values get turned into text
   results <- lapply(results,as.double)
-  results$Condition <- conditions$Condition
-  results$Start <- conditions$`Start Time`
-  results$End <- conditions$`End Time`
+  results$Condition <- conditions[[conditionCol]]
+  results$Start <- conditions[[startCol]]
+  results$End <- conditions[[endCol]]
   
   #g2 <-ggplot(data = subset(eda, ((eda$Timestamp >= min(results$Start)) & (eda$Timestamp < max(results$End)))) ,mapping = aes(x=Timestamp,y=EDA)) + geom_line(size=1,col="#1FBFC4") + xlab("Time") + ylab("EDA")
 

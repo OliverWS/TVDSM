@@ -780,6 +780,16 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   }
   d <- subset(d,((Timestamp >= start) & (Timestamp <= end)) )
   fs <- getFS(d)
+  
+  #Pre-downsample source data to match what is used in analysis
+  ax <- decimate(d[,2], downsample*fs)
+  ay <- decimate(d[,3],downsample*fs)
+  t <- seq.int(1,to = length(d$Timestamp),by = round(downsample*fs))
+  sourceData <- data.frame(Timestamp=t)
+  sourceData[[names(d)[2]]] <- ax
+  sourceData[[names(d)[3]]] <- ay
+  
+  
   if (window_size <= 0) {
     window_size <- length(d$Timestamp)/fs
     window_step <- window_size
@@ -863,6 +873,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   }
   out$mdls <- mdls
   out$summary <- mdlData
+  out$sourceData <- sourceData
   return(out)
 }
 

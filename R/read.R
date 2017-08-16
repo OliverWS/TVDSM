@@ -235,7 +235,7 @@ read.actiwave <- function(file) {
 
 getFS <- function(d){
   fs <- 1.0/diff(d$Timestamp)[[1]]
-  return(fs)
+  return(round(fs))
 }
 
 

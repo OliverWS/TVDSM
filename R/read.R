@@ -247,7 +247,7 @@ read.empatica <- function(path) {
   acc <- read.empatica.acc(file.path(path,"ACC.csv"))
   bvp <- read.empatica.bvp(file.path(path,"BVP.csv"))
   ibi <- read.empatica.ibi(file.path(path,"IBI.csv"))
-  temp <- read.empatica.ibi(file.path(path,"IBI.csv"))
+  temp <- read.empatica.temp(file.path(path,"TEMP.csv"))
   eda <- read.empatica.eda(file.path(path,"EDA.csv"))
   
   data <- list(ACC=acc,BVP=bvp,EDA=eda,TEMP=temp,IBI=ibi)
@@ -264,7 +264,7 @@ read.e4 <- function(path) {
   ibi <- read.empatica.ibi(file.path(path,"IBI.csv"))
   temp <- read.empatica.temp(file.path(path,"TEMP.csv"))
   eda <- read.empatica.eda(file.path(path,"EDA.csv"))
-  hr <- ead.empatica.hr(file.path(path,"HR.csv"))
+  hr <- read.empatica.hr(file.path(path,"HR.csv"))
   df <- data.frame(Timestamp=bvp$Timestamp)
   df$EDA <- interp(eda$EDA,q = 8,n = 5)
   df$BVP <- bvp$BVP
@@ -281,7 +281,7 @@ read.empatica.eda <- function(file){
   raw <- read.csv(file,header = F)
   start_s <- raw$V1[1]
   sample_rate <- as.numeric(raw$V1[2])
-  data <- data.frame(EDA=raw$V1[3:length(raw$V1)])
+  data <- data.frame(Timestamp=NA, EDA=raw$V1[3:length(raw$V1)])
   start <- as.POSIXct(start_s, origin = "1970-01-01")
   dt <- as.difftime(as.character(1.0/sample_rate),format = "%OS")
   timestamps <- seq(from = start, by=dt , along.with = data$EDA) 
@@ -293,7 +293,7 @@ read.empatica.acc <- function(file){
   raw <- read.csv(file,header = F)
   start_s <- raw$V1[1]
   sample_rate <- as.numeric(raw$V1[2])
-  data <- data.frame(X=raw$V1[3:length(raw$V1)],Y=raw$V2[3:length(raw$V2)],Z=raw$V3[3:length(raw$V3)])
+  data <- data.frame(X=raw$V1[3:length(raw$V1)]/64.0,Y=raw$V2[3:length(raw$V2)]/64.0,Z=raw$V3[3:length(raw$V3)]/64.0)
   start <- as.POSIXct(x = start_s, origin = "1970-01-01")
   dt <- as.difftime(as.character(1.0/sample_rate),format = "%OS")
   timestamps <- seq(from = start, by=dt , along.with = data$X) 
@@ -316,9 +316,9 @@ read.empatica.hr <- function(file){
   raw <- read.csv(file,header = F)
   start_s <- raw$V1[1]
   start <- as.POSIXct(x = start_s,origin = "1970-01-01")
-  dt <- as.difftime(raw$V1[2:length(raw$V1)],units = "secs")
+  dt <- as.difftime(seq_along(raw$V1[2:length(raw$V1)]),units = "secs")
   timestamps <- start+dt
-  HR <- as.numeric(raw$V2[2:length(raw$V2)])
+  HR <- as.numeric(raw$V1[2:length(raw$V1)])
   data <- data.frame(Timestamp=timestamps, HR=HR)
   data
 }
@@ -329,7 +329,7 @@ read.empatica.ibi <- function(file){
   start <- as.POSIXct(x = start_s,origin = "1970-01-01")
   dt <- as.difftime(raw$V1[2:length(raw$V1)],units = "secs")
   timestamps <- start+dt
-  ibi <- as.numeric(raw$V2[2:length(raw$V2)])
+  ibi <- as.double(as.character(raw$V2[2:length(raw$V2)]) )
   data <- data.frame(Timestamp=timestamps, IBI=ibi)
   data
 }

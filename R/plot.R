@@ -148,8 +148,8 @@ gghist <- function(x,groups=NULL) {
     plt <- ggplot(aes(x=x),data = data.frame(x=x)) + geom_density(col="darkgray",fill="gray",lwd=1)
     plt <- plt + stat_function(fun = dnorm, colour = "red",args = list(mean=x.mu,sd=x.sd))
     
-    y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
-    x.range <- ggplot_build(plt)$panel$ranges[[1]]$x.range
+    y.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$y.range
+    x.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$x.range
     
     text.y <- y.range[1] + (y.range[2]-y.range[1])*0.1
     text.x <- x.range[1] + (x.range[2] - x.range[1])*0.5
@@ -179,7 +179,8 @@ ggbracket <- function(plt,pad = 0.1,offset=0,sig.cutoff=0.05,ci.func=mean_cl_nor
     return(str)
   }
   #Scale according to plot limits
-  y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
+  y.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$y.range
+  
   pad <- 0.04*(y.range[2]-y.range[1])
   
   x <- plt$data[[as.character(plt$mapping$x)]]
@@ -227,73 +228,73 @@ ggbracket <- function(plt,pad = 0.1,offset=0,sig.cutoff=0.05,ci.func=mean_cl_nor
   return(g)
 }
 
-
-ggbracket <- function(plt,pad = 0.1,offset=0,sig.cutoff=0.05,ci.func=mean_cl_normal){
-  f.test <- function(x,y){
-    mdl <- lm(y ~ x)
-    s <- summary(aov(mdl))
-    f = round(s[[1]][[4]][1],digits = 3)
-    p.val = s[[1]][[5]][1]
-    if(p.val < 0.001){
-      p.label = paste0("p ",format.pval(pv=p.val,digits=3, eps=0.001))
-    }
-    else {
-      p.label = paste0("p = ",format.pval(pv=p.val,digits = 3,eps=0.001))
-    }
-    
-    df = paste(s[[1]][[1]],collapse = ",")
-    
-    str <- paste0("F(",df,") = ",f,", ",p.label)
-    return(str)
-  }
-  #Scale according to plot limits
-  y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
-  pad <- 0.05*(y.range[2]-y.range[1])
-  
-  x <- plt$data[[as.character(plt$mapping$x)]]
-  y <- plt$data[[as.character(plt$mapping$y)]]
-  groups <- levels(as.factor(x))
-  
-  x <- simplify2array(x)
-  y <- simplify2array(y)
-  
-  n=0
-  g=plt
-  
-  comparisons <- combn(groups,m=2,simplify = F)
-  
-  g <- g + annotate("text",x= groups[2], y= max(y.range)+pad*10*length(comparisons),label=f.test(x,y),hjust="center")
-  
-  for(p in rev(comparisons)){
-    group.1 <- p[1]
-    group.1.idx <- which(groups == group.1)
-    group.2 <- p[2]
-    group.2.idx <- which(groups == group.2)
-    y.g1 <- subset(y,x==group.1)
-    y.g2 <- subset(y,x==group.2)
-    
-    t <- t.test(y.g1,y.g2)
-    
-    if(t$p.value < sig.cutoff){
-      if(t$p.value < 0.001){
-        label = paste0("p ",format.pval(pv=t$p.value,digits=3, eps=0.001))
-      }
-      else {
-        label = paste0("p = ",format.pval(pv=t$p.value,digits = 3,eps=0.001))
-      }
-      y.1 <- ci.func(y.g1,conf.int=(1-sig.cutoff))$ymax + pad
-      y.2 <-  ci.func(y.g2,conf.int=(1-sig.cutoff))$ymax + pad
-      y.max <- max(tapply(y,x,FUN = function(a){return(ci.func(a)$ymax)})) + pad*(n+1)*5
-      df <- data.frame(x1=c(group.1,group.1,group.2),x2=c(group.1,group.2,group.2),y1=c(y.max-pad,y.max,y.max),y2=c(y.max,y.max,y.max-pad))
-      g <- (g + geom_segment(aes(x=x1,y=y1,xend=x2,yend=y2),data=df,col="black"))
-      x.label <- (max(c(group.1.idx,group.2.idx)) - min(c(group.1.idx,group.2.idx)))/2.0 + min(c(group.1.idx,group.2.idx))
-      g <- g + annotate("text", x = x.label, y = y.max+pad*2, label = label)
-      n = n + 1
-    }
-    
-  }
-  return(g)
-}
+# 
+# ggbracket <- function(plt,pad = 0.1,offset=0,sig.cutoff=0.05,ci.func=mean_cl_normal){
+#   f.test <- function(x,y){
+#     mdl <- lm(y ~ x)
+#     s <- summary(aov(mdl))
+#     f = round(s[[1]][[4]][1],digits = 3)
+#     p.val = s[[1]][[5]][1]
+#     if(p.val < 0.001){
+#       p.label = paste0("p ",format.pval(pv=p.val,digits=3, eps=0.001))
+#     }
+#     else {
+#       p.label = paste0("p = ",format.pval(pv=p.val,digits = 3,eps=0.001))
+#     }
+#     
+#     df = paste(s[[1]][[1]],collapse = ",")
+#     
+#     str <- paste0("F(",df,") = ",f,", ",p.label)
+#     return(str)
+#   }
+#   #Scale according to plot limits
+#   y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
+#   pad <- 0.05*(y.range[2]-y.range[1])
+#   
+#   x <- plt$data[[as.character(plt$mapping$x)]]
+#   y <- plt$data[[as.character(plt$mapping$y)]]
+#   groups <- levels(as.factor(x))
+#   
+#   x <- simplify2array(x)
+#   y <- simplify2array(y)
+#   
+#   n=0
+#   g=plt
+#   
+#   comparisons <- combn(groups,m=2,simplify = F)
+#   
+#   g <- g + annotate("text",x= groups[2], y= max(y.range)+pad*10*length(comparisons),label=f.test(x,y),hjust="center")
+#   
+#   for(p in rev(comparisons)){
+#     group.1 <- p[1]
+#     group.1.idx <- which(groups == group.1)
+#     group.2 <- p[2]
+#     group.2.idx <- which(groups == group.2)
+#     y.g1 <- subset(y,x==group.1)
+#     y.g2 <- subset(y,x==group.2)
+#     
+#     t <- t.test(y.g1,y.g2)
+#     
+#     if(t$p.value < sig.cutoff){
+#       if(t$p.value < 0.001){
+#         label = paste0("p ",format.pval(pv=t$p.value,digits=3, eps=0.001))
+#       }
+#       else {
+#         label = paste0("p = ",format.pval(pv=t$p.value,digits = 3,eps=0.001))
+#       }
+#       y.1 <- ci.func(y.g1,conf.int=(1-sig.cutoff))$ymax + pad
+#       y.2 <-  ci.func(y.g2,conf.int=(1-sig.cutoff))$ymax + pad
+#       y.max <- max(tapply(y,x,FUN = function(a){return(ci.func(a)$ymax)})) + pad*(n+1)*5
+#       df <- data.frame(x1=c(group.1,group.1,group.2),x2=c(group.1,group.2,group.2),y1=c(y.max-pad,y.max,y.max),y2=c(y.max,y.max,y.max-pad))
+#       g <- (g + geom_segment(aes(x=x1,y=y1,xend=x2,yend=y2),data=df,col="black"))
+#       x.label <- (max(c(group.1.idx,group.2.idx)) - min(c(group.1.idx,group.2.idx)))/2.0 + min(c(group.1.idx,group.2.idx))
+#       g <- g + annotate("text", x = x.label, y = y.max+pad*2, label = label)
+#       n = n + 1
+#     }
+#     
+#   }
+#   return(g)
+# }
 
 plotMetric <- function(data,metric,group,sig.cutoff=0.05) {
   n_fun <- function(x){
@@ -312,22 +313,22 @@ plotMetric <- function(data,metric,group,sig.cutoff=0.05) {
 }
 
 ggrel.x <- function(plt=last_plot(),x=0.5){
-  x.range <- ggplot_build(plt)$panel$ranges[[1]]$x.range
+  x.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$x.range
   coord.x = min(x.range) + (max(x.range) - min(x.range))*x
   return(coord.x)
   
 }
 
 ggrel.y <- function(plt=last_plot(),y=0.5){
-  y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
+  y.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$y.range
   coord.y = min(y.range) + (max(y.range) - min(y.range))*y
   return(coord.y)
   
 }
 
 annotate.relative <- function(plt=last_plot(),geom="text",x=0.5,y=0.1,...){
-  x.range <- ggplot_build(plt)$panel$ranges[[1]]$x.range
-  y.range <- ggplot_build(plt)$panel$ranges[[1]]$y.range
+  x.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$x.range
+  y.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$y.range
   coord.x = min(x.range) + (max(x.range) - min(x.range))*x
   coord.y = min(y.range) + (max(y.range) - min(y.range))*y
   

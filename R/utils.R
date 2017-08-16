@@ -961,13 +961,63 @@ o.window <- function(x, window_size, window_step=window_size, FUN, na.rm=T, verb
 o.pbcopy <- function(x){
   write.table(file = pipe("pbcopy"), x, sep = "\t",quote=F)
 }
+
+
 critical.r <- function( n, alpha = .05 ) {
   df <- n - 2
   critical.t <- qt(alpha/2, df, lower.tail = F)
   critical.r <- sqrt( (critical.t^2) / ( (critical.t^2) + df ) )
   return(critical.r)
 }
+make_corr_table <- function(mat,...){
+  cors.mat <- corr.test(mat,...)
+  vars <- colnames(cors.mat$r)
+  idx <- paste0(seq_along(vars),".")
+  vars <- paste(idx,vars)
+  mat <- round(cors.mat$r,2)
+  out.table <- data.frame(row.names = vars,mat)
+  colnames(out.table) <- idx
+  for(row in seq_along(vars)){
+    for(col in seq_along(vars)){
+      p <- cors.mat$p[row,col]
+      out.table[row,col] <- sprintf(".%d",round(as.numeric(out.table[row,col])*100))
+      if(row == col){
+        #do nothing
+      }
+      else if(p < 0.001){
+        out.table[row,col] <- paste0(out.table[row,col],"***")
+      }
+      else if(p <.01) {
+        out.table[row,col] <- paste0(out.table[row,col],"**")
+      }
+      else if (p < .05) {
+        out.table[row,col] <- paste0(out.table[row,col],"*")
+      }
+      else if (p < .1) {
+        out.table[row,col] <- paste0(out.table[row,col],"+")
+      }
+      
+    }
+  }
+  
+  return(out.table)
+}
 
+
+format.r <- function(r,cutoff){
+  isNeg <- (as.numeric(r) < 0)
+  lbl <- sprintf(".%d",round(abs(as.numeric(r))*100))
+  lbl <- str_sub(lbl,start = 1,3)
+  if(isNeg){
+    lbl <- paste0("-",lbl)
+  }
+  
+  if (abs(r) > cutoff) {
+    lbl <- paste0(lbl,"*")
+  }
+  return(lbl)
+  
+}
 
 o.corplot <- function(data, as.cormat = F,...) {
   source("https://raw.githubusercontent.com/briatte/ggcorr/master/ggcorr.R")
@@ -979,6 +1029,7 @@ o.corplot <- function(data, as.cormat = F,...) {
   high = "#F21A00"
   
   if(as.cormat){
+    
     gg <- ggcorr(data=NULL, cor_martrix=data, geom = "blank", label = F, hjust = 1,layout.exp = 1.1,...) + 
       geom_tile(aes_string(fill = "coefficient", alpha = paste("abs(coefficient) >", cutoff))) +
       #   scale_alpha_manual(values = c("TRUE" = 0.75, "FALSE" = 0)) +
@@ -987,20 +1038,25 @@ o.corplot <- function(data, as.cormat = F,...) {
                 color = "black", size = 4,
                 show.legend = FALSE) +
       guides(alpha=F)
+    
   }
   else {
-    gg <- ggcorr(data, geom = "blank", label = F, hjust = 1,layout.exp = 1.1,...) + 
-      geom_tile(aes_string(fill = "coefficient", alpha = paste("abs(coefficient) >", cutoff))) +
+    gg <- ggcorr(data, geom = "blank", label = F, hjust = 0.8,layout.exp = 1.1, size=3,...) + 
+      geom_tile(aes_string(fill = "coefficient")) +
       #   scale_alpha_manual(values = c("TRUE" = 0.75, "FALSE" = 0)) +
-      scale_fill_gradient2("r", low = low, mid = mid, high = high, midpoint = 0, limits = c(-1, 1)) +
-      geom_text(aes(x, y, label = label),
-                color = "black", size = 4,
-                show.legend = FALSE) +
+      scale_fill_gradient2("r", low = low, mid = mid, high = high, midpoint = 0, limits = c(-1, 1)) 
+    
+    dat <- gg$data
+    dat$label <- sapply(dat$coefficient, FUN=function(d){return(format.r(d,cutoff = cutoff))})
+    gg <- gg + geom_text(data=dat,aes_string(x="x", y="y", label = "label", alpha = paste("abs(coefficient) >", cutoff)),
+                         color = "black", size = 2.75,
+                         show.legend = FALSE) +
       guides(alpha=F)
   }
   
   return(gg)
 }
+
 
 
 as.TimeOfDay <- function(t){

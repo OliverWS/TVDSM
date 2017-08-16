@@ -210,7 +210,7 @@ get.key <- function(lst, key,as.list=F) {
 
 plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T) {
   data <- na.omit(data)
-  r2.labels <- c(bquote(Delta~R[.(xname)]^2),bquote(Delta~R[.(yname)]^2))
+  r2.labels <- c(bquote(I[.(xname)%<-% .(yname)]^2),bquote(I[.(yname)%<-%.(xname)]^2))
   data$timestamp <- as.POSIXct(data$timestamp,origin = "1970-01-01")
   params1 <- melt(subset(data,select=c("timestamp","x.lag","y.lag")),id.vars = c("timestamp"))
   params2 <- melt(subset(data,select=c("timestamp","dx.r.squared","dy.r.squared")),id.vars = c("timestamp"))
@@ -250,7 +250,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   if(use.delta.rsquared){
     x.r2 <- get.key(data, key="dx.r.squared")
     y.r2 <- get.key(data, key="dy.r.squared")
-    r2.labels <- c(bquote(Delta~R[.(xname)]^2),bquote(Delta~R[.(yname)]^2))
+    r2.labels <- c(bquote(I[.(xname)%<-% .(yname)]^2),bquote(I[.(yname)%<-%.(xname)]^2))
   }
   else {
     x.r2 <- get.key(data, key="x.r.squared")
@@ -352,8 +352,8 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
       plt2 <- plt2 + geom_point(size=point_size) 
     }
   }
-  plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max))
-  plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) 
+  plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family="Baskerville"))
+  plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family="Baskerville"))
   
   if(grayscale){
     plt1 <- plt1 + glegend1.gray
@@ -1022,8 +1022,8 @@ generateI3Mat <- function(data, outputFile=NULL){
 }
 
 
-analyzeGroup <- function(files,window_size=60,window_step=10,...){
-  if(dir.exists(files)){
+analyzeGroup <- function(files,window_size=60,window_step=10,readFunction=read.eda,scanDirs=T,...){
+  if(dir.exists(files) & scanDirs){
     files <-list.files(path = files,pattern = "\\.csv$",full.names = T)
   }
   files <- sort(files,decreasing = T)
@@ -1031,10 +1031,10 @@ analyzeGroup <- function(files,window_size=60,window_step=10,...){
   nTotal = 0
   nFiles = length(files) 
   output <- list()
-  ids <- str_sub(filenames,end = -5)
+  ids <- filenames
   physioData <- list()
   for (f in files) {
-    physioData[[f]] <- read.eda(f)
+    physioData[[f]] <- readFunction(f)
   }
   startTime <- as.POSIXct(max(unlist(lapply(physioData, function(d){return(min(d$Timestamp))}))),origin="1970-01-01")
   endTime <- as.POSIXct(min(unlist(lapply(physioData, function(d){return(max(d$Timestamp))}))),origin="1970-01-01")

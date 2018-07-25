@@ -41,5 +41,6 @@ Imports:
     progress,
     caTools,
     edfReader,
-    lubridate
+    lubridate,
+    compute.es
 RoxygenNote: 5.0.1

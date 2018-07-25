@@ -38,5 +38,6 @@ Imports:
     systemfit,
     plotly,
     coefplot,
-    progress
+    progress,
+    caTools
 RoxygenNote: 5.0.1

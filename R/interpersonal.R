@@ -244,7 +244,7 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
 }
 
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL) {
+plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL,returnSeparatePlots=F) {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -393,7 +393,14 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   if(save){
     ggsave(f)
   }
-  return(combinedPlt)
+  
+  if(returnSeparatePlots) {
+    return(list(I2Plt=plt2,paramPlt=plt1))
+  }
+  
+  else {
+    return(combinedPlt)
+  }
   
 }
 
@@ -782,8 +789,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   fs <- getFS(d)
   
   #Pre-downsample source data to match what is used in analysis
-  ax <- decimate(d[,2], downsample*fs)
-  ay <- decimate(d[,3],downsample*fs)
+  ax <- decimate(d[,2], round(downsample*fs))
+  ay <- decimate(d[,3],round(downsample*fs))
   t <- seq.int(1,to = length(d$Timestamp),by = round(downsample*fs))
   sourceData <- data.frame(Timestamp=t)
   sourceData[[names(d)[2]]] <- ax
@@ -1058,3 +1065,46 @@ analyzeGroup <- function(files,window_size=60,window_step=10,readFunction=read.e
   
   return(output)
 }
+
+
+
+
+as.group <- function(pn,cols=c("EDA"),norm=F,na.interpolate=T,interpolation.method=na.spline) {
+  pn.name <- names(pn)
+  pn.start <- max(unlist(lapply(pn, FUN=function(p){return(min(p$Timestamp))})))
+  pn.end <- min(unlist(lapply(pn,FUN=function(p){return(max(p$Timestamp))})))
+  
+  if(pn.end <= pn.start){
+    print("Error: no overlap found between timeseries")
+    return()
+  }
+  print(paste("Dyad Overlap: ",pn.start,"to",pn.end))
+  pn.cropped <- lapply(pn, FUN=function(p){return( subset(p,((Timestamp >= pn.start) & (Timestamp < pn.end)) ) )})
+  dyad <- data.frame(Timestamp=pn.cropped[[1]]$Timestamp)
+  
+  for(i in 1:length(pn)){
+    p <- pn.cropped[[i]]
+    
+    for(c in cols) {
+      cname <- paste(pn.name[[i]],c,sep = ".")
+      
+      if(norm){
+        dyad[[cname]] <- o.scale(p[[c]])
+      }
+      else {
+        dyad[[cname]] <- p[[c]]
+      }
+      
+      if(na.interpolate){
+        dyad[[cname]] <- interpolation.method(dyad[[cname]])
+        
+      }
+      
+    }
+  }  
+  return(dyad)
+  
+  
+}
+
+

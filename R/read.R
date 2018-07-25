@@ -235,8 +235,33 @@ read.actiwave <- function(file) {
 
 getFS <- function(d){
   fs <- 1.0/diff(d$Timestamp)[[1]]
-  return(round(fs))
+  if(fs < 1.0){
+    return(fs)
+  }
+  else {
+    return(round(fs))
+  }
 }
+
+
+downsample.eda <- function(d,targetRate=1.0){
+  current.fs <- getFS(d)
+  q <- round(current.fs/targetRate)
+  output.TS <- d$Timestamp[seq(from=1,to=dim(d)[1],by=q)]
+  output <- data.frame(Timestamp=output.TS)
+  for(i in 1:dim(d)[2]){
+    col <- colnames(d)[i]
+    if(col == "Timestamp"){
+      #Skip this column
+    }
+    else {
+      x <- d[,i]
+      output[,col] <- decimate(x,q)
+    }
+  }
+  return(output)
+}
+
 
 
 #/Users/OliverWS/Downloads/1418312035_192103
@@ -398,6 +423,8 @@ o.scale <- function(x,use.sd=F){
   return(sx)
   
 }
+
+
 
 
 read.dyad <- function(f,sample_rate=32.0,p1.name=NULL,p2.name=NULL,start=strptime("2016-01-01 0:0:0","%Y-%m-%d %H:%M:%S"), readFunction=read.csv){

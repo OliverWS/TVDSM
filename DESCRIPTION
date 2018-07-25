@@ -40,5 +40,6 @@ Imports:
     coefplot,
     progress,
     caTools,
-    edfReader
+    edfReader,
+    lubridate
 RoxygenNote: 5.0.1

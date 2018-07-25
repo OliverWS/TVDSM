@@ -39,5 +39,6 @@ Imports:
     plotly,
     coefplot,
     progress,
-    caTools
+    caTools,
+    edfReader
 RoxygenNote: 5.0.1

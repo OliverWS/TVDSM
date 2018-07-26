@@ -244,7 +244,7 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
 }
 
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL,returnSeparatePlots=F) {
+plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL,returnSeparatePlots=F,fontFamily="Baskerville") {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -352,8 +352,8 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
       plt2 <- plt2 + geom_point(size=point_size) 
     }
   }
-  plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family="Baskerville"))
-  plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family="Baskerville"))
+  plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family=fontFamily))
+  plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family=fontFamily))
   
   if(grayscale){
     plt1 <- plt1 + glegend1.gray

@@ -153,7 +153,7 @@ gghist <- function(x,groups=NULL) {
     
     text.y <- y.range[1] + (y.range[2]-y.range[1])*0.1
     text.x <- x.range[1] + (x.range[2] - x.range[1])*0.5
-    plt <- plt + annotate("label",x=text.x,y= text.y,label=norm.test(x),size=5,hjust="center")
+    plt <- plt + annotate("label",x=text.x,y= text.y,label=try(norm.test(x)),size=5,hjust="center")
   }
   
   
@@ -313,22 +313,22 @@ plotMetric <- function(data,metric,group,sig.cutoff=0.05) {
 }
 
 ggrel.x <- function(plt=last_plot(),x=0.5){
-  x.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$x.range
+  x.range <- ggplot_build(plt)$layout$panel_params[[1]]$x.range
   coord.x = min(x.range) + (max(x.range) - min(x.range))*x
   return(coord.x)
   
 }
 
 ggrel.y <- function(plt=last_plot(),y=0.5){
-  y.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$y.range
+  y.range <- ggplot_build(plt)$layout$panel_params[[1]]$y.range
   coord.y = min(y.range) + (max(y.range) - min(y.range))*y
   return(coord.y)
   
 }
 
 annotate.relative <- function(plt=last_plot(),geom="text",x=0.5,y=0.1,...){
-  x.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$x.range
-  y.range <- ggplot_build(plt)$layout$panel_ranges[[1]]$y.range
+  x.range <- ggplot_build(plt)$layout$panel_params[[1]]$x.range
+  y.range <- ggplot_build(plt)$layout$panel_params[[1]]$y.range
   coord.x = min(x.range) + (max(x.range) - min(x.range))*x
   coord.y = min(y.range) + (max(y.range) - min(y.range))*y
   

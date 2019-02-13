@@ -286,7 +286,7 @@ read.e4 <- function(path) {
   #First lets read the file header info
   acc <- read.empatica.acc(file.path(path,"ACC.csv"))
   bvp <- read.empatica.bvp(file.path(path,"BVP.csv"))
-  ibi <- read.empatica.ibi(file.path(path,"IBI.csv"))
+  try(ibi <- read.empatica.ibi(file.path(path,"IBI.csv")))
   temp <- read.empatica.temp(file.path(path,"TEMP.csv"))
   eda <- read.empatica.eda(file.path(path,"EDA.csv"))
   hr <- read.empatica.hr(file.path(path,"HR.csv"))

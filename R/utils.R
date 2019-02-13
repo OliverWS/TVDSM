@@ -1,6 +1,6 @@
 library(psych)
 library(xtable)
-library(ascii)
+#library(ascii)
 library(ggplot2)
 library(mvnormtest)
 library(lawstat)

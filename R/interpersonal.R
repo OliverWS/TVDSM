@@ -244,7 +244,7 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
 }
 
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL,returnSeparatePlots=F,fontFamily="Baskerville") {
+plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL,returnSeparatePlots=F,fontFamily="Helvetica") {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -340,7 +340,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   if(grayscale) line_size = 0.75
   plt1 <- ggplot(data=params1, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=line_size) + xlab(x_label) + ylab(NULL) + ggtitle(title.1) +glegend1 +gstyle 
   
-  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=line_size) + xlab(x_label) + ylab(NULL) + ggtitle(title.2) + glegend2 + gstyle
+  plt2 <- ggplot(data=params2, aes(x=Timestamps,y=value,colour=variable)) + geom_line(size=line_size) + xlab(x_label) + ylab(bquote(I^2)) + ggtitle(title.2) + glegend2 + gstyle
   
   if(point_size > 1.25) {
     if(grayscale){
@@ -353,7 +353,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
     }
   }
   plt1 <- plt1 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family=fontFamily))
-  plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family=fontFamily))
+  plt2 <- plt2 + scale_x_datetime(limits=c(x_min, x_max)) + theme(text=element_text(family=fontFamily),axis.title.y = element_text(angle = 0))
   
   if(grayscale){
     plt1 <- plt1 + glegend1.gray
@@ -361,10 +361,17 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   }
   
   if(by.condition){
-    CONDITION_HEIGHT <- ggrel.y(plt=plt2, y= 0.1)
-    y.min <- ggrel.y(plt=plt2, y= 0)
+    CONDITION_HEIGHT <- ggrel.y(plt=plt2, y= 0.2)
+    if(is.nan(CONDITION_HEIGHT)){
+      CONDITION_HEIGHT = 0.2
+    }
     
-    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=(y.min - CONDITION_HEIGHT),ymax=y.min,xmin=start,xmax=end),linetype=0,alpha=1) 
+    y.min <- ggrel.y(plt=plt2, y= 0)
+    if(is.nan(y.min)) {
+      y.min <- 0
+    }
+    
+    plt2 <- plt2 + geom_rect(aes(fill=Condition,ymin=(y.min - CONDITION_HEIGHT),ymax=y.min,xmin=start,xmax=end),linetype=0,alpha=0.8) 
     if(grayscale){
       plt2 <- plt2 + scale_fill_grey()
     }
@@ -383,7 +390,7 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   }
   else if(plotParams == "raw"){
     colnames(rawData) <- c("Timestamp",xname,yname)
-    plt.raw <- plotDyad(rawData,title = title,ylabel = "")
+    plt.raw <- plotDyad(rawData,title = title,ylabel = "EDA (µS)")
     combinedPlt <- plot_grid(plt.raw,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
   }
   else {
@@ -857,10 +864,10 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   }
   n <- length(get.key(data,"x.r.squared"))
   mdls <- data
-  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),
+  mdlData <- data.frame(timestamp=as.POSIXct(get.key(mdls,"Timestamp"),origin = "1970-01-01"),
                         name=rep_len(dname,n),
-                        Start=get.key(mdls,"Start"),
-                        End=get.key(mdls,"End"), 
+                        Start=as.POSIXct(get.key(mdls,"Start"),origin="1970-01-01"),
+                        End=as.POSIXct(get.key(mdls,"End"),origin="1970-01-01"), 
                         dx.r.squared=get.key(mdls,"dx.r.squared"),
                         dy.r.squared=get.key(mdls,"dy.r.squared"),
                         x.selfreg=get.key(mdls,"b1"),

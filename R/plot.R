@@ -119,7 +119,7 @@ plot.eda <- function(data, title = "EDA Data", show_acc = FALSE, show_raw_acc = 
 #' @examples
 #' plotDyad(mydata, title = 'Dyad Plot')
 plotDyad <- function(d, title = "", ylabel = "EDA", legend_label = "Participant", grayscale = FALSE, ...) {
-  data <- melt(d, id.vars = c("Timestamp"), variable_name = legend_label)
+  data <- reshape::melt(d, id.vars = c("Timestamp"), variable_name = legend_label)
   g <- ggplot(data, aes_string(x = "Timestamp", y = "value", col = legend_label)) + 
     geom_line(size = 1) + ylab(ylabel) + xlab("Time") + ggtitle(title)
   if (grayscale) {

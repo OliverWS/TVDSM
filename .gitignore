@@ -6,3 +6,10 @@
 .Rcheck
 .DS_Store
 docs
+.Rproj
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+..Rcheck
+.Rcheck

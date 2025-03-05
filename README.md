@@ -1,4 +1,4 @@
-# tvdsm: Tools for Dyadic Data Analysis
+# tvdsm: Tools for Dyadic Data Analysis Using Time-Varying Dynamical Systems Models
 
 `tvdsm` is an R package designed to help you analyze dyadic data efficiently. This README serves as the main page for the pkgdown website and provides support documentation including quick examples and guidance on using the key function `analyzeDyad`.
 

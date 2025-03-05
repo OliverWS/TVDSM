@@ -8,7 +8,8 @@
 * using session charset: UTF-8
 * checking for file ‘./DESCRIPTION’ ... OK
 * checking extension type ... Package
-* this is package ‘tvdsm’ version ‘1.3’
+* this is package ‘tvdsm’ version ‘1.4’
+* package encoding: UTF-8
 * checking package namespace information ... OK
 * checking package dependencies ... OK
 * checking if this is a source package ... OK
@@ -16,18 +17,744 @@
 * checking for executable files ... OK
 * checking for hidden files and directories ... NOTE
 Found the following hidden files and directories:
-  .DS_Store
   .git/.DS_Store
+  .github/.gitignore
   .gitignore
   R/.DS_Store
   ..Rcheck
+  .Rproj.user
   .git
+  .github
 These were most likely included in error. See section ‘Package
 structure’ in the ‘Writing R Extensions’ manual.
 * checking for portable file names ... OK
 * checking for sufficient/correct file permissions ... OK
-* checking whether package ‘tvdsm’ can be installed ... ERROR
-Installation failed.
+* checking whether package ‘tvdsm’ can be installed ... WARNING
+Found the following significant warnings:
+  Note: possible error in 'simulateDyad(duration = 600, ': unused arguments (sr = 0, cr = 0.25) 
+  Note: possible error in 'simulatePartner(x.signal = x, ': unused arguments (cr = cr, sr = sr) 
+  Note: possible error in 'vectorfield(f, xx, yy, ': unused argument (scale = scale) 
 See ‘/Users/OliverWS/Dropbox (Personal)/TVDSM/..Rcheck/00install.out’ for details.
+Information on the location(s) of code generating the ‘Note’s can be
+obtained by re-running with environment variable R_KEEP_PKG_SOURCE set
+to ‘yes’.
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking DESCRIPTION meta-information ... NOTE
+Malformed Description field: should contain one or more complete sentences.
+Non-standard license specification:
+  Apache 2.0
+Standardizable: FALSE
+Checking should be performed on sources prepared by ‘R CMD build’.
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... WARNING
+Found the following directory with the name of a check directory:
+  ./..Rcheck
+Most likely, these were included erroneously.
+* checking code files for non-ASCII characters ... WARNING
+Found the following files with non-ASCII characters:
+  R/interpersonal.R
+  R/read.R
+  R/utils.R
+Portable packages must use only ASCII characters in their R code and
+NAMESPACE directives, except perhaps in comments.
+Use \uxxxx escapes for other characters.
+Function ‘tools::showNonASCIIfile’ can help in finding non-ASCII
+characters in files.
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking dependencies in R code ... WARNING
+'library' or 'require' calls not declared from:
+  ‘ggplot2’ ‘grid’
+'library' or 'require' calls in package code:
+  ‘ggplot2’ ‘grid’
+  Please use :: or requireNamespace() instead.
+  See section 'Suggested packages' in the 'Writing R Extensions' manual.
+Namespaces in Imports field not imported from:
+  ‘Hmisc’ ‘MASS’ ‘caTools’ ‘car’ ‘coefplot’ ‘cowplot’ ‘e1071’ ‘foreign’
+  ‘ggplot2’ ‘grid’ ‘gridExtra’ ‘gvlma’ ‘lattice’ ‘lavaan’ ‘lawstat’
+  ‘lme4’ ‘lmerTest’ ‘lsr’ ‘lubridate’ ‘matrixStats’ ‘mvnormtest’
+  ‘plotly’ ‘progress’ ‘psych’ ‘psychometric’ ‘readxl’ ‘reshape’
+  ‘signal’ ‘systemfit’ ‘xtable’
+  All declared Imports should be used.
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+bootstrapSimulation: warning in simulateDyad(duration = 600, fs = 1,
+  sr.ratio = 0.95, lag = 0, mu = 0.5, sr = 0, cr = 0.25, i = 0):
+  partial argument match of 'i' to 'interaction.coef'
+compareSim: warning in simulatePartner(x.signal = x.signal, fs = 0.1,
+  mu = 0.5, sr.ratio = 1, coReg.coef = coReg.coef, selfReg.coef =
+  selfReg.coef, i = 0): partial argument match of 'i' to
+  'interaction.coef'
+examples: warning in simulatePartner(x.signal = x, fs = 1, mu = 0.5,
+  sr.ratio = 1, coReg.coef = cr, selfReg.coef = sr, i = 0): partial
+  argument match of 'i' to 'interaction.coef'
+examples: warning in simulatePartner(x.signal = x, fs = 1, mu = 0.5,
+  sr.ratio = 1, cr = cr, sr = sr, i = 0): partial argument match of 'i'
+  to 'interaction.coef'
+rand.dyad: warning in as.difftime(dur, unit = "secs"): partial argument
+  match of 'unit' to 'units'
+ICClme: no visible global function definition for ‘VarCorr’
+analyzeDyad: no visible binding for global variable ‘Timestamp’
+analyzeDyad: no visible global function definition for ‘decimate’
+analyzeDyad: no visible global function definition for ‘ldply’
+analyzeGroup: no visible binding for global variable ‘Timestamp’
+analyzeLags: no visible global function definition for ‘rowMaxs’
+annotate.relative: no visible global function definition for
+  ‘last_plot’
+annotate.relative: no visible global function definition for
+  ‘ggplot_build’
+annotate.relative: no visible global function definition for ‘annotate’
+as.TimeOfDay: no visible global function definition for ‘hour’
+as.TimeOfDay: no visible global function definition for ‘minute’
+as.TimeOfDay: no visible global function definition for ‘second’
+as.dyad: no visible binding for global variable ‘na.spline’
+as.dyad: no visible binding for global variable ‘Timestamp’
+as.group: no visible binding for global variable ‘na.spline’
+as.group : <anonymous>: no visible binding for global variable
+  ‘Timestamp’
+boot_test_DC: no visible global function definition for ‘sd’
+bootstrapSimulation: possible error in simulateDyad(duration = 600, fs
+  = 1, sr.ratio = 0.95, lag = 0, mu = 0.5, sr = 0, cr = 0.25, i = 0):
+  unused arguments (sr = 0, cr = 0.25)
+compareSim: no visible global function definition for ‘plot_grid’
+compareSimulatedDyads : xname: no visible global function definition
+  for ‘str_split’
+compareSimulatedDyads : yname: no visible global function definition
+  for ‘str_split’
+compareSimulatedDyads: no visible global function definition for
+  ‘na.omit’
+compareSimulatedDyads: no visible global function definition for ‘sd’
+compareSimulatedDyads: no visible global function definition for
+  ‘t.test’
+compareSimulatedDyads: no visible global function definition for
+  ‘ggplot’
+compareSimulatedDyads: no visible global function definition for ‘aes’
+compareSimulatedDyads: no visible binding for global variable ‘type’
+compareSimulatedDyads: no visible binding for global variable ‘value’
+compareSimulatedDyads: no visible global function definition for
+  ‘geom_point’
+compareSimulatedDyads: no visible global function definition for
+  ‘stat_summary’
+compareSimulatedDyads: no visible global function definition for
+  ‘ggtitle’
+critical.r: no visible global function definition for ‘qt’
+downsample.eda: no visible global function definition for ‘decimate’
+dsmodel: no visible global function definition for ‘lm’
+dsmodel: no visible global function definition for ‘coef’
+dsmodel : x_f: no visible global function definition for ‘predict’
+dsmodel : y_f: no visible global function definition for ‘predict’
+dsmodel.multilag: no visible global function definition for ‘lm’
+dsmodel.multilag: no visible global function definition for ‘Lag’
+dsmodel.multilag: no visible global function definition for ‘coef’
+dsmodel.multilag : x_f: no visible global function definition for
+  ‘predict’
+dsmodel.multilag : y_f: no visible global function definition for
+  ‘predict’
+dsmodel.sem: no visible global function definition for ‘sem’
+dummyCodeByCondition: no visible global function definition for
+  ‘write.csv’
+dyad.dsgraph: no visible global function definition for ‘decimate’
+examples: no visible global function definition for ‘read_excel’
+examples: possible error in simulatePartner(x.signal = x, fs = 1, mu =
+  0.5, sr.ratio = 1, cr = cr, sr = sr, i = 0): unused arguments (cr =
+  cr, sr = sr)
+fitDSModel: no visible global function definition for ‘na.omit’
+fitDSModel: no visible global function definition for ‘systemfit’
+fitDSModel: no visible global function definition for ‘lrtest’
+fitDSModelForDyad: no visible global function definition for ‘decimate’
+format.r: no visible global function definition for ‘str_sub’
+generateI3Mat: no visible global function definition for ‘str_sub’
+generateI3Mat: no visible global function definition for ‘toJSON’
+ggCaterpillar : f: no visible global function definition for ‘qnorm’
+ggCaterpillar : f: no visible global function definition for ‘ppoints’
+ggCaterpillar : f: no visible global function definition for ‘ggplot’
+ggCaterpillar : f: no visible global function definition for ‘aes’
+ggCaterpillar : f: no visible binding for global variable ‘nQQ’
+ggCaterpillar : f: no visible binding for global variable ‘y’
+ggCaterpillar : f: no visible global function definition for
+  ‘facet_wrap’
+ggCaterpillar : f: no visible global function definition for ‘xlab’
+ggCaterpillar : f: no visible global function definition for ‘ylab’
+ggCaterpillar : f: no visible binding for global variable ‘ID’
+ggCaterpillar : f: no visible global function definition for
+  ‘coord_flip’
+ggCaterpillar : f: no visible global function definition for
+  ‘facet_grid’
+ggCaterpillar : f: no visible global function definition for ‘theme’
+ggCaterpillar : f: no visible global function definition for
+  ‘geom_hline’
+ggCaterpillar : f: no visible global function definition for
+  ‘geom_errorbar’
+ggCaterpillar : f: no visible binding for global variable ‘ci’
+ggCaterpillar : f: no visible global function definition for
+  ‘geom_point’
+ggbracket: no visible binding for global variable ‘mean_cl_normal’
+ggbracket : f.test: no visible global function definition for ‘lm’
+ggbracket : f.test: no visible global function definition for ‘aov’
+ggbracket: no visible global function definition for ‘ggplot_build’
+ggbracket: no visible global function definition for ‘combn’
+ggbracket: no visible global function definition for ‘annotate’
+ggbracket: no visible global function definition for ‘t.test’
+ggbracket: no visible global function definition for ‘geom_segment’
+ggbracket: no visible global function definition for ‘aes’
+ggbracket: no visible binding for global variable ‘x1’
+ggbracket: no visible binding for global variable ‘y1’
+ggbracket: no visible binding for global variable ‘x2’
+ggbracket: no visible binding for global variable ‘y2’
+gghist : norm.test: no visible global function definition for
+  ‘shapiro.test’
+gghist: no visible global function definition for ‘sd’
+gghist: no visible global function definition for ‘ggplot’
+gghist: no visible global function definition for ‘aes’
+gghist: no visible binding for global variable ‘group’
+gghist: no visible global function definition for ‘geom_density’
+gghist: no visible global function definition for ‘stat_function’
+gghist: no visible binding for global variable ‘dnorm’
+gghist: no visible global function definition for ‘ggplot_build’
+gghist: no visible global function definition for ‘annotate’
+ggrel.x: no visible global function definition for ‘last_plot’
+ggrel.x: no visible global function definition for ‘ggplot_build’
+ggrel.y: no visible global function definition for ‘last_plot’
+ggrel.y: no visible global function definition for ‘ggplot_build’
+ind_DC: no visible global function definition for ‘approx’
+ind_DC: no visible global function definition for ‘trapz’
+ind_DC: no visible global function definition for ‘tail’
+ind_DC: no visible global function definition for ‘head’
+linearTrend: no visible global function definition for ‘lm’
+linearTrend: no visible global function definition for ‘coef’
+lmp: no visible global function definition for ‘pf’
+makeDyad: no visible global function definition for ‘na.omit’
+make_corr_table: no visible global function definition for ‘corr.test’
+multiplot: no visible global function definition for ‘grid.newpage’
+multiplot: no visible global function definition for ‘pushViewport’
+multiplot: no visible global function definition for ‘viewport’
+multiplot: no visible global function definition for ‘grid.layout’
+normalize: no visible global function definition for ‘sd’
+o.Lag: no visible global function definition for ‘Lag’
+o.ancova: no visible global function definition for ‘Anova’
+o.anova: no visible global function definition for ‘get_all_vars’
+o.anova.table: no visible global function definition for ‘anova’
+o.aov: no visible global function definition for ‘aov’
+o.aov: no visible global function definition for ‘drop1’
+o.barplot: no visible global function definition for ‘barplot’
+o.barplot: no visible global function definition for ‘text’
+o.center: no visible binding for global variable ‘use.sd’
+o.center: no visible global function definition for ‘sd’
+o.corplot: no visible global function definition for ‘ggcorr’
+o.corplot: no visible global function definition for ‘geom_tile’
+o.corplot: no visible global function definition for ‘aes_string’
+o.corplot: no visible global function definition for
+  ‘scale_fill_gradient2’
+o.corplot: no visible global function definition for ‘geom_text’
+o.corplot: no visible global function definition for ‘aes’
+o.corplot: no visible binding for global variable ‘x’
+o.corplot: no visible binding for global variable ‘y’
+o.corplot: no visible binding for global variable ‘label’
+o.corplot: no visible global function definition for ‘guides’
+o.describe: no visible global function definition for ‘sd’
+o.describe: no visible global function definition for ‘skew’
+o.describe: no visible global function definition for ‘kurtosi’
+o.describeBy: no visible global function definition for ‘describeBy’
+o.describeBy: no visible global function definition for ‘xtable’
+o.estLag: no visible global function definition for ‘rowWeightedMeans’
+o.estLag: no visible global function definition for ‘gausswin’
+o.hist: no visible global function definition for ‘par’
+o.hist: no visible global function definition for ‘hist’
+o.hist: no visible global function definition for ‘na.omit’
+o.hist: no visible binding for global variable ‘na.omit’
+o.hist: no visible global function definition for ‘dnorm’
+o.hist: no visible global function definition for ‘sd’
+o.hist: no visible global function definition for ‘lines’
+o.hov: no visible global function definition for ‘leveneTest’
+o.isnorm: no visible global function definition for ‘shapiro.test’
+o.isnorm: no visible global function definition for ‘na.omit’
+o.lm.table: no visible global function definition for ‘standardCoefs’
+o.lm.xtable: no visible global function definition for ‘xtable’
+o.outliers: no visible global function definition for ‘stdres’
+o.pbcopy: no visible global function definition for ‘write.table’
+o.pcor: no visible global function definition for ‘xtable’
+o.plot.lm: no visible global function definition for ‘residuals’
+o.plot.lm: no visible global function definition for ‘cooks.distance’
+o.plot.lm: no visible global function definition for ‘par’
+o.plot.lm: no visible global function definition for ‘abline’
+o.plot.lm: no visible global function definition for ‘coef’
+o.plot.lm: no visible global function definition for ‘points’
+o.plot.residuals: no visible global function definition for ‘residuals’
+o.plot.residuals: no visible global function definition for
+  ‘cooks.distance’
+o.plot.residuals: no visible global function definition for ‘abline’
+o.plot.residuals: no visible global function definition for ‘points’
+o.ppplot: no visible global function definition for ‘pnorm’
+o.ppplot: no visible global function definition for ‘ppoints’
+o.ppplot: no visible global function definition for ‘abline’
+o.residuals: no visible global function definition for ‘par’
+o.residuals: no visible global function definition for ‘residuals’
+o.residuals: no visible global function definition for ‘stdres’
+o.residuals: no visible global function definition for ‘coef’
+o.residuals: no visible global function definition for ‘View’
+o.residuals: no visible global function definition for ‘xtable’
+o.residuals: no visible global function definition for ‘lm’
+o.residuals: no visible global function definition for ‘abline’
+o.residuals: no visible global function definition for ‘legend’
+o.residuals: no visible global function definition for ‘cooks.distance’
+o.residuals: no visible global function definition for ‘describe’
+o.rmcov: no visible global function definition for ‘model.matrix’
+o.rmcov: no visible global function definition for ‘model.response’
+o.rmcov: no visible global function definition for ‘weights’
+o.rmcov: no visible global function definition for ‘lsfit’
+o.scale: no visible global function definition for ‘sd’
+o.scatter: no visible global function definition for ‘lines’
+o.scatter: no visible global function definition for ‘lowess’
+o.smooth: no visible global function definition for ‘Lag’
+o.smooth: no visible global function definition for ‘rowWeightedMeans’
+o.smooth: no visible global function definition for ‘gausswin’
+o.window: no visible binding for global variable ‘progress_bar’
+o.window.list: no visible binding for global variable ‘progress_bar’
+pbcopy: no visible global function definition for ‘write.table’
+pcor.mat: no visible global function definition for ‘na.omit’
+pcor.mat: no visible global function definition for ‘cov’
+pcor.mat: no visible global function definition for ‘cov2cor’
+pcor.rec: no visible global function definition for ‘na.omit’
+pcor.rec: no visible global function definition for ‘cor’
+pcor.test: no visible global function definition for ‘na.omit’
+pcor.test: no visible global function definition for ‘pnorm’
+plot.density: no visible global function definition for ‘kde2d’
+plot.density: no visible global function definition for ‘contour’
+plot.density: no visible global function definition for ‘title’
+plot.density: no visible global function definition for ‘ggplot’
+plot.density: no visible global function definition for ‘aes’
+plot.density: no visible binding for global variable ‘x’
+plot.density: no visible binding for global variable ‘y’
+plot.density: no visible binding for global variable ‘z’
+plot.density: no visible global function definition for ‘geom_contour’
+plot.dsgraph: no visible global function definition for ‘ggplot’
+plot.dsgraph: no visible global function definition for ‘aes’
+plot.dsgraph: no visible binding for global variable ‘x’
+plot.dsgraph: no visible binding for global variable ‘y’
+plot.dsgraph: no visible global function definition for ‘geom_segment’
+plot.dsgraph: no visible binding for global variable ‘xprime’
+plot.dsgraph: no visible binding for global variable ‘yprime’
+plot.dsgraph: no visible global function definition for ‘arrow’
+plot.dsgraph: no visible global function definition for ‘unit’
+plot.dsgraph: no visible global function definition for
+  ‘scale_colour_gradient’
+plot.dsgraph: no visible global function definition for ‘labs’
+plot.dsgraph: no visible global function definition for ‘xlim’
+plot.dsgraph: no visible global function definition for ‘ylim’
+plot.eda: no visible global function definition for ‘ggplot’
+plot.eda: no visible global function definition for ‘aes’
+plot.eda: no visible binding for global variable ‘Timestamp’
+plot.eda: no visible binding for global variable ‘EDA’
+plot.eda: no visible global function definition for ‘geom_line’
+plot.eda: no visible global function definition for ‘xlab’
+plot.eda: no visible global function definition for ‘ylab’
+plot.eda: no visible global function definition for ‘ggtitle’
+plot.eda: no visible binding for global variable ‘X’
+plot.eda: no visible binding for global variable ‘Y’
+plot.eda: no visible binding for global variable ‘Z’
+plot.eda: no visible binding for global variable ‘Movement’
+plot.eda: no visible global function definition for ‘plot_grid’
+plot.lagparams: no visible global function definition for ‘na.omit’
+plot.lagparams: no visible global function definition for ‘melt’
+plot.lagparams: no visible global function definition for
+  ‘scale_colour_discrete’
+plot.lagparams: no visible global function definition for ‘guides’
+plot.lagparams: no visible global function definition for
+  ‘guide_legend’
+plot.lagparams: no visible global function definition for
+  ‘element_text’
+plot.lagparams: no visible global function definition for ‘ggplot’
+plot.lagparams: no visible global function definition for ‘aes’
+plot.lagparams: no visible binding for global variable ‘timestamp’
+plot.lagparams: no visible binding for global variable ‘value’
+plot.lagparams: no visible binding for global variable ‘variable’
+plot.lagparams: no visible global function definition for ‘geom_line’
+plot.lagparams: no visible global function definition for ‘geom_point’
+plot.lagparams: no visible global function definition for ‘xlab’
+plot.lagparams: no visible global function definition for ‘ylab’
+plot.lagparams: no visible global function definition for ‘ggtitle’
+plot.lagparams: no visible global function definition for
+  ‘scale_x_datetime’
+plot.lagparams: no visible global function definition for ‘plot_grid’
+plot.lagparams: no visible global function definition for ‘ggsave’
+plot.tvdsm: no visible global function definition for ‘na.omit’
+plot.tvdsm: no visible global function definition for ‘melt’
+plot.tvdsm: no visible global function definition for
+  ‘scale_colour_discrete’
+plot.tvdsm: no visible global function definition for
+  ‘scale_shape_discrete’
+plot.tvdsm: no visible global function definition for ‘guides’
+plot.tvdsm: no visible global function definition for ‘guide_legend’
+plot.tvdsm: no visible global function definition for ‘element_text’
+plot.tvdsm: no visible global function definition for ‘ggplot’
+plot.tvdsm: no visible global function definition for ‘aes’
+plot.tvdsm: no visible binding for global variable ‘Timestamps’
+plot.tvdsm: no visible binding for global variable ‘value’
+plot.tvdsm: no visible binding for global variable ‘variable’
+plot.tvdsm: no visible global function definition for ‘geom_line’
+plot.tvdsm: no visible global function definition for ‘xlab’
+plot.tvdsm: no visible global function definition for ‘ylab’
+plot.tvdsm: no visible global function definition for ‘ggtitle’
+plot.tvdsm: no visible global function definition for ‘geom_point’
+plot.tvdsm: no visible global function definition for
+  ‘scale_x_datetime’
+plot.tvdsm: no visible global function definition for ‘theme’
+plot.tvdsm: no visible global function definition for ‘geom_rect’
+plot.tvdsm: no visible binding for global variable ‘Condition’
+plot.tvdsm: no visible global function definition for ‘scale_fill_grey’
+plot.tvdsm: no visible global function definition for ‘ylim’
+plot.tvdsm: no visible global function definition for ‘plot_grid’
+plot.tvdsm: no visible global function definition for ‘ggsave’
+plotDyad: no visible global function definition for ‘melt’
+plotDyad: no visible global function definition for ‘ggplot’
+plotDyad: no visible global function definition for ‘aes_string’
+plotDyad: no visible global function definition for ‘geom_line’
+plotDyad: no visible global function definition for ‘ylab’
+plotDyad: no visible global function definition for ‘xlab’
+plotDyad: no visible global function definition for ‘ggtitle’
+plotDyad: no visible global function definition for ‘scale_color_grey’
+plotEDAByCondition: no visible global function definition for ‘ggplot’
+plotEDAByCondition: no visible global function definition for ‘aes’
+plotEDAByCondition: no visible binding for global variable ‘Timestamp’
+plotEDAByCondition: no visible binding for global variable ‘EDA’
+plotEDAByCondition: no visible global function definition for
+  ‘geom_line’
+plotEDAByCondition: no visible global function definition for ‘xlab’
+plotEDAByCondition: no visible global function definition for ‘ylab’
+plotEDAByCondition: no visible global function definition for ‘ggtitle’
+plotEDAByCondition: no visible global function definition for
+  ‘geom_rect’
+plotEDAByCondition: no visible binding for global variable ‘Start Time’
+plotEDAByCondition: no visible binding for global variable ‘End Time’
+plotEDAByCondition: no visible binding for global variable ‘Condition’
+plotMetric: no visible global function definition for ‘ggplot’
+plotMetric: no visible global function definition for ‘aes_string’
+plotMetric: no visible global function definition for ‘stat_summary’
+plotMetric: no visible binding for global variable ‘mean_cl_normal’
+plotTSDescriptives: no visible global function definition for ‘melt’
+plotTSDescriptives: no visible global function definition for ‘ggplot’
+plotTSDescriptives: no visible global function definition for ‘aes’
+plotTSDescriptives: no visible binding for global variable ‘Start’
+plotTSDescriptives: no visible binding for global variable ‘End’
+plotTSDescriptives: no visible binding for global variable ‘value’
+plotTSDescriptives: no visible binding for global variable ‘variable’
+plotTSDescriptives: no visible global function definition for
+  ‘geom_line’
+plotTSDescriptives: no visible global function definition for
+  ‘geom_point’
+plotTSDescriptives: no visible global function definition for ‘xlab’
+plotTSDescriptives: no visible global function definition for ‘ylab’
+plotTSDescriptives: no visible global function definition for ‘ggtitle’
+plotTSDescriptives: no visible global function definition for
+  ‘geom_rect’
+plotTSDescriptives: no visible global function definition for
+  ‘aes_string’
+plotTSDescriptives: no visible global function definition for ‘guides’
+plotTSDescriptives: no visible global function definition for
+  ‘guide_legend’
+plotTSDescriptives: no visible global function definition for ‘theme’
+plotTSDescriptives: no visible global function definition for
+  ‘scale_y_continuous’
+plotTSDescriptives: no visible global function definition for
+  ‘scale_x_datetime’
+plotlyDyad: no visible global function definition for ‘melt’
+plotlyDyad: no visible global function definition for ‘plot_ly’
+plotlyDyad: no visible global function definition for ‘add_lines’
+r2.corr.mer: no visible global function definition for ‘lm’
+read.Codes: no visible global function definition for ‘read_excel’
+read.Codes: no visible global function definition for ‘read.csv’
+read.Codes: no visible global function definition for ‘na.omit’
+read.ERCodes: no visible global function definition for ‘read_excel’
+read.ERCodes: no visible global function definition for ‘read.csv’
+read.IBI: no visible global function definition for ‘read.csv’
+read.RTCodes: no visible global function definition for ‘read_excel’
+read.RTCodes: no visible global function definition for ‘read.csv’
+read.RTCodes: no visible global function definition for ‘na.omit’
+read.actiwave: no visible global function definition for ‘read.csv’
+read.actiwave: no visible global function definition for ‘na.omit’
+read.biosync: no visible global function definition for ‘read.csv’
+read.biosync: no visible global function definition for ‘ymd_hms’
+read.csvdata: no visible global function definition for ‘read.csv’
+read.csvdata: no visible global function definition for ‘ymd_hms’
+read.dyad: no visible binding for global variable ‘read.csv’
+read.dyad: no visible global function definition for ‘na.omit’
+read.e4: no visible global function definition for ‘interp’
+read.eda: no visible global function definition for ‘read.csv’
+read.eda: no visible global function definition for ‘na.exclude’
+read.empatica.acc: no visible global function definition for ‘read.csv’
+read.empatica.bvp: no visible global function definition for ‘read.csv’
+read.empatica.eda: no visible global function definition for ‘read.csv’
+read.empatica.hr: no visible global function definition for ‘read.csv’
+read.empatica.ibi: no visible global function definition for ‘read.csv’
+read.empatica.temp: no visible global function definition for
+  ‘read.csv’
+read.ibutton: no visible global function definition for ‘read.csv’
+read.reda: no visible global function definition for ‘read.csv’
+read.reda: no visible global function definition for ‘na.omit’
+runAnova: no visible global function definition for ‘lm’
+runAnova: no visible global function definition for ‘lmer’
+runAnova: no visible global function definition for ‘anova’
+runFalsePairings: no visible binding for global variable ‘progress_bar’
+sampleSignal: no visible global function definition for ‘read_excel’
+save.eda: no visible global function definition for ‘str_length’
+save.eda: no visible global function definition for ‘write.table’
+saveDataForGraphing: no visible global function definition for
+  ‘write.csv’
+saveInterpersonalData: no visible global function definition for
+  ‘write.csv’
+scatter_plot : cor_fun: no visible global function definition for
+  ‘cor.test’
+scatter_plot: no visible global function definition for ‘ggplot’
+scatter_plot: no visible global function definition for ‘aes_string’
+scatter_plot: no visible global function definition for ‘geom_point’
+scatter_plot: no visible global function definition for ‘geom_smooth’
+se: no visible global function definition for ‘var’
+se: no visible global function definition for ‘na.omit’
+simulate: no visible global function definition for ‘predict’
+simulateDyad: no visible global function definition for ‘rnorm’
+simulateDyad: no visible global function definition for ‘Lag’
+simulateDyad: no visible global function definition for ‘runif’
+simulateDyad: no visible global function definition for ‘na.omit’
+simulateDyad: no visible global function definition for ‘melt’
+simulateDyad: no visible global function definition for ‘ggplot’
+simulateDyad: no visible global function definition for ‘aes’
+simulateDyad: no visible binding for global variable ‘Timestamp’
+simulateDyad: no visible binding for global variable ‘value’
+simulateDyad: no visible binding for global variable ‘variable’
+simulateDyad: no visible global function definition for ‘geom_line’
+simulateDyad: no visible global function definition for ‘xlab’
+simulateDyad: no visible global function definition for ‘ylab’
+simulateDyad: no visible global function definition for
+  ‘scale_y_continuous’
+simulateDyad: no visible global function definition for
+  ‘scale_x_datetime’
+simulatePartner: no visible global function definition for ‘Lag’
+simulatePartner: no visible global function definition for ‘rnorm’
+simulatePartner: no visible global function definition for ‘na.omit’
+simulatePartner: no visible global function definition for ‘melt’
+simulatePartner: no visible global function definition for ‘ggplot’
+simulatePartner: no visible global function definition for ‘aes’
+simulatePartner: no visible binding for global variable ‘Timestamp’
+simulatePartner: no visible binding for global variable ‘value’
+simulatePartner: no visible binding for global variable ‘variable’
+simulatePartner: no visible global function definition for ‘geom_line’
+simulatePartner: no visible global function definition for ‘xlab’
+simulatePartner: no visible global function definition for ‘ylab’
+simulatePartner: no visible global function definition for
+  ‘scale_y_continuous’
+simulatePartner: no visible global function definition for
+  ‘scale_x_datetime’
+skew.ratio: no visible global function definition for ‘skew’
+skew.se: no visible global function definition for ‘na.omit’
+statespacegraph: no visible global function definition for ‘ggplot’
+statespacegraph: no visible global function definition for ‘aes’
+statespacegraph: no visible binding for global variable ‘x’
+statespacegraph: no visible binding for global variable ‘y’
+statespacegraph: no visible global function definition for
+  ‘geom_segment’
+statespacegraph: no visible binding for global variable ‘xprime’
+statespacegraph: no visible binding for global variable ‘yprime’
+statespacegraph: no visible global function definition for ‘arrow’
+statespacegraph: no visible global function definition for ‘unit’
+statespacegraph: no visible global function definition for
+  ‘scale_colour_gradient’
+statespacegraph: no visible global function definition for ‘labs’
+statespacegraph: no visible global function definition for ‘xlim’
+statespacegraph: no visible global function definition for ‘ylim’
+statespacegraph: no visible global function definition for
+  ‘standardCoefs’
+statespacegraph: no visible global function definition for
+  ‘arrangeGrob’
+statespacegraph: no visible global function definition for ‘textGrob’
+statespacegraph: no visible global function definition for ‘gpar’
+std: no visible global function definition for ‘sd’
+stem: no visible global function definition for ‘coefficients’
+stem: no visible global function definition for ‘lines’
+stem: no visible global function definition for ‘abline’
+topography: no visible global function definition for ‘ggplot’
+topography: no visible global function definition for ‘aes’
+topography: no visible global function definition for ‘geom_density2d’
+topography: no visible global function definition for ‘xlim’
+topography: no visible global function definition for ‘ylim’
+tsDescriptives: no visible global function definition for ‘sd’
+tsDescriptives: no visible global function definition for ‘decimate’
+tsDescriptives: no visible global function definition for ‘acf’
+tsDescriptives: no visible global function definition for ‘var’
+vectorfield: no visible global function definition for ‘Lag’
+vectorfield: no visible global function definition for ‘ggplot’
+vectorfield: no visible global function definition for ‘aes’
+vectorfield: no visible global function definition for ‘geom_density2d’
+vectorfield: no visible global function definition for ‘geom_segment’
+vectorfield: no visible binding for global variable ‘x.vel’
+vectorfield: no visible binding for global variable ‘y.vel’
+vectorfield: no visible global function definition for ‘arrow’
+vectorfield: no visible global function definition for ‘unit’
+vectorfield: no visible global function definition for ‘labs’
+vectorfield: no visible global function definition for ‘xlim’
+vectorfield: no visible global function definition for ‘ylim’
+vectorflow: possible error in vectorfield(f, xx, yy, scale = scale):
+  unused argument (scale = scale)
+write.eda: no visible global function definition for ‘str_length’
+write.eda: no visible global function definition for ‘write.table’
+xyplot.lme: no visible global function definition for ‘xyplot’
+xyplot.lme : <anonymous>: no visible global function definition for
+  ‘panel.xyplot’
+xyplot.lme : <anonymous>: no visible global function definition for
+  ‘panel.lmline’
+Undefined global functions or variables:
+  Anova Condition EDA End End Time ID Lag Movement Start Start Time
+  Timestamp Timestamps VarCorr View X Y Z abline acf add_lines aes
+  aes_string annotate anova aov approx arrangeGrob arrow barplot ci
+  coef coefficients combn contour cooks.distance coord_flip cor
+  cor.test corr.test cov cov2cor decimate describe describeBy dnorm
+  drop1 element_text facet_grid facet_wrap gausswin geom_contour
+  geom_density geom_density2d geom_errorbar geom_hline geom_line
+  geom_point geom_rect geom_segment geom_smooth geom_text geom_tile
+  get_all_vars ggcorr ggplot ggplot_build ggsave ggtitle gpar
+  grid.layout grid.newpage group guide_legend guides head hist hour
+  interp kde2d kurtosi label labs last_plot ldply legend leveneTest
+  lines lm lmer lowess lrtest lsfit mean_cl_normal melt minute
+  model.matrix model.response nQQ na.exclude na.omit na.spline
+  panel.lmline panel.xyplot par pf plot_grid plot_ly pnorm points
+  ppoints predict progress_bar pushViewport qnorm qt read.csv
+  read_excel residuals rnorm rowMaxs rowWeightedMeans runif
+  scale_color_grey scale_colour_discrete scale_colour_gradient
+  scale_fill_gradient2 scale_fill_grey scale_shape_discrete
+  scale_x_datetime scale_y_continuous sd second sem shapiro.test skew
+  standardCoefs stat_function stat_summary stdres str_length str_split
+  str_sub systemfit t.test tail text textGrob theme timestamp title
+  toJSON trapz type unit use.sd value var variable viewport weights
+  write.csv write.table x x.vel x1 x2 xlab xlim xprime xtable xyplot y
+  y.vel y1 y2 ylab ylim ymd_hms yprime z
+Consider adding
+  importFrom("graphics", "abline", "barplot", "contour", "hist",
+             "legend", "lines", "par", "points", "text", "title")
+  importFrom("stats", "acf", "anova", "aov", "approx", "coef",
+             "coefficients", "cooks.distance", "cor", "cor.test", "cov",
+             "cov2cor", "dnorm", "drop1", "get_all_vars", "lm", "lowess",
+             "lsfit", "model.matrix", "model.response", "na.exclude",
+             "na.omit", "pf", "pnorm", "ppoints", "predict", "qnorm",
+             "qt", "residuals", "rnorm", "runif", "sd", "shapiro.test",
+             "t.test", "var", "weights")
+  importFrom("utils", "View", "combn", "head", "read.csv", "tail",
+             "timestamp", "write.csv", "write.table")
+to your NAMESPACE file.
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd cross-references ... WARNING
+Missing link or links in Rd file 'analyzeDyad.Rd':
+  ‘as.dyad’
+
+See section 'Cross-references' in the 'Writing R Extensions' manual.
+* checking for missing documentation entries ... WARNING
+Undocumented code objects:
+  ‘ICClme’ ‘RMSSD’ ‘TSDescriptivesByCondition’ ‘analyzeGroup’
+  ‘analyzeLags’ ‘annotate.relative’ ‘as.TimeOfDay’ ‘as.dyad’ ‘as.group’
+  ‘as.simulateddyad’ ‘boot_test_DC’ ‘bootstrapSimulation’ ‘compareSim’
+  ‘compareSimulatedDyads’ ‘conf.int’ ‘critical.r’ ‘describeDyad’
+  ‘descriptivesByCondition’ ‘distance’ ‘downsample.eda’ ‘dsmodel’
+  ‘dsmodel.multilag’ ‘dsmodel.sem’ ‘dummyCodeByCondition’
+  ‘dyad.dsgraph’ ‘dyad.dsmodel’ ‘dynamicalCorrelation’ ‘examples’
+  ‘fitDSModel’ ‘fitDSModelForDyad’ ‘format.r’ ‘generateI3Mat’ ‘get.key’
+  ‘getFS’ ‘ggCaterpillar’ ‘ggbracket’ ‘gghist’ ‘ggrel.x’ ‘ggrel.y’
+  ‘ind_DC’ ‘interruptedTimeSeries’ ‘is.NullOb’ ‘linearTrend’ ‘lmp’
+  ‘makeDyad’ ‘make_corr_table’ ‘multiplot’ ‘normalize’ ‘o.Lag’
+  ‘o.ancova’ ‘o.anova’ ‘o.anova.table’ ‘o.aov’ ‘o.assumptions’
+  ‘o.barplot’ ‘o.center’ ‘o.coef’ ‘o.corplot’ ‘o.describe’
+  ‘o.describe.by’ ‘o.describeBy’ ‘o.estLag’ ‘o.hist’ ‘o.hov’ ‘o.isnorm’
+  ‘o.lm.table’ ‘o.lm.xtable’ ‘o.outliers’ ‘o.pbcopy’ ‘o.pcor’
+  ‘o.plot.lm’ ‘o.plot.residuals’ ‘o.ppplot’ ‘o.range’ ‘o.rescale’
+  ‘o.residuals’ ‘o.rmcov’ ‘o.scale’ ‘o.scatter’ ‘o.smooth’ ‘o.window’
+  ‘o.window.list’ ‘omega.squared’ ‘p.format’ ‘parseTime’ ‘pbcopy’
+  ‘pcor.mat’ ‘pcor.rec’ ‘pcor.test’ ‘plot.density’ ‘plot.dsgraph’
+  ‘plot.eda’ ‘plot.lagparams’ ‘plot.tvdsm’ ‘plotDyad’
+  ‘plotEDAByCondition’ ‘plotMetric’ ‘plotTSDescriptives’ ‘plotlyDyad’
+  ‘r2.corr.mer’ ‘rand.dyad’ ‘read.Codes’ ‘read.ERCodes’ ‘read.IBI’
+  ‘read.IBI.TS’ ‘read.RTCodes’ ‘read.actiwave’ ‘read.biosync’
+  ‘read.csvdata’ ‘read.dyad’ ‘read.e4’ ‘read.eda’ ‘read.edf’
+  ‘read.empatica’ ‘read.empatica.acc’ ‘read.empatica.bvp’
+  ‘read.empatica.eda’ ‘read.empatica.hr’ ‘read.empatica.ibi’
+  ‘read.empatica.temp’ ‘read.ibutton’ ‘read.reda’ ‘rmNullObs’
+  ‘runAnova’ ‘runFalsePairings’ ‘sampleSignal’ ‘save.eda’
+  ‘saveDataForGraphing’ ‘saveInterpersonalData’ ‘scatter_plot’ ‘se’
+  ‘simulate’ ‘simulateDyad’ ‘simulatePartner’ ‘skew.ratio’ ‘skew.se’
+  ‘statespacegraph’ ‘std’ ‘stem’ ‘topography’ ‘tsDescriptives’
+  ‘urlForModel’ ‘validateConditionTimes’ ‘vectorfield’ ‘vectorflow’
+  ‘window’ ‘write.eda’ ‘xyplot.lme’
+All user-level objects in a package should have documentation entries.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking for code/documentation mismatches ... WARNING
+Functions or methods with usage in Rd file 'analyzeByCondition.Rd' but not in code:
+  ‘analyzeByCondition’
+
+Codoc mismatches from Rd file 'analyzeDyad.Rd':
+analyzeDyad
+  Code: function(f1 = "", f2 = "", dyad = c(), xname = f1, yname = f2,
+                 norm = F, window_size = 60 * 5, window_step =
+                 window_size, start = "", end = "", func =
+                 fitDSModelForDyad, na.rm = T, simulate = F, dname =
+                 paste(xname, yname, sep = "+"), lag = 0, noPlots = F,
+                 plotParams = T, pltTitle = paste(dname, "(", "Lag",
+                 "=", lag, ")"), measure = "EDA", type = 4, downsample
+                 = 1, x.baseline = NA, y.baseline = NA, verbose = F,
+                 codes = "", useRealTime = F, incTSD = T, ...)
+  Docs: function(f1 = "", f2 = "", dyad = c(), xname = f1, yname = f2,
+                 norm = F, window_size = 60 * 5, window_step =
+                 window_size, start = "", end = "", func =
+                 computeStateSpace, na.rm = T, simulate = F, dname =
+                 paste(xname, yname, sep = "+"), lag = 0, noPlots = F,
+                 plotParams = T, pltTitle = paste(dname, "(", "Lag",
+                 "=", lag, ")"), measure = "EDA", type = 2, downsample
+                 = 1, x.baseline = NA, y.baseline = NA, verbose = F)
+  Argument names in code not in docs:
+    codes useRealTime incTSD ...
+  Mismatches in argument default values:
+    Name: 'func' Code: fitDSModelForDyad Docs: computeStateSpace
+    Name: 'type' Code: 4 Docs: 2
+
+* checking Rd \usage sections ... WARNING
+Undocumented arguments in Rd file 'analyzeByCondition.Rd'
+  ‘func’ ‘verbose’ ‘start’ ‘end’ ‘timeformat’
+Duplicated \argument entries in Rd file 'analyzeByCondition.Rd':
+  ‘lag’
+
+Undocumented arguments in Rd file 'analyzeDyad.Rd'
+  ‘start’ ‘end’ ‘func’ ‘na.rm’ ‘simulate’ ‘verbose’
+Duplicated \argument entries in Rd file 'analyzeDyad.Rd':
+  ‘downsample’
+
+Functions with \usage entries need to have the appropriate \alias
+entries, and all their arguments documented.
+The \usage entries must correspond to syntactically valid R code.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking examples ... ERROR
+Running examples in ‘tvdsm-Ex.R’ failed
+The error most likely occurred in:
+
+> ### Name: analyzeByCondition
+> ### Title: Perform TVDSM analysis on a dyad by condition
+> ### Aliases: analyzeByCondition
+> 
+> ### ** Examples
+> 
+> analyzeByCondition("PersonA.csv","PersonB.csv",codes="ConditionTimes.csv")
+Error in analyzeByCondition("PersonA.csv", "PersonB.csv", codes = "ConditionTimes.csv") : 
+  could not find function "analyzeByCondition"
+Execution halted
+* checking PDF version of manual ... OK
 * DONE
-Status: 1 ERROR, 1 NOTE
+Status: 1 ERROR, 8 WARNINGs, 3 NOTEs

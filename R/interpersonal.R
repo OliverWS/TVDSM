@@ -825,7 +825,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
     l <- dim(ERCodes)[1]
     ERCodes[l+1,] <- c(NA,-1,-1,-1,-1)
     addNA(ERCodes$Condition)
-    for(n in length(data):1){
+    for(n in rev(seq_along(data))){
       if(is.na(data[[n]]) == F){
         dt <- data[[n]]$Start - start
         data[[n]]$Condition <- ERCodes$Condition[[l+1]]
@@ -856,8 +856,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   mdls <- data
   mdlData <- data.frame(timestamp=as.POSIXct(get.key(mdls,"Timestamp"),origin = "1970-01-01"),
                         name=rep_len(dname,n),
-                        Start=as.POSIXct(get.key(mdls,"Start"),
-                        End=as.POSIXct(get.key(mdls,"End"), 
+                        Start=as.POSIXct(get.key(mdls,"Start"),origin = "1970-01-01"),
+                        End=as.POSIXct(get.key(mdls,"End"),origin = "1970-01-01"),
                         dx.r.squared=get.key(mdls,"dx.r.squared"),
                         dy.r.squared=get.key(mdls,"dy.r.squared"),
                         x.selfreg=get.key(mdls,"b1"),
@@ -866,7 +866,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
                         y.selfreg=get.key(mdls,"b4"),
                         y.coreg=get.key(mdls,"b5"),
                         y.interaction=get.key(mdls,"b45")
-                        )
+  )
+
   if(incTSD){
     df.xTSD <- ldply(mdls,.fun = function(d){return(as.data.frame(d$xTSD))})
     df.yTSD <- ldply(mdls,.fun = function(d){return(as.data.frame(d$yTSD))})

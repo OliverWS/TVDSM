@@ -1,10 +1,14 @@
 * installing *source* package ‘tvdsm’ ...
 ** using staged installation
 ** R
-Error in parse(...) : 
-  /Users/OliverWS/Dropbox (Personal)/TVDSM/R/interpersonal.R:870:3: unexpected 'if'
-869:                         )
-870:   if
-       ^
-ERROR: unable to collate and parse R files for package ‘tvdsm’
-* removing ‘/Users/OliverWS/Dropbox (Personal)/TVDSM/..Rcheck/tvdsm’
+** byte-compile and prepare package for lazy loading
+Note: possible error in 'simulateDyad(duration = 600, ': unused arguments (sr = 0, cr = 0.25) 
+Note: possible error in 'simulatePartner(x.signal = x, ': unused arguments (cr = cr, sr = sr) 
+Note: possible error in 'vectorfield(f, xx, yy, ': unused argument (scale = scale) 
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (tvdsm)

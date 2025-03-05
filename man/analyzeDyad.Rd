@@ -2,63 +2,99 @@
 % Please edit documentation in R/interpersonal.R
 \name{analyzeDyad}
 \alias{analyzeDyad}
-\title{Perform TVDSM analysis on a dyad by condition}
+\title{Analyze dyad data for TVDSM analysis}
 \usage{
-analyzeDyad(f1 = "", f2 = "", dyad = c(), xname = f1, yname = f2,
-  norm = F, window_size = 60 * 5, window_step = window_size, start = "",
-  end = "", func = computeStateSpace, na.rm = T, simulate = F,
-  dname = paste(xname, yname, sep = "+"), lag = 0, noPlots = F,
-  plotParams = T, pltTitle = paste(dname, "(", "Lag", "=", lag, ")"),
-  measure = "EDA", type = 2, downsample = 1, x.baseline = NA,
-  y.baseline = NA, verbose = F)
+analyzeDyad(
+  f1 = "",
+  f2 = "",
+  dyad = c(),
+  xname = f1,
+  yname = f2,
+  norm = F,
+  window_size = 60 * 5,
+  window_step = window_size,
+  start = "",
+  end = "",
+  func = fitDSModelForDyad,
+  na.rm = T,
+  simulate = F,
+  dname = paste(xname, yname, sep = "+"),
+  lag = 0,
+  noPlots = F,
+  plotParams = T,
+  pltTitle = paste(dname, "(", "Lag", "=", lag, ")"),
+  measure = "EDA",
+  type = 4,
+  downsample = 1,
+  x.baseline = NA,
+  y.baseline = NA,
+  verbose = F,
+  codes = "",
+  useRealTime = F,
+  incTSD = T,
+  ...
+)
 }
 \arguments{
-\item{f1}{path to csv file with data for participant 1}
+\item{f1}{File path for participant 1.}
 
-\item{f2}{path to csv file with data for participant 2}
+\item{f2}{File path for participant 2.}
 
-\item{dyad}{if a valid dyad object is provided (produced via \code{\link{as.dyad}}), analysis will be run on the dyad directly, and \code{f1} and \code{f2} will be ignored}
+\item{dyad}{Optional dyad object.}
 
-\item{xname}{a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f1}}
+\item{xname}{Friendly name for participant 1.}
 
-\item{yname}{a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f2}}
+\item{yname}{Friendly name for participant 2.}
 
-\item{norm}{should participant data be standardized prior to TVDSM analysis}
+\item{norm}{Logical, whether to standardize data.}
 
-\item{window_size}{the size of the sliding window to use for TVDSM analysis, in seconds}
+\item{window_size}{Window size in seconds.}
 
-\item{window_step}{the increment to be used when sliding \code{window_size}, in seconds}
+\item{window_step}{Step size in seconds.}
 
-\item{dname}{a string indicating a friendly name for the dyad (used in plots and summary data frame)}
+\item{start}{Start time for analysis.}
 
-\item{lag}{the lag to be used in the TVDSM analysis (in seconds)}
+\item{end}{End time for analysis.}
 
-\item{noPlots}{if true, plots will not be generated}
+\item{func}{Function for model fitting (default fitDSModelForDyad).}
 
-\item{plotParams}{should model coefficients be ploted}
+\item{na.rm}{Logical.}
 
-\item{pltTitle}{pass a string to override plot title}
+\item{simulate}{Logical, whether to simulate a dyad.}
 
-\item{measure}{a string indicating which column to select from each file when creating a dyad}
+\item{dname}{Friendly name for the dyad.}
 
-\item{type}{the type of TVDSM analysis to use}
+\item{lag}{Lag value for analysis.}
 
-\item{downsample}{the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)}
+\item{noPlots}{Logical, if TRUE, no plots are produced.}
 
-\item{x.baseline}{provide a value to be treated as baseline for participant 1 in TVDSM analysis. Defaults to mean of participant 1's data.}
+\item{plotParams}{Logical, whether to include model parameter plots.}
 
-\item{y.baseline}{provide a value to be treated as baseline for participant 2 in TVDSM analysis. Defaults to mean of participant 2's data.}
+\item{pltTitle}{Title for the plots.}
 
-\item{downsample}{the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)}
+\item{measure}{Measurement column name.}
+
+\item{type}{Model type.}
+
+\item{downsample}{Downsampling factor.}
+
+\item{x.baseline}{Baseline for participant 1.}
+
+\item{y.baseline}{Baseline for participant 2.}
+
+\item{verbose}{Logical, whether to be verbose.}
+
+\item{codes}{File path for condition codes.}
+
+\item{useRealTime}{Logical, whether to interpret condition codes in real time.}
+
+\item{incTSD}{Logical, whether to include time series descriptives.}
+
+\item{...}{Additional arguments.}
 }
 \value{
-a list containing models (mdls), plot (plt), and a summary data frame (summary)
+A list containing TVDSM model outputs, summary, and plots.
 }
 \description{
-Perform TVDSM analysis on a dyad by condition
+Processes two participant datasets or a dyad object, performs TVDSM analysis, generates plots, and returns model summaries.
 }
-\examples{
-#Perform TVDSM analysis using a 5 minute sliding window incremented every 10 second, with a lag of 5 seconds
-analyzeDyad("PersonA.csv","PersonB.csv",window_size=5*60, window_step=10,lag=5)
-}
-

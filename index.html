@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">tvdsm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,8 +60,11 @@
 <span></span>
 <span></span>
 <span><span class="co"># Run the analysis using analyzeDyad</span></span>
+<span><span class="va">PersonA</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"PersonA.csv"</span><span class="op">)</span></span>
+<span><span class="va">PersonB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"PersonB.csv"</span><span class="op">)</span></span>
+<span><span class="va">dyad</span> <span class="op">&lt;-</span> <span class="fu">as.dyad</span><span class="op">(</span><span class="va">PersonA</span>, <span class="va">PersonB</span>, cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"EDA"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/analyzeDyad.html">analyzeDyad</a></span><span class="op">(</span>f1<span class="op">=</span><span class="st">"PersonA.csv"</span>, f2<span class="op">=</span><span class="st">"PersonB.csv"</span>, window_size<span class="op">=</span><span class="fl">60</span>, lag<span class="op">=</span><span class="fl">0</span>, measure<span class="op">=</span><span class="st">"EDA"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/analyzeDyad.html">analyzeDyad</a></span><span class="op">(</span>dyad<span class="op">=</span><span class="va">dyad</span>, window_size<span class="op">=</span><span class="fl">60</span>, lag<span class="op">=</span><span class="fl">0</span>, measure<span class="op">=</span><span class="st">"EDA"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="what-does-analyzedyad-do">What does analyzeDyad do?<a class="anchor" aria-label="anchor" href="#what-does-analyzedyad-do"></a>

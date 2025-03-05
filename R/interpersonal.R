@@ -2,13 +2,14 @@ library(lattice)
 library(lme4)
 library(psychometric)
 library(reshape)
+library(reshape2)
 library(e1071)
 library(lmerTest)
 library(cowplot)
 library(lmtest)
 library(reshape)
 library(systemfit)
-
+library(Hmisc)
 library(progress)
 
 #' Run ANOVA on model set
@@ -198,7 +199,7 @@ plot.tvdsm <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),sav
   params1 <- melt(subset(params.df,select=c("Timestamps","b1","b2", "b4","b5","b21","b45")),id.vars = c("Timestamps"))
   params2 <- melt(subset(params.df,select=c("Timestamps","x.r2","y.r2","Condition","start","end")),id.vars = c("Timestamps","start","end","Condition"))
   
-  if(is.na(params.df$b21) & is.na(params.df$b45)){
+  if(all(is.na(params.df$b21)) & all(is.na(params.df$b45))){
     param.labels <- c(bquote(.(xname)[S-R]), bquote(.(xname)[Co-R]),bquote(.(yname)[S-R]),bquote(.(yname)[Co-R]))
     glegend1 <- scale_colour_discrete(name  = "Beta Coefficents",
                                       breaks=c("b1","b2", "b4","b5"),
@@ -791,7 +792,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   t <- seq.int(1,to = length(d$Timestamp),by = round(downsample*fs))
   sourceData <- data.frame(Timestamp=t)
   sourceData[[names(d)[2]]] <- ax
-  sourceData[[names(d)[3]]] <- ay
+  sourceData[[names(d)[3]] <- ay
   
   
   if (window_size <= 0) {

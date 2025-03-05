@@ -5,6 +5,7 @@ Version: 1.3
 Date: 2025-02-21
 Author: Oliver Saunders Wilder & Richard Palumbo
 Maintainer: <oliversw@media.mit.edu>
+Encoding: UTF-8
 Description: TVDSM is a package for fitting and analyzing data using Time-Varying Dynamic State Models (TVDSM)
 License: Apache 2.0
 Depends:
@@ -42,4 +43,5 @@ Imports:
     edfReader,
     lubridate,
     compute.es
-RoxygenNote: 5.0.1
+RoxygenNote: 7.3.2
+URL: http://oliverws.github.io/TVDSM/

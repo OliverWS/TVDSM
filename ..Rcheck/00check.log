@@ -1,10 +1,14 @@
-* using log directory ‘/Users/OliverWS/git/CBSL.R/..Rcheck’
-* using R version 3.0.2 (2013-09-25)
-* using platform: x86_64-apple-darwin13.0.0 (64-bit)
+* using log directory ‘/Users/OliverWS/Dropbox (Personal)/TVDSM/..Rcheck’
+* using R version 4.4.1 (2024-06-14)
+* using platform: aarch64-apple-darwin20
+* R was compiled by
+    Apple clang version 14.0.0 (clang-1400.0.29.202)
+    GNU Fortran (GCC) 12.2.0
+* running under: macOS 15.3.1
 * using session charset: UTF-8
 * checking for file ‘./DESCRIPTION’ ... OK
 * checking extension type ... Package
-* this is package ‘cbsl’ version ‘1.0’
+* this is package ‘tvdsm’ version ‘1.3’
 * checking package namespace information ... OK
 * checking package dependencies ... OK
 * checking if this is a source package ... OK
@@ -13,194 +17,17 @@
 * checking for hidden files and directories ... NOTE
 Found the following hidden files and directories:
   .DS_Store
+  .git/.DS_Store
+  .gitignore
+  R/.DS_Store
   ..Rcheck
+  .git
 These were most likely included in error. See section ‘Package
 structure’ in the ‘Writing R Extensions’ manual.
 * checking for portable file names ... OK
 * checking for sufficient/correct file permissions ... OK
-* checking whether package ‘cbsl’ can be installed ... OK
-* checking installed package size ... OK
-* checking package directory ... OK
-* checking DESCRIPTION meta-information ... WARNING
-Non-standard license specification:
-  Apache 2.0
-Standardizable: FALSE
-* checking top-level files ... OK
-* checking for left-over files ... OK
-* checking index information ... OK
-* checking package subdirectories ... WARNING
-Found the following directory with the name of a check directory:
-  ./..Rcheck
-Most likely, these were included erroneously.
-* checking R files for non-ASCII characters ... WARNING
-Found the following file with non-ASCII characters:
-  utils.R
-Portable packages must use only ASCII characters in their R code,
-except perhaps in comments.
-Use \uxxxx escapes for other characters.
-* checking R files for syntax errors ... OK
-* checking whether the package can be loaded ... OK
-* checking whether the package can be loaded with stated dependencies ... OK
-* checking whether the package can be unloaded cleanly ... OK
-* checking whether the namespace can be loaded with stated dependencies ... OK
-* checking whether the namespace can be unloaded cleanly ... OK
-* checking loading without being on the library search path ... OK
-* checking dependencies in R code ... WARNING
-‘library’ or ‘require’ calls not declared from:
-  ‘ggplot2’ ‘grid’
-See the information on DESCRIPTION files in the chapter ‘Creating R
-packages’ of the ‘Writing R Extensions’ manual.
-* checking S3 generic/method consistency ... WARNING
-plot:
-  function(x, ...)
-plot.dyad:
-  function(p1, p2, title)
-
-plot:
-  function(x, ...)
-plot.eda:
-  function(data, title, show_acc)
-
-See section ‘Generic functions and methods’ of the ‘Writing R
-Extensions’ manual.
-* checking replacement functions ... OK
-* checking foreign function calls ... OK
-* checking R code for possible problems ... NOTE
-pcor.mat: warning in cov(xdata, xdata, m = method): partial argument
-  match of 'm' to 'method'
-pcor.mat: warning in cov(xdata, zdata, m = method): partial argument
-  match of 'm' to 'method'
-pcor.mat: warning in cov(zdata, zdata, m = method): partial argument
-  match of 'm' to 'method'
-pcor.rec: warning in cor(tdata[, 1], tdata[, 2], m = method): partial
-  argument match of 'm' to 'method'
-ICClme: no visible global function definition for ‘VarCorr’
-as.dyad: no visible binding for global variable ‘Timestamp’
-dyad.statespacegraph: no visible global function definition for
-  ‘decimate’
-ggCaterpillar : f: no visible global function definition for ‘ggplot’
-ggCaterpillar : f: no visible global function definition for ‘aes’
-ggCaterpillar : f: no visible binding for global variable ‘nQQ’
-ggCaterpillar : f: no visible binding for global variable ‘y’
-ggCaterpillar : f: no visible global function definition for
-  ‘facet_wrap’
-ggCaterpillar : f: no visible global function definition for ‘xlab’
-ggCaterpillar : f: no visible global function definition for ‘ylab’
-ggCaterpillar : f: no visible binding for global variable ‘ID’
-ggCaterpillar : f: no visible global function definition for
-  ‘coord_flip’
-ggCaterpillar : f: no visible global function definition for
-  ‘facet_grid’
-ggCaterpillar : f: no visible global function definition for ‘theme’
-ggCaterpillar : f: no visible global function definition for
-  ‘geom_hline’
-ggCaterpillar : f: no visible global function definition for
-  ‘geom_errorbar’
-ggCaterpillar : f: no visible binding for global variable ‘ci’
-ggCaterpillar : f: no visible global function definition for
-  ‘geom_point’
-multiplot: no visible global function definition for ‘grid.newpage’
-multiplot: no visible global function definition for ‘pushViewport’
-multiplot: no visible global function definition for ‘viewport’
-multiplot: no visible global function definition for ‘grid.layout’
-o.ancova: no visible global function definition for ‘Anova’
-o.describe: no visible global function definition for ‘skew’
-o.describe: no visible global function definition for ‘kurtosi’
-o.describeBy: no visible global function definition for ‘describeBy’
-o.describeBy: no visible global function definition for ‘xtable’
-o.hov: no visible global function definition for ‘leveneTest’
-o.lm.table: no visible global function definition for ‘standardCoefs’
-o.lm.xtable: no visible global function definition for ‘xtable’
-o.outliers: no visible global function definition for ‘stdres’
-o.pcor: no visible global function definition for ‘xtable’
-o.residuals: no visible global function definition for ‘stdres’
-o.residuals: no visible global function definition for ‘xtable’
-o.residuals: no visible global function definition for ‘describe’
-plot.dyad: no visible global function definition for ‘ggplot’
-plot.dyad: no visible global function definition for ‘aes’
-plot.dyad: no visible binding for global variable ‘Timestamp’
-plot.dyad: no visible binding for global variable ‘P1.EDA’
-plot.dyad: no visible global function definition for ‘geom_line’
-plot.dyad: no visible binding for global variable ‘P2.EDA’
-plot.dyad: no visible global function definition for ‘xlab’
-plot.dyad: no visible global function definition for ‘ggtitle’
-plot.dyad: no visible global function definition for ‘ylab’
-plot.eda: no visible global function definition for ‘ggplot’
-plot.eda: no visible global function definition for ‘aes’
-plot.eda: no visible binding for global variable ‘Timestamp’
-plot.eda: no visible binding for global variable ‘EDA’
-plot.eda: no visible global function definition for ‘geom_line’
-plot.eda: no visible global function definition for ‘xlab’
-plot.eda: no visible global function definition for ‘ylab’
-plot.eda: no visible global function definition for ‘ggtitle’
-plot.eda: no visible binding for global variable ‘X’
-plot.eda: no visible binding for global variable ‘Y’
-plot.eda: no visible binding for global variable ‘Z’
-skew.ratio: no visible global function definition for ‘skew’
-statespace: no visible global function definition for ‘Lag’
-statespacegraph: no visible global function definition for ‘ggplot’
-statespacegraph: no visible global function definition for ‘aes’
-statespacegraph: no visible binding for global variable ‘x’
-statespacegraph: no visible binding for global variable ‘y’
-statespacegraph: no visible global function definition for
-  ‘geom_segment’
-statespacegraph: no visible binding for global variable ‘xprime’
-statespacegraph: no visible binding for global variable ‘yprime’
-statespacegraph: no visible global function definition for ‘arrow’
-statespacegraph: no visible global function definition for ‘unit’
-statespacegraph: no visible global function definition for
-  ‘scale_colour_gradient’
-statespacegraph: no visible global function definition for ‘labs’
-statespacegraph: no visible global function definition for ‘xlim’
-statespacegraph: no visible global function definition for ‘ylim’
-statespacegraph: no visible global function definition for
-  ‘standardCoefs’
-statespacegraph: no visible global function definition for
-  ‘arrangeGrob’
-statespacegraph: no visible global function definition for ‘textGrob’
-statespacegraph: no visible global function definition for ‘gpar’
-topography: no visible global function definition for ‘ggplot’
-topography: no visible global function definition for ‘aes’
-topography: no visible global function definition for ‘geom_density2d’
-topography: no visible global function definition for ‘xlim’
-topography: no visible global function definition for ‘ylim’
-vectorfield: no visible global function definition for ‘Lag’
-vectorfield: no visible global function definition for ‘ggplot’
-vectorfield: no visible global function definition for ‘aes’
-vectorfield: no visible global function definition for ‘geom_density2d’
-vectorfield: no visible global function definition for ‘geom_segment’
-vectorfield: no visible binding for global variable ‘x.vel’
-vectorfield: no visible binding for global variable ‘y.vel’
-vectorfield: no visible global function definition for ‘arrow’
-vectorfield: no visible global function definition for ‘unit’
-vectorfield: no visible global function definition for ‘labs’
-vectorfield: no visible global function definition for ‘xlim’
-vectorfield: no visible global function definition for ‘ylim’
-vectorflow: possible error in vectorfield(f, xx, yy, scale = scale):
-  unused argument (scale = scale)
-xyplot.lme: no visible global function definition for ‘xyplot’
-xyplot.lme : <anonymous>: no visible global function definition for
-  ‘panel.xyplot’
-xyplot.lme : <anonymous>: no visible global function definition for
-  ‘panel.lmline’
-* checking for missing documentation entries ... WARNING
-Undocumented code objects:
-  ‘ICClme’ ‘as.dyad’ ‘conf.int’ ‘distance’ ‘dyad.statespace’
-  ‘dyad.statespacegraph’ ‘ggCaterpillar’ ‘multiplot’ ‘normalize’
-  ‘o.ancova’ ‘o.anova’ ‘o.anova.table’ ‘o.aov’ ‘o.assumptions’
-  ‘o.barplot’ ‘o.center’ ‘o.describe’ ‘o.describe.by’ ‘o.describeBy’
-  ‘o.hist’ ‘o.hov’ ‘o.isnorm’ ‘o.lm.table’ ‘o.lm.xtable’ ‘o.outliers’
-  ‘o.pcor’ ‘o.plot.lm’ ‘o.plot.residuals’ ‘o.ppplot’ ‘o.range’
-  ‘o.residuals’ ‘o.rmcov’ ‘o.scatter’ ‘omega.squared’ ‘parseTime’
-  ‘pbcopy’ ‘pcor.mat’ ‘pcor.rec’ ‘pcor.test’ ‘plot.dyad’ ‘plot.eda’
-  ‘r2.corr.mer’ ‘read.actiwave’ ‘read.eda’ ‘read.ibutton’ ‘se’
-  ‘simulate’ ‘skew.ratio’ ‘skew.se’ ‘statespace’ ‘statespacegraph’
-  ‘std’ ‘stem’ ‘topography’ ‘vectorfield’ ‘vectorflow’ ‘window’
-  ‘xyplot.lme’
-All user-level objects in a package should have documentation entries.
-See the chapter ‘Writing R documentation files’ in the ‘Writing R
-Extensions’ manual.
-* checking examples ... NONE
-* checking PDF version of manual ... OK
-WARNING: There were 6 warnings.
-NOTE: There were 2 notes.
+* checking whether package ‘tvdsm’ can be installed ... ERROR
+Installation failed.
+See ‘/Users/OliverWS/Dropbox (Personal)/TVDSM/..Rcheck/00install.out’ for details.
+* DONE
+Status: 1 ERROR, 1 NOTE

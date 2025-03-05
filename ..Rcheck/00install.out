@@ -1,9 +1,10 @@
-* installing *source* package ‘cbsl’ ...
+* installing *source* package ‘tvdsm’ ...
+** using staged installation
 ** R
-** preparing package for lazy loading
-** help
-No man pages found in package  ‘cbsl’ 
-*** installing help indices
-** building package indices
-** testing if installed package can be loaded
-* DONE (cbsl)
+Error in parse(...) : 
+  /Users/OliverWS/Dropbox (Personal)/TVDSM/R/interpersonal.R:870:3: unexpected 'if'
+869:                         )
+870:   if
+       ^
+ERROR: unable to collate and parse R files for package ‘tvdsm’
+* removing ‘/Users/OliverWS/Dropbox (Personal)/TVDSM/..Rcheck/tvdsm’

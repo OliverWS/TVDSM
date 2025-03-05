@@ -16,8 +16,11 @@ library(tvdsm)
 
 
 # Run the analysis using analyzeDyad
+PersonA <- read.csv("PersonA.csv")
+PersonB <- read.csv("PersonB.csv")
+dyad <- as.dyad(PersonA, PersonB, cols = c("EDA"))
 
-result <- analyzeDyad(f1="PersonA.csv", f2="PersonB.csv", window_size=60, lag=0, measure="EDA")
+result <- analyzeDyad(dyad=dyad, window_size=60, lag=0, measure="EDA")
 
 
 ```

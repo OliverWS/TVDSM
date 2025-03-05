@@ -1,22 +1,43 @@
-  
 library(signal)
 library(matrixStats)
 library(Hmisc)
 library(lavaan)
 
+#' Compute Root Mean Square of Successive Differences (RMSSD)
+#'
+#' @param hr.period A numeric vector of heart rate period values.
+#' @return The RMSSD value.
+#' @export
 RMSSD <- function(hr.period) {
   hr.period.delta <- diff(hr.period)
   return(sqrt(mean(hr.period.delta*hr.period.delta)))
 }
 
+#' Compute Linear Trend Slope
+#'
+#' @param data A numeric vector.
+#' @return The slope of the linear trend.
+#' @export
 linearTrend <- function(data) {
   t <- seq_along(data)
   mdl <- lm(data ~ t)
   trend <- coef(mdl)[[2]]
   return(trend)
 }
+
+#' Compute Standard Error of a Vector
+#'
+#' @param x A numeric vector.
+#' @return The standard error.
+#' @export
 se <- function(x) sqrt(var(x)/length(x))
 
+#' Compute Time Series Descriptive Statistics
+#'
+#' @param data Numeric vector of data.
+#' @param fs Sample rate (default is 32).
+#' @return A list of descriptive statistics including mean, se, sd, var, trend, min, max, slope, slopeRatio, range and autocorrelation.
+#' @export
 tsDescriptives <- function(data,fs=32) {
   m <- mean(data, na.rm=T)
   st.err <- se(data)
@@ -36,7 +57,19 @@ tsDescriptives <- function(data,fs=32) {
   return(list(mean=m,se=st.err, sd=st.dev, var=var(data,na.rm=T), trend=trend,min=min.data,max=max.data,slope=slope,slopeRatio=slopeRatio,range=(max.data-min.data),autocorrelation=ac))
 }
 
-
+#' Dummy Code By Condition
+#'
+#' @param filename Filename for the EDA data.
+#' @param codes Either a path to a file with codes or a dataframe with codes.
+#' @param outputFile Output file name (default is filename appended with "_DummyCoded.csv").
+#' @param saveFile Logical indicating whether to save the dummy coded file.
+#' @param codeFunc Function to read codes, default is read.RTCodes.
+#' @param startCol Column name for start time, default "Start.Time".
+#' @param endCol Column name for end time, default "End.Time".
+#' @param conditionCol Column name for condition, default "Condition".
+#' @param timeformat Time format for conversion.
+#' @return Data frame with dummy coded data.
+#' @export
 dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_DummyCoded.csv",sep=""),saveFile=F,codeFunc=read.RTCodes,startCol="Start.Time",endCol="End.Time",conditionCol="Condition",timeformat="%Y-%m-%d %H:%M:%S") {
   
   if(typeof(codes) == "character"){
@@ -74,7 +107,19 @@ dummyCodeByCondition <- function(filename,codes,outputFile=paste(filename,"_Dumm
   return(eda)
 }
 
-
+#' Descriptives By Condition
+#'
+#' @param filename Path to the EDA data file.
+#' @param codes Codes data (either file path or dataframe).
+#' @param col Column for analysis (default "EDA").
+#' @param title Title for the plot.
+#' @param codeFunc Function to read codes, default is read.RTCodes.
+#' @param startCol Start time column name, default "Start.Time".
+#' @param endCol End time column name, default "End.Time".
+#' @param conditionCol Condition column name, default "Condition".
+#' @param timeformat Time format string.
+#' @return Data frame of descriptive statistics.
+#' @export
 descriptivesByCondition <- function(filename, codes,col="EDA",title=filename,codeFunc=read.RTCodes,startCol="Start.Time",endCol="End.Time",conditionCol="Condition",timeformat="%Y-%m-%d %H:%M:%S") {
   
   if(typeof(codes) == "character"){
@@ -121,7 +166,17 @@ descriptivesByCondition <- function(filename, codes,col="EDA",title=filename,cod
   
 }
 
+#' Alias for descriptivesByCondition
+#' @export
 TSDescriptivesByCondition <- descriptivesByCondition
+
+#' Plot Time Series Descriptive Statistics
+#'
+#' @param data Data frame of descriptive statistics.
+#' @param title Plot title.
+#' @param vars Optional variables to melt.
+#' @return A ggplot object.
+#' @export
 plotTSDescriptives <- function(data,title="",vars=NULL) {
   if(is.null(vars)){
     data <- melt(as.data.frame(data),id.vars = c("Start","End","Condition"), )
@@ -148,13 +203,21 @@ plotTSDescriptives <- function(data,title="",vars=NULL) {
   return(g1)
 }
 
-
+#' Interrupted Time Series Analysis (Not Implemented)
+#'
+#' @param data Data frame or time series data.
+#' @param col.data Column name for the data (default "EDA").
+#' @param col.condition Column name for the condition (default "Condition").
+#' @return Not implemented.
+#' @export
 interruptedTimeSeries <- function(data, col.data="EDA", col.condition="Condition") {
 }
 
-
-
-
+#' Calculate p-value from an lm object
+#'
+#' @param modelobject An object of class 'lm' or 'systemfit.equation'.
+#' @return The p-value of the F-statistic.
+#' @export
 lmp <- function (modelobject) {
   if (!(class(modelobject) == "lm" || class(modelobject) == "systemfit.equation")) stop("Not an object of class 'lm' ")
   f <- summary(modelobject)$fstatistic
@@ -163,15 +226,23 @@ lmp <- function (modelobject) {
   return(p)
 }
 
-
-
-
-
-
+#' Calculate Euclidean Distance
+#'
+#' @param x Numeric value.
+#' @param y Numeric value.
+#' @return Euclidean distance computed as sqrt(x*x + y*y).
+#' @export
 distance <- function(x,y){
   return(sqrt(x*x + y*y));
 }
 
+#' Visualize Vector Field
+#'
+#' @param x Numeric vector for x-axis.
+#' @param y Numeric vector for y-axis.
+#' @param f Function for vector field computation.
+#' @param scale Scaling factor (default 0.1).
+#' @export
 vectorflow <- function(x,y,f,scale=0.1) {
   xx <- c(min(x),max(x))
   yy <- c(min(y),max(y))
@@ -179,6 +250,14 @@ vectorflow <- function(x,y,f,scale=0.1) {
 
 }
 
+#' Plot Topography Density
+#'
+#' @param x Numeric vector for x-axis.
+#' @param y Numeric vector for y-axis.
+#' @param xlab Label for x-axis.
+#' @param ylab Label for y-axis.
+#' @return A ggplot object showing 2D density plot.
+#' @export
 topography <- function(x,y,xlab="X",ylab="Y") {
   subdata <- as.data.frame(x)
   subdata$x <- x
@@ -186,9 +265,24 @@ topography <- function(x,y,xlab="X",ylab="Y") {
   ggplot(subdata,aes(x=x,y=y))+geom_density2d()+xlab(xlab)+ylab(ylab)+xlim(min(x),max(x))+ylim(min(y),max(y))
 }
 
+#' Normalize a Numeric Vector
+#'
+#' @param x Numeric vector.
+#' @return Normalized vector where the mean is subtracted and divided by the standard deviation.
+#' @export
 normalize <- function(x){
   return((x-mean(x,na.rm = T))/sd(x,na.rm = T))
 }
+
+#' Create a Vector Flow Plot
+#'
+#' @param x Numeric vector for x coordinates.
+#' @param y Numeric vector for y coordinates.
+#' @param xlabel Label for x-axis.
+#' @param ylabel Label for y-axis.
+#' @param title Plot title.
+#' @return A ggplot object displaying the vector flow plot.
+#' @export
 vectorfield <- function(x,y,xlabel="X",ylabel="Y",title="Vector Flow Plot"){
   subdata <- as.data.frame(x)
   subdata$x <- x
@@ -204,6 +298,14 @@ vectorfield <- function(x,y,xlabel="X",ylabel="Y",title="Vector Flow Plot"){
 
 }
 
+#' Simulate Data using Linear Models
+#'
+#' @param xmodel Linear model for x simulation.
+#' @param ymodel Linear model for y simulation.
+#' @param n Number of samples to simulate (default 1000).
+#' @param start Starting values as a vector (default c(1,2)).
+#' @return A matrix with simulated data (n rows x 2 columns).
+#' @export
 simulate <- function(xmodel,ymodel,n=1000, start=c(1,2)) {
   x = start[1]
   y = start[2]
@@ -221,15 +323,37 @@ simulate <- function(xmodel,ymodel,n=1000, start=c(1,2)) {
   return(out)
 
 }
-dyad.statespace <- function(p1,p2,type=2, step=0.25, measure="EDA") {
+
+#' Build Dyadic Model
+#'
+#' @param p1 Data for participant 1.
+#' @param p2 Data for participant 2.
+#' @param type Model type (default 2).
+#' @param step Step size (default 0.25).
+#' @param measure Column name for measurement (default "EDA").
+#' @return A model object.
+#' @export
+dyad.dsmodel <- function(p1,p2,type=2, step=0.25, measure="EDA") {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))
   data <- as.dyad(p1,p2, cols=c(measure))
 
-  return(statespace(data[,2],data[,3],type=type, step=step))
+  return(dsmodel(data[,2],data[,3],type=type, step=step))
 }
 
-dyad.statespacegraph <- function(p1,p2,norm=T,epoch=1, step=0.25, title="State Space Plot", type=2,measure="EDA" ) {
+#' Plot Dyadic Graph
+#'
+#' @param p1 Data for participant 1.
+#' @param p2 Data for participant 2.
+#' @param norm Logical indicating whether to normalize the data (default TRUE).
+#' @param epoch Epoch size (default 1).
+#' @param step Step size (default 0.25).
+#' @param title Plot title.
+#' @param type Model type (default 2).
+#' @param measure Column name for measurement (default "EDA").
+#' @return A plot of the model params
+#' @export
+dyad.dsgraph <- function(p1,p2,norm=T,epoch=1, step=0.25, title="State Space Plot", type=2,measure="EDA" ) {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))
   data <- as.dyad(p1,p2,cols=c(measure))
@@ -244,6 +368,13 @@ dyad.statespacegraph <- function(p1,p2,norm=T,epoch=1, step=0.25, title="State S
 
 }
 
+#' Compute Lag Difference
+#'
+#' @param x Numeric vector.
+#' @param lag Lag value.
+#' @param robust Logical indicating use of robust method (default TRUE).
+#' @return Lagged difference.
+#' @export
 o.Lag <- function(x,lag=0, robust=T) {
   if(robust){
     dx <- (Lag(x,(-1*lag)-1) - Lag(x,(-1*lag)+1))/2
@@ -255,7 +386,12 @@ o.Lag <- function(x,lag=0, robust=T) {
   return(dx)
 }
 
-
+#' Estimate Lag with Moving Window
+#'
+#' @param x Numeric vector.
+#' @param window Window size (default 10).
+#' @return Estimated lag values.
+#' @export
 o.estLag <- function(x,window=10){
   mat <- matrix(nrow=length(x),ncol = window)
   for(n in 1:window){
@@ -263,9 +399,14 @@ o.estLag <- function(x,window=10){
     mat[,n] <- o.Lag(x,l)
   }
   return(rowWeightedMeans(mat,w=gausswin(window),na.rm = T))
-  
 }
 
+#' Smooth a Numeric Vector
+#'
+#' @param x Numeric vector.
+#' @param window Window size (default 10).
+#' @return Smoothed vector.
+#' @export
 o.smooth <- function(x,window=10){
   mat <- matrix(nrow=length(x),ncol = window)
   for(n in 1:window){
@@ -273,8 +414,14 @@ o.smooth <- function(x,window=10){
     mat[,n] <- Lag(x,l)
   }
   return(rowWeightedMeans(mat,w=gausswin(window),na.rm = T))
-  
 }
+
+#' Generate Random Dyadic Data
+#'
+#' @param dur Duration in seconds (default 60*120).
+#' @param fs Sampling rate (default 32).
+#' @return Data frame with Timestamp and two fake signals.
+#' @export
 rand.dyad <- function(dur=60*120,fs=32){
   now = Sys.time()
   l = dur*fs
@@ -285,6 +432,14 @@ rand.dyad <- function(dur=60*120,fs=32){
   return(d)
 }
 
+#' Extract Coefficient with Significance Check
+#'
+#' @param mdl Linear model object.
+#' @param c Parameter index (default 2).
+#' @param cutoff Significance cutoff (default 0.05).
+#' @param useD Logical, if TRUE use standardized coefficient (default FALSE).
+#' @return Coefficient value or 0 if not significant.
+#' @export
 o.coef <- function(mdl,c=2,cutoff=0.05,useD=F){
   s <- summary(mdl)
   p <- s$coefficients[c,4]
@@ -299,18 +454,24 @@ o.coef <- function(mdl,c=2,cutoff=0.05,useD=F){
   }
 }
 
-statespace <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=F){
-  #(Xt+1 – Xt)= b0+b1(Xt)+b2(Yt)+e
-  #(Yt+1 – Yt)= b3+b4(Yt)+b5(Xt)+e
+#' Fit Dyadic Model
+#'
+#' @param x Numeric vector for signal x.
+#' @param y Numeric vector for signal y.
+#' @param type Model type (default 2).
+#' @param step Step size (default 0.25).
+#' @param p.value P-value threshold (default 0.01).
+#' @param verbose Logical indicating verbose output (default FALSE).
+#' @return A list containing the fitted models, R-squared values, prediction functions, and model equations.
+#' @export
+dsmodel <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=F){
   x_prime <-o.Lag(x)
   y_prime <- o.Lag(y)
   base_x_model <- lm(x_prime ~ x)
   base_y_model <- lm(y_prime ~ y)
   
-  
   s1 <- ""
   s2 <- ""
-  
   
   if(type==1){
     x_model <- lm(x_prime ~ x * y)
@@ -323,7 +484,6 @@ statespace <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=F){
     b3 <- coef(y_model)[[1]]
     b4 <- coef(y_model)[[2]]
     b5 <- coef(y_model)[[3]]
-    byx <- coef(y_model)[[4]]
     s1 <- cat("x' = ",b0," + ",b1,"*x"," + ",b2,"*y","\n")
     s2 <- cat("y' = ",b3," + ",b4,"*y"," + ",b5,"*x","\n")
   }
@@ -341,18 +501,8 @@ statespace <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=F){
     s2 <- paste("y'"," = ",b3," + ",b4,"*y"," + ",b5,"(x-y)",sep="")
   }
   else if (type == 4) {
-#     x_prime <- o.estLag(x,window = 32)
-#     y_prime <- o.estLag(y,window=32)
-#     base_x_model <- lm(x_prime ~ x)
-#     base_y_model <- lm(y_prime ~ y)
-#     
-#     dyx <- o.smooth(y-x,window = 32)
-#     dxy <- o.smooth(x-y,window = 32)
-#     
-    
       x_model <- lm(x_prime ~ I(mean(x,na.rm=T)-x) * I(y-x))
       y_model <- lm(y_prime ~ I(mean(y,na.rm=T)-y) * I(x-y) )
-      
       b0 <- o.coef(x_model,1)
       b1 <- o.coef(x_model,2)
       b2 <- o.coef(x_model,3)
@@ -365,7 +515,6 @@ statespace <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=F){
   else if (type == 0) {
     x_model <- lm(x_prime ~ x)
     y_model <- lm(y_prime ~ y)
-    
     b0 <- coef(x_model)[[1]]
     b1 <- 0
     b2 <- coef(x_model)[[2]]
@@ -376,18 +525,8 @@ statespace <- function(x,y,type=2, step=0.25,p.value=0.01,verbose=F){
     s2 <- cat("y' = ",b3," + ",b5,"*(x-y)","\n")
   }
 else if (type == 5) {
-  #     x_prime <- o.estLag(x,window = 32)
-  #     y_prime <- o.estLag(y,window=32)
-  #     base_x_model <- lm(x_prime ~ x)
-  #     base_y_model <- lm(y_prime ~ y)
-  #     
-  #     dyx <- o.smooth(y-x,window = 32)
-  #     dxy <- o.smooth(x-y,window = 32)
-  #     
-  
   x_model <- lm(x_prime ~  I(y-x))
   y_model <- lm(y_prime ~ I(x-y) )
-  
   b0 <- o.coef(x_model,1)
   b1 <- 0
   b2 <- o.coef(x_model,2)
@@ -423,7 +562,6 @@ else if (type == 5) {
   xx <- c(min(x),max(x))
   yy <- c(min(y),max(y))
 
-
   if(verbose){
     print(s1)
     print(summary(x_model))
@@ -431,7 +569,6 @@ else if (type == 5) {
     print(summary(y_model))
     
   }
-
 
   xvals <- seq(min(x,na.rm = T),max(x,na.rm = T),step)
   yvals <- seq(min(y,na.rm = T),max(y,na.rm = T),step)
@@ -450,33 +587,35 @@ else if (type == 5) {
     x.r.squared <- 0
     x.base.r.squared <- 0
     
-    
-  if(lmp(x_model) < p.value){
-    x.r.squared <- summary(x_model)$adj.r.squared
-    x.base.r.squared <- summary(base_x_model)$adj.r.squared
-    dx.r.squared <- x.r.squared - x.base.r.squared
-  }
+    if(lmp(x_model) < p.value){
+      x.r.squared <- summary(x_model)$adj.r.squared
+      x.base.r.squared <- summary(base_x_model)$adj.r.squared
+      dx.r.squared <- x.r.squared - x.base.r.squared
+    }
   
     y.r.squared <- 0
     y.base.r.squared <- 0
     dy.r.squared <- 0
   
-  if(lmp(y_model) < p.value){
-    y.r.squared <- summary(y_model)$adj.r.squared
-    y.base.r.squared <- summary(base_y_model)$adj.r.squared
-    dy.r.squared <- y.r.squared - y.base.r.squared
-  }
-  
-  
+    if(lmp(y_model) < p.value){
+      y.r.squared <- summary(y_model)$adj.r.squared
+      y.base.r.squared <- summary(base_y_model)$adj.r.squared
+      dy.r.squared <- y.r.squared - y.base.r.squared
+    }
   
   return(list(x_model=x_model,y_model=y_model,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=dx.r.squared,dy.r.squared=dy.r.squared, mat=subdata,x_func=x_f, y_func=y_f,x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5))
 }
 
-
-
-library(systemfit)
-
-statespace.sem <- function(d,type=2, step=0.25,p.value=0.01,verbose=T){
+#' Fit Dyadic Model using SEM
+#'
+#' @param d Data frame containing dyad data.
+#' @param type Model type (default 2).
+#' @param step Step size (default 0.25).
+#' @param p.value P-value threshold (default 0.01).
+#' @param verbose Logical indicating verbose output (default TRUE).
+#' @return A SEM model object.
+#' @export
+dsmodel.sem <- function(d,type=2, step=0.25,p.value=0.01,verbose=T){
   x <- d[,2]
   y <- d[,3]
   x_prime <-o.Lag(x)
@@ -508,44 +647,19 @@ statespace.sem <- function(d,type=2, step=0.25,p.value=0.01,verbose=T){
   '
     
     mdl <- sem(model,data=data,missing = "fiml")
-#     x_model <- fit$eq[[1]]
-#     y_model <- fit$eq[[2]]
-#     
-#     b0 <- o.coef(x_model,1)
-#     b1 <- o.coef(x_model,2)
-#     b2 <- o.coef(x_model,3)
-#     b3 <- o.coef(y_model,1)
-#     b4 <- o.coef(y_model,2)
-#     b5 <- o.coef(y_model,3)
-# 
-# 
-#   if(verbose){
-#     
-#     print(summary(x_model))
-#     print(summary(y_model))
-#     
-#     
-#   }
-#   
-#   
-#   x.base.r.squared=0
-#   y.base.r.squared=0
-#   x.r.squared = summary(x_model)$adj.r.squared
-#   y.r.squared = summary(y_model)$adj.r.squared
-#   
-  
-  #return(list(x_model=x_model,y_model=y_model,model=fit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=x.r.squared,dy.r.squared=y.r.squared,x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5))
-  return(mdl)
+    return(mdl)
 }
 
-
-
-
-
-statespace.multilag <- function(x,y, step=0.25,p.value=0.01,type=2){
-  
-  #(Xt+1 – Xt)= b0+b1(Xt)+b2(Yt)+e
-  #(Yt+1 – Yt)= b3+b4(Yt)+b5(Xt)+e
+#' Fit Multi-lag Dyadic Model
+#'
+#' @param x Numeric vector for signal x.
+#' @param y Numeric vector for signal y.
+#' @param step Step size (default 0.25).
+#' @param p.value P-value threshold (default 0.01).
+#' @param type Model type (default 2).
+#' @return A list containing models, statistics, and prediction functions.
+#' @export
+dsmodel.multilag <- function(x,y, step=0.25,p.value=0.01,type=2){
   x_prime <-o.Lag(x)
   y_prime <- o.Lag(y)
   s1 <- ""
@@ -558,7 +672,6 @@ statespace.multilag <- function(x,y, step=0.25,p.value=0.01,type=2){
     y.lag2 <- Lag(y,-2)
     x.lag3 <- Lag(x, -3)
     y.lag3 <- Lag(y,-3)
-  
   
     x_model <- lm(x_prime ~ I(y-x) + I(y.lag1-x.lag1) + I(y.lag2-x.lag2) + I(y.lag3-x.lag3))
     y_model <- lm(y_prime ~ I(x-y) + I(x.lag1 - y.lag1) + I(x.lag2 - y.lag2)+I(x.lag3 - y.lag3))
@@ -583,31 +696,20 @@ statespace.multilag <- function(x,y, step=0.25,p.value=0.01,type=2){
   xx <- c(min(x),max(x))
   yy <- c(min(y),max(y))
   
-  
-  
   print(s1)
   print(summary(x_model))
   print(s2)
   print(summary(y_model))
   
-  
   xvals <- seq(min(x,na.rm = T),max(x,na.rm = T),step)
   yvals <- seq(min(y,na.rm = T),max(y,na.rm = T),step)
   subdata <- matrix(nrow = length(xvals)*length(yvals), ncol=4)
   n= 0
-#   for(xt in xvals){
-#     for(yt in yvals){
-#       subdata[n,] <- c(xt,yt,x_f(xt,yt),y_f(xt,yt))
-#       n= n + 1
-#     }
-#   }
-#   
-#   colnames(subdata) <- c("x","y","xprime","yprime")
+  # Note: loop for filling subdata is commented out in original code
   subdata <- as.data.frame(subdata)
   dx.r.squared <- 0
   x.r.squared <- 0
   x.base.r.squared <- 0
-  
   
   if(lmp(x_model) < p.value){
     x.r.squared <- summary(x_model)$r.squared
@@ -625,20 +727,31 @@ statespace.multilag <- function(x,y, step=0.25,p.value=0.01,type=2){
     dy.r.squared <- (y.r.squared - y.base.r.squared)
   }
   
-  
-  
   return(list(x_model=x_model,y_model=y_model,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=dx.r.squared,dy.r.squared=dy.r.squared, mat=subdata,x_func=x_f, y_func=y_f,x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5))
 }
 
-
-
-
-
+#' Rescale a Vector to [0,1]
+#'
+#' @param x Numeric vector.
+#' @return The rescaled vector.
+#' @export
 o.rescale <- function(x){
   out <- (x-min(x,na.rm = T))/(max(x,na.rm = T)-min(x,na.rm = T))
   return(out)
 }
 
+#' Plot State Space Graph
+#'
+#' @param xt Numeric vector for x values.
+#' @param yt Numeric vector for y values.
+#' @param norm Logical to normalize data (default TRUE).
+#' @param step Step size (default 0.25).
+#' @param title Plot title.
+#' @param xlabel Label for x-axis.
+#' @param ylabel Label for y-axis.
+#' @param type Model type (default 3).
+#' @return A ggplot object representing the state space graph.
+#' @export
 statespacegraph <- function(xt,yt,norm=T, step=0.25,title="State Space Plot", xlabel="X Data", ylabel="Y Data",type=3) {
   xlab <- xlabel
   ylab <- ylabel
@@ -647,58 +760,58 @@ statespacegraph <- function(xt,yt,norm=T, step=0.25,title="State Space Plot", xl
     yt <- o.rescale(yt)
     xlabel <- paste(xlabel,"(Std.)")
     ylabel <- paste(ylabel,"(Std.)")
-
   }
-  s <- statespace(xt,yt,step=step,type=type)
+  s <- dsmodel(xt,yt,step=step,type=type)
   data <- s$mat
 
-  p <- ggplot(data=data, aes(x=x,y=y))+geom_segment(aes(xend=(x+xprime), yend=(y+yprime),lineend="round", colour=(sqrt(xprime*xprime+yprime*yprime))),arrow=arrow(length=unit(.2,"cm")))+scale_colour_gradient(low="#0000CC",high="#CC0000",name="Distance")+labs(list(title=title, x=xlabel, y =ylabel))+xlim(min(xt,na.rm = T),max(xt,na.rm = T))+ylim(min(yt,na.rm = T),max(yt,na.rm = T))
-  # source: http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
+  p <- ggplot(data=data, aes(x=x,y=y))+geom_segment(aes(xend=(x+xprime), yend=(y+yprime),lineend="round", colour=(sqrt(xprime*xprime+yprime*yprime))),arrow=arrow(length=unit(.2,"cm")))+
+    scale_colour_gradient(low="#0000CC",high="#CC0000",name="Distance")+
+    labs(list(title=title, x=xlabel, y =ylabel))+
+    xlim(min(xt,na.rm = T),max(xt,na.rm = T))+
+    ylim(min(yt,na.rm = T),max(yt,na.rm = T))
   lab.1 <- expression(paste(R^2," ",xlabel,"="))
   lab.2 <- expression(paste(R^2," ",ylabel,"="))
   r2.x <- round(summary(s$x_model)$r.squared,digits = 2)
   r2.y <- round(summary(s$y_model)$r.squared,digits = 2)
   b2 <- round(standardCoefs(s$x_model)[2,2],digits=2)
   b5 <- round(standardCoefs(s$y_model)[2,2],digits=2)
-  footnote <- substitute(paste(R^2," ",xlabel,"=", r2.x," | ",R^2," ",ylabel,"=",r2.y, " | ",beta[xlab],"=",b2," | ",beta[ylab],"=",b5))
+  footnote <- substitute(paste(R^2," ",xlabel,"=", r2.x," | ",R^2," ",ylabel,"=", r2.y, " | ",beta[xlab],"=",b2," | ",beta[ylab],"=",b5))
   g <- arrangeGrob(p, sub = textGrob(footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 16)))
 
   g
-
 }
 
-plot.statespace <- function(s,title="State Space Plot", xlabel="X Data", ylabel="Y Data") {
+#' Create Plot for Dyadic State Space Graph
+#'
+#' @param s A dyadic statespace model object.
+#' @param title Plot title.
+#' @param xlabel Label for x-axis.
+#' @param ylabel Label for y-axis.
+#' @return A ggplot object.
+#' @export
+plot.dsgraph <- function(s,title="State Space Plot", xlabel="X Data", ylabel="Y Data") {
   xlab <- xlabel
   ylab <- ylabel
   data <- s$mat
   xt <- s$mat$x
   yt <- s$mat$y
-  p <- ggplot(data=data, aes(x=x,y=y))+geom_segment(aes(xend=(x+xprime), yend=(y+yprime),lineend="round", colour=(sqrt(xprime*xprime+yprime*yprime))),arrow=arrow(length=unit(.2,"cm")))+scale_colour_gradient(low="#0000CC",high="#CC0000",name="Distance")+labs(list(title=title, x=xlabel, y =ylabel))+xlim(min(xt,na.rm = T),max(xt,na.rm = T))+ylim(min(yt,na.rm = T),max(yt,na.rm = T))
-  # source: http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
-#   lab.1 <- expression(paste(R^2," ",xlabel,"="))
-#   lab.2 <- expression(paste(R^2," ",ylabel,"="))
-#   r2.x <- round(summary(s$x_model)$r.squared,digits = 2)
-#   r2.y <- round(summary(s$y_model)$r.squared,digits = 2)
-#   b2 <- round(standardCoefs(s$x_model)[2,2],digits=2)
-#   b5 <- round(standardCoefs(s$y_model)[2,2],digits=2)
-#   footnote <- substitute(paste(R^2," ",xlabel,"=", r2.x," | ",R^2," ",ylabel,"=",r2.y, " | ",beta[xlab],"=",b2," | ",beta[ylab],"=",b5))
+  p <- ggplot(data=data, aes(x=x,y=y))+geom_segment(aes(xend=(x+xprime), yend=(y+yprime),lineend="round", colour=(sqrt(xprime*xprime+yprime*yprime))),arrow=arrow(length=unit(.2,"cm")))+
+    scale_colour_gradient(low="#0000CC",high="#CC0000",name="Distance")+
+    labs(list(title=title, x=xlabel, y =ylabel))+
+    xlim(min(xt,na.rm = T),max(xt,na.rm = T))+
+    ylim(min(yt,na.rm = T),max(yt,na.rm = T))
   return(p)
-  
 }
 
-
-
-#
-# lag.matrix <- function(x1, x2, func=lag.range=c(-10,10)) {
-#   nlags = max(lag.range) - min(lag.range)
-#   mat = matrix(data=0, ncol = length(x1), nrow = nlags)
-#   data <- cbind(x1,x2)
-#   for(lag in seq(from = min(lag.range), to = max(lag.range),by = 1)){
-#
-#   }
-# }
-
-
+#' Apply Moving Window Operation
+#'
+#' @param x Numeric vector.
+#' @param window_size Size of each window.
+#' @param window_overlap Overlap between windows.
+#' @param FUN Function to apply on each window.
+#' @param na.rm Logical indicating whether to remove NAs (default TRUE).
+#' @return A vector of computed values.
+#' @export
 window <- function(x, window_size, window_overlap=0, FUN, na.rm=T) {
   x <- as.vector(x)
   output_length = length(x)/(window_size- window_overlap/2)
@@ -714,14 +827,14 @@ window <- function(x, window_size, window_overlap=0, FUN, na.rm=T) {
     output[n] <- FUN(x[start:end])
     n = n+1
   }
-
+  
   return(output)
 }
 
-
-
-
-
+#' Copy Text to Clipboard
+#'
+#' @param x Object to be copied.
+#' @export
 pbcopy <- function(x){
   write.table(file = pipe("pbcopy"), x, sep = "\t",quote=F)
 }

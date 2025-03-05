@@ -11,10 +11,16 @@ library(systemfit)
 
 library(progress)
 
+#' Run ANOVA on model set
+#'
+#' @description Runs ANOVA comparisons on delta R-squared values from a list of models using a specified condition.
+#' @param mdls A list of model objects.
+#' @param key The key to extract the condition variable (default "Condition").
+#' @return A fitted lmer model object.
+#' @export
 
 runAnova <- function(mdls, key="Condition"){
   condition <- get.key(mdls,key)
-  
   
   b5 <- get.key(mdls,"b5")
   b2<- get.key(mdls,"b2")
@@ -45,6 +51,15 @@ runAnova <- function(mdls, key="Condition"){
   return(mmdl.x)
 }
 
+#' Validate condition times within data range
+#'
+#' @description Checks each condition's start and end times to confirm they fall within the dyad's timestamp range.
+#' @param d A data frame with a Timestamp column.
+#' @param codes A data frame with condition timing (with Start.Time, End.Time, and Condition).
+#' @param timeformat A string specifying the timestamp format (default "%Y-%m-%d %H:%M:%S").
+#' @return Stops with an error if a condition time is out-of-range.
+#' @export
+
 validateConditionTimes <- function(d,codes,timeformat ="%Y-%m-%d %H:%M:%S"){
   start.ctime <- as.POSIXct(d$Timestamp[[1]])
   end.ctime <- as.POSIXct(d$Timestamp[[length(d$Timestamp)]])
@@ -62,142 +77,14 @@ validateConditionTimes <- function(d,codes,timeformat ="%Y-%m-%d %H:%M:%S"){
   }
 }
 
-#' Perform TVDSM analysis on a dyad by condition
+#' Extract a key from a list of objects
 #'
-#' @param f1 path to csv file with data for participant 1
-#' @param f2 path to csv file with data for participant 2
-#' @param codes path to csv file with condition timing data
-#' @param useRealTime treat condition times listed in condition timing sheet as calendar times, e.g. "1/2/16 13:23:45"
-#' @param type the type of TVDSM analysis to use
-#' @param cols a vector indicating which columns to select from each file when creating a dyad
-#' @param dname a string indicating a friendly name for the dyad (used in plots and summary data frame)
-#' @param p1.name a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f1}
-#' @param p2.name a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f2}
-#' @param plotParams should model coefficients be ploted
-#' @param lag the lag to be used in the TVDSM analysis (in seconds)
-#' @param downsample the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)
-#' @param lag the lag to be used in the TVDSM analysis (in seconds)
-#' @return a list containing models (mdls), plot (plt), and a summary data frame (summary)
+#' @description Retrieves the specified key from each element of a list.
+#' @param lst A list of objects.
+#' @param key The key to extract.
+#' @param as.list Logical; if TRUE, returns a list (default FALSE).
+#' @return A vector or list of values corresponding to the key from each element.
 #' @export
-#' @examples
-#' analyzeByCondition("PersonA.csv","PersonB.csv",codes="ConditionTimes.csv")
-
-
-analyzeByCondition <- function(f1="",f2="", dyad=c(),codes="",useRealTime=F, type=4,cols=c("EDA"),dname="Dyad",p1.name="Participant 1",p2.name="Participant 2",lag=0,plotParams=T,downsample=1,func=computeStateSpace, verbose=F,start="", end="",  timeformat ="%Y-%m-%d %H:%M:%S", ...){
-  measure = cols[0]
-  if(length(dyad) > 0){
-    d <- dyad
-  }
-  else {
-    p1 <- read.eda(f1)
-    p2 <- read.eda(f2)
-    d <- as.dyad(p1,p2,norm = T,cols=cols)
-    
-  }
-
-  
-
-  if(start != ""){
-    start <- strptime(start,format=timeformat,tz = "")
-  }
-  else {
-    start <- d$Timestamp[[1]]
-  }
-  if(end != ""){
-    end <- strptime(end,format=timeformat,tz = "")
-  }
-  else {
-    end <- d$Timestamp[[length(d$Timestamp)]]
-  }
-  d <- subset(d,((Timestamp >= start) & (Timestamp <= end)) )
- 
-  
-  if (useRealTime) {
-    ERCodes <- read.RTCodes(codes)
-    validateConditionTimes(d,ERCodes) #Check that condition times don't exceed dyad start/end times and throw meaningful error messages
-    
-    start.ctime <- as.POSIXct(start,format=timeformat,tz = "")
-    end.ctime <- as.POSIXct(end,format=timeformat,tz = "")
-    if(verbose){print(paste("Dyad valid from ",start,"to",end,"with duration of",round(difftime(end.ctime,start.ctime,units="secs")),"seconds"))}
-    ERCodes$Start <- difftime(as.POSIXct(ERCodes$Start.Time,format=timeformat,tz = ""),start.ctime, units = "secs")
-    ERCodes$End <- difftime(as.POSIXct(ERCodes$End.Time,format=timeformat,tz = ""),start.ctime, units="secs")
-  }
-  else {
-    ERCodes <- read.Codes(codes)
-    ERCodes$Start <- ERCodes$Start.Time
-    ERCodes$End <- ERCodes$End.Time
-  }
-  
-  if(verbose){View(ERCodes)}
-
-  FS <- getFS(d)
-  mdls <- list()
-  
-  
-  x.baseline <- mean(d[,2],na.rm=T)
-  y.baseline <- mean(d[,3],na.rm=T)
-  
-  FUN <- function(data){
-    out <- func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline,verbose=verbose)
-    out$xTSD <- tsDescriptives(data[,2],fs=FS)
-    out$yTSD <- tsDescriptives(data[,3],fs=FS)
-    return(out);
-  }
-  if(verbose){
-    pb <- progress_bar$new(total = dim(ERCodes)[[1]])
-  }
-  for(n in 1:dim(ERCodes)[[1]]){
-    if(!is.na(ERCodes$Condition[[n]])){
-      start = ERCodes$Start[[n]]*FS
-      end = ERCodes$End[[n]]*FS
-      if(end >= dim(d)[[1]]){
-        end = dim(d)[[1]]-1
-      }
-      mdls[[n]] <- FUN(d[start:end,])
-      mdls[[n]]$Condition <- ERCodes$Condition[[n]]
-      mdls[[n]]$Duration <- (ERCodes$End[[n]] - ERCodes$Start[[n]])
-      mdls[[n]]$Start <- ERCodes$Start.Time[[n]] 
-      mdls[[n]]$End <- ERCodes$End.Time[[n]] 
-      mdls[[n]]$Timestamp <- as.POSIXct(ERCodes$Start.Time[[n]],tz="") +  mdls[[n]]$Duration/2
-      mdls[[n]]$dyad.name <- dname 
-      
-    }
-    if(verbose){
-      pb$tick()
-    }
-    
-  }
-  startD = min(ERCodes$Start.Time)
-  endD = max(ERCodes$End.Time)
-  
-  rawD <- subset(d,((Timestamp >= startD) & (Timestamp <= endD)) )
-  colnames(rawD) <- c("Timestamp",p1.name,p2.name)
-
-  plt <- plot.ssparams(mdls,xname = p1.name,yname=p2.name,use.delta.rsquared = T, title=dname,plotParams = plotParams,rawData = rawD, ...)
-  print(plt)
-  mdlData <- data.frame(timestamp=get.key(mdls,"Timestamp"),
-                        name=rep_len(dname,n),
-                        Condition=get.key(mdls,"Condition"), 
-                        Start=get.key(mdls,"Start"),
-                        End=get.key(mdls,"End"), 
-                        x.r.squared=get.key(mdls,"dx.r.squared"),
-                        y.r.squared=get.key(mdls,"dy.r.squared"),
-                        x.selfreg=get.key(mdls,"b1"),
-                        x.coreg=get.key(mdls,"b2"),
-                        x.interaction=get.key(mdls,"b21"),
-                        y.selfreg=get.key(mdls,"b4"),
-                        y.coreg=get.key(mdls,"b5"),
-                        y.interaction=get.key(mdls,"b45")
-                        )
-  
-  output <- list(mdls=mdls,summary=mdlData,plt=plt,rawPlot=plotDyad(rawD,ylabel =measure,title = dname))
-  
-  return(output)
-  
-}
-
-
-
 
 get.key <- function(lst, key,as.list=F) {
   if(as.list == T){
@@ -207,6 +94,21 @@ get.key <- function(lst, key,as.list=F) {
     return(unlist( lapply(lst,FUN = function(l){return(try(l[[key]]))}),recursive = F ))
   }
 }
+
+#' Plot lag parameters over time
+#'
+#' @description Plots the lags and R-squared values over time using ggplot2.
+#' @param data A data frame containing timestamps and parameter values.
+#' @param xname Label for the x variable.
+#' @param yname Label for the y variable.
+#' @param title The plot title.
+#' @param save Logical, whether to save the plot.
+#' @param f Filename to save the plot (default "plot.pdf").
+#' @param use.delta.rsquared Logical, whether to use delta R-squared values.
+#' @param by.condition Logical, whether to group by condition.
+#' @param autoscale Logical, whether to auto-scale the plot.
+#' @return A combined ggplot object.
+#' @export
 
 plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=T) {
   data <- na.omit(data)
@@ -219,7 +121,6 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
   glegend1 <- scale_colour_discrete(name  ="Variable",
                                     breaks=c("x.lag","y.lag"),
                                     labels=c(bquote(Lag[.(xname)]),bquote(Lag[.(yname)])))
-  
   glegend2 <- scale_colour_discrete(name  ="Variable",
                                     breaks=c("dx.r.squared","dy.r.squared"),
                                     labels=r2.labels)
@@ -243,8 +144,27 @@ plot.lagparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname)
   
 }
 
+#' Plot TVDSM model results
+#'
+#' @description Generates a combined plot displaying TVDSM model parameters and R-squared values over time.
+#' @param data A list of TVDSM model objects.
+#' @param xname Friendly name for participant 1.
+#' @param yname Friendly name for participant 2.
+#' @param title Plot title.
+#' @param save Logical, whether to save the plot.
+#' @param f Filename to save the plot.
+#' @param use.delta.rsquared Logical, whether to use delta R-squared values.
+#' @param by.condition Logical, whether to group by condition.
+#' @param autoscale Logical, whether to auto-scale the plot.
+#' @param plotParams Logical, whether to include model parameter plots.
+#' @param grayscale Logical, whether to use a grayscale color scheme.
+#' @param rawData Optional raw data for plotting.
+#' @param returnSeparatePlots Logical, if TRUE returns separate plots.
+#' @param fontFamily Font family for text.
+#' @return A ggplot object or a list of ggplot objects.
+#' @export
 
-plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL,returnSeparatePlots=F,fontFamily="Helvetica") {
+plot.tvdsm <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),save=F,f="plot.pdf",use.delta.rsquared=T,by.condition=T, autoscale=F,plotParams=T, grayscale=F,rawData=NULL,returnSeparatePlots=F,fontFamily="Helvetica") {
   data <- na.omit(data)
   r2.labels <- c(bquote(R[.(xname)]^2),bquote(R[.(yname)]^2))
   if(use.delta.rsquared){
@@ -411,7 +331,15 @@ plot.ssparams <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),
   
 }
 
-
+#' Plot density contour of beta coefficients
+#'
+#' @description Creates a contour plot from a 2D kernel density estimate of beta coefficients.
+#' @param data A data frame containing beta coefficient values.
+#' @param group Group label for the plot.
+#' @param xname Label for the x-axis (default: "Particpant 1 Beta").
+#' @param yname Label for the y-axis (default: "Participant 2 Beta").
+#' @return A plot of the density contours.
+#' @export
 
 plot.density <- function(data,group="Dyad", xname='Particpant 1 Beta', yname="Participant 2 Beta") {
   x.beta <- get.key(data, key="b2")
@@ -425,8 +353,22 @@ plot.density <- function(data,group="Dyad", xname='Particpant 1 Beta', yname="Pa
   print(gg)
 }
 
+#' Fit a dynamic system model
+#'
+#' @description Fits a dynamic system model to time series data using systemfit and SUR.
+#' @param x Numeric vector representing x values.
+#' @param y Numeric vector representing y values.
+#' @param x_mu Baseline value for x; default is mean(x, na.rm=TRUE).
+#' @param y_mu Baseline value for y; default is mean(y, na.rm=TRUE).
+#' @param type Model type (default 2).
+#' @param step Step size parameter (default 0.25).
+#' @param p.value Significance level for the likelihood ratio test.
+#' @param verbose Logical, whether to print verbose output.
+#' @param lag Lag value to apply.
+#' @return A list containing the fitted models, R-squared values, and model coefficients.
+#' @export
 
-statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=F,lag=0){
+fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=F,lag=0){
   if(is.null(lag)){
     x_prime <-o.Lag(x,lag=0)
     y_prime <- o.Lag(y,lag=0)
@@ -580,7 +522,6 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
     y_model <- y_prime ~  I(x-y)
     
     
-    
     eq <- list(x_model,y_model)
     fit <- systemfit(list(x_model,y_model),data=data, method = "SUR")
     
@@ -630,8 +571,20 @@ statespace.fiml <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2
   return(list(x_model=x_model,y_model=y_model,base_x_model=base_x_model,base_y_model=base_y_model,model=fit,basemodel=basefit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=(x.r.squared - x.base.r.squared),dy.r.squared=(y.r.squared - y.base.r.squared),x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5,b21=b21,b45=b45))
 }
 
+#' Fit dynamic system model for dyad data
+#'
+#' @description Downsamples dyad data and fits a dynamic system model for both participants.
+#' @param dyad A data frame with dyad time series data.
+#' @param type Model type (default 4).
+#' @param downsample Downsampling factor (default 1).
+#' @param lag Lag value (default 0).
+#' @param x_mu Baseline for participant 1.
+#' @param y_mu Baseline for participant 2.
+#' @param verbose Logical, whether to output verbose messages.
+#' @return A list containing model outputs and timing information.
+#' @export
 
-computeStateSpace <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL,verbose=F) {
+fitDSModelForDyad <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL,verbose=F) {
   FS <- round(getFS(dyad))
   ax <- decimate(dyad[,2], downsample*FS)
   ay <- decimate(dyad[,3],downsample*FS)
@@ -646,7 +599,7 @@ computeStateSpace <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL
     x.eq="s1",y.eq="s2",
     b0=NA,b1=NA,b2=NA,b3=NA,b4=NA,b5=NA,b21=NA,b45=NA)
   
-tryCatch(mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose),
+tryCatch(mdl <- fitDSModel(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose),
            error=function(e){
              print(e)
            })
@@ -658,6 +611,13 @@ tryCatch(mdl <- statespace.fiml(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_m
   return(mdl)
 }
 
+#' Generate URL for model visualization
+#'
+#' @description Constructs a local file URL for visualizing model results based on coefficients.
+#' @param m A model object containing coefficients and a matrix.
+#' @return A string representing the URL for the model visualization.
+#' @export
+
 urlForModel <- function(m) {
   a1 <- m$b1
   a2 <- m$b2
@@ -668,8 +628,36 @@ urlForModel <- function(m) {
   return(paste("file:///Users/OliverWS/git/DCS%20Visualization/index.html?a1=", a1,"&a2=",a2,"&b1=",b1,"&b2=",b2,"&min=",minV,"&max=",maxV,sep=""))
 }
 
+#' Analyze model performance over varying lags
+#'
+#' @description Iterates over a range of lag values to fit models and determine optimal lag based on R-squared.
+#' @param f1 File path for participant 1.
+#' @param f2 File path for participant 2.
+#' @param dyad Optional dyad object (if provided, f1 and f2 are ignored).
+#' @param xname Friendly name for participant 1.
+#' @param yname Friendly name for participant 2.
+#' @param norm Logical, whether to standardize data.
+#' @param window_size Window size in seconds.
+#' @param window_step Step size in seconds.
+#' @param start Start time.
+#' @param end End time.
+#' @param func Function to use for fitting the model.
+#' @param na.rm Logical, whether to remove NA values.
+#' @param simulate Logical, whether to simulate dyad data.
+#' @param dname Friendly name for the dyad.
+#' @param measure Measurement column (e.g., "EDA").
+#' @param downsample Downsampling factor.
+#' @param minLag Minimum lag value.
+#' @param maxLag Maximum lag value.
+#' @param noPlots Logical, if TRUE no plots are generated.
+#' @param relativeToLag Reference lag index (default -1).
+#' @param type Model type.
+#' @param plotParams Logical, whether to plot model parameters.
+#' @param pltTitle Title for the plots.
+#' @return A list with optimal lag summary and model outputs.
+#' @export
 
-analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),measure="EDA", downsample=1, minLag=0,maxLag=5,noPlots=F,relativeToLag=-1,type=4,plotParams=T,pltTitle=NULL) {
+analyzeLags <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=fitDSModelForDyad,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),measure="EDA", downsample=1, minLag=0,maxLag=5,noPlots=F,relativeToLag=-1,type=4,plotParams=T,pltTitle=NULL) {
   lagList <- list()
 n = 1;
   lags <- minLag:maxLag
@@ -713,38 +701,41 @@ n = 1;
   
 }
 
-
-
-#' Perform TVDSM analysis on a dyad by condition
+#' Analyze dyad data for TVDSM analysis
 #'
-#' @param f1 path to csv file with data for participant 1
-#' @param f2 path to csv file with data for participant 2
-#' @param dyad if a valid dyad object is provided (produced via \code{\link{as.dyad}}), analysis will be run on the dyad directly, and \code{f1} and \code{f2} will be ignored
-#' @param type the type of TVDSM analysis to use
-#' @param dname a string indicating a friendly name for the dyad (used in plots and summary data frame)
-#' @param xname a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f1}
-#' @param yname a string indicating a friendly name for the participant whose data was loaded at path indicated by \code{f2}
-#' @param norm should participant data be standardized prior to TVDSM analysis
-#' @param window_size the size of the sliding window to use for TVDSM analysis, in seconds
-#' @param window_step the increment to be used when sliding \code{window_size}, in seconds
-#' @param measure a string indicating which column to select from each file when creating a dyad
-#' @param pltTitle pass a string to override plot title
-#' @param plotParams should model coefficients be ploted
-#' @param noPlots if true, plots will not be generated
-#' @param lag the lag to be used in the TVDSM analysis (in seconds)
-#' @param downsample the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)
-#' @param x.baseline provide a value to be treated as baseline for participant 1 in TVDSM analysis. Defaults to mean of participant 1's data.
-#' @param y.baseline provide a value to be treated as baseline for participant 2 in TVDSM analysis. Defaults to mean of participant 2's data.
-#' @param downsample the desired sample period in seconds after downsampling (e.g. 8Hz = 0.125, 2Hz = 0.5, 1hz= 1.0)
-#' @return a list containing models (mdls), plot (plt), and a summary data frame (summary)
+#' @description Processes two participant datasets or a dyad object, performs TVDSM analysis, generates plots, and returns model summaries.
+#' @param f1 File path for participant 1.
+#' @param f2 File path for participant 2.
+#' @param dyad Optional dyad object.
+#' @param xname Friendly name for participant 1.
+#' @param yname Friendly name for participant 2.
+#' @param norm Logical, whether to standardize data.
+#' @param window_size Window size in seconds.
+#' @param window_step Step size in seconds.
+#' @param start Start time for analysis.
+#' @param end End time for analysis.
+#' @param func Function for model fitting (default fitDSModelForDyad).
+#' @param na.rm Logical.
+#' @param simulate Logical, whether to simulate a dyad.
+#' @param dname Friendly name for the dyad.
+#' @param lag Lag value for analysis.
+#' @param noPlots Logical, if TRUE, no plots are produced.
+#' @param plotParams Logical, whether to include model parameter plots.
+#' @param pltTitle Title for the plots.
+#' @param measure Measurement column name.
+#' @param type Model type.
+#' @param downsample Downsampling factor.
+#' @param x.baseline Baseline for participant 1.
+#' @param y.baseline Baseline for participant 2.
+#' @param verbose Logical, whether to be verbose.
+#' @param codes File path for condition codes.
+#' @param useRealTime Logical, whether to interpret condition codes in real time.
+#' @param incTSD Logical, whether to include time series descriptives.
+#' @param ... Additional arguments.
+#' @return A list containing TVDSM model outputs, summary, and plots.
 #' @export
-#' @examples
-#' #Perform TVDSM analysis using a 5 minute sliding window incremented every 10 second, with a lag of 5 seconds
-#' analyzeDyad("PersonA.csv","PersonB.csv",window_size=5*60, window_step=10,lag=5)
 
-
-
-analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=computeStateSpace,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=4,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F, codes="",useRealTime=F, incTSD=T, ...) {
+analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=fitDSModelForDyad,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams=T,pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=4,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F, codes="",useRealTime=F, incTSD=T, ...) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   
   if(length(dyad) > 0){
@@ -760,7 +751,6 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
     else {
       d <- as.dyad(p1,p2,norm=norm,cols = c(measure),verbose = verbose)
     }
-    
     
     
   }
@@ -854,7 +844,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   out <- list()
   
   if(noPlots == F){
-    pltData<- plot.ssparams(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=d, ...)
+    pltData<- plot.tvdsm(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=d, ...)
     print(pltData)
     out$plt <- pltData
     colnames(d) <- c("Timestamp",xname,yname)
@@ -866,8 +856,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   mdls <- data
   mdlData <- data.frame(timestamp=as.POSIXct(get.key(mdls,"Timestamp"),origin = "1970-01-01"),
                         name=rep_len(dname,n),
-                        Start=as.POSIXct(get.key(mdls,"Start"),origin="1970-01-01"),
-                        End=as.POSIXct(get.key(mdls,"End"),origin="1970-01-01"), 
+                        Start=as.POSIXct(get.key(mdls,"Start"),
+                        End=as.POSIXct(get.key(mdls,"End"), 
                         dx.r.squared=get.key(mdls,"dx.r.squared"),
                         dy.r.squared=get.key(mdls,"dy.r.squared"),
                         x.selfreg=get.key(mdls,"b1"),
@@ -876,8 +866,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
                         y.selfreg=get.key(mdls,"b4"),
                         y.coreg=get.key(mdls,"b5"),
                         y.interaction=get.key(mdls,"b45")
-                        
-  )
+                        )
   if(incTSD){
     df.xTSD <- ldply(mdls,.fun = function(d){return(as.data.frame(d$xTSD))})
     df.yTSD <- ldply(mdls,.fun = function(d){return(as.data.frame(d$yTSD))})
@@ -891,6 +880,15 @@ analyzeDyad <- function(f1="",f2="",dyad=c(), xname=f1,yname=f2, norm=F,window_s
   return(out)
 }
 
+#' Describe dyad interdependence
+#'
+#' @description Computes descriptive statistics for dyad interdependence metrics based on TVDSM outputs.
+#' @param mdls A list of TVDSM model outputs.
+#' @param xname Friendly name for participant 1.
+#' @param yname Friendly name for participant 2.
+#' @return A summary of interdependence measures.
+#' @export
+
 describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
   dx <- get.key(mdls, "dx.r.squared")
   dy <- get.key(mdls, "dy.r.squared")
@@ -902,6 +900,18 @@ describeDyad <- function(mdls,xname="Participant 1", yname="Participant 2") {
   
   return(o.describeBy(interdependence, group,tex = F,digits = 3))
 }
+
+#' Save interpersonal analysis data to a CSV file
+#'
+#' @description Exports the summary data (and optionally condition-based data) from a dyad analysis to a CSV file.
+#' @param dyadData A list containing TVDSM dyad analysis output.
+#' @param outputFilename Optional filename for the output CSV.
+#' @param I3.only Logical, if TRUE, only saves the I3 metric.
+#' @param aname Friendly name for participant 1.
+#' @param bname Friendly name for participant 2.
+#' @param by.condition Logical, if TRUE, includes condition information.
+#' @return The data frame that was saved.
+#' @export
 
 saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname=NULL,bname=NULL,by.condition=F){
   timeformat ="%Y-%m-%dT%H:%M:%S%z"
@@ -956,6 +966,15 @@ saveInterpersonalData <- function(dyadData, outputFilename=NULL, I3.only=F,aname
   return(data)
 }
 
+#' Save data for graphing from TVDSM analysis
+#'
+#' @description Exports the R-squared summary metrics of the TVDSM analysis to CSV files.
+#' @param mdls A list containing TVDSM model outputs and summary data.
+#' @param xfname Filename for saving participant X's R-squared data.
+#' @param yfname Filename for saving participant Y's R-squared data.
+#' @return None.
+#' @export
+
 saveDataForGraphing <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
   timeformat ="%Y-%m-%d %H:%M:%S"
   data <- mdls$summary
@@ -964,7 +983,17 @@ saveDataForGraphing <- function(mdls,xfname="Dyad_X.csv",yfname="Dyad_X.csv"){
   write.csv(data.frame(Timestamp=data$Timestamp, R2=data$dy.r.squared),file = yfname)
 }
 
-
+#' Compute dynamical correlation using bootstrap methods
+#'
+#' @description Calculates the dynamical correlation between participant data using a bootstrap approach.
+#' @param a_files A vector of file paths for participant A.
+#' @param b_files A vector of file paths for participant B.
+#' @param read_func Function to read data files (default read.eda).
+#' @param cols A vector of measurement columns (default "EDA").
+#' @param sr Sampling rate (default 32).
+#' @param randPairs Logical, if TRUE, uses random pairing.
+#' @return Bootstrapped dynamical correlation test results.
+#' @export
 
 dynamicalCorrelation <- function(a_files, b_files,read_func=read.eda,cols=c("EDA"),sr=32,randPairs=F){
   n <- length(a_files)
@@ -993,8 +1022,13 @@ dynamicalCorrelation <- function(a_files, b_files,read_func=read.eda,cols=c("EDA
   return(results.boot)
 }
 
-
-
+#' Generate an I3 matrix for interdependence analysis
+#'
+#' @description Constructs a 3D matrix of I3 values across participants and time windows and optionally saves it as JSON.
+#' @param data A nested list of dyad analysis results.
+#' @param outputFile Optional filename to save the JSON output.
+#' @return A list containing the legend, I3 matrix, and timestamps.
+#' @export
 
 generateI3Mat <- function(data, outputFile=NULL){
   timestamps = data[[1]][[1]]$summary$timestamp
@@ -1035,6 +1069,17 @@ generateI3Mat <- function(data, outputFile=NULL){
   return(output)
 }
 
+#' Analyze a group of participant data files
+#'
+#' @description Performs pairwise TVDSM analysis on a group of participant data files.
+#' @param files A vector of file paths or a directory path containing CSV files.
+#' @param window_size Window size in seconds for TVDSM analysis.
+#' @param window_step Window step size in seconds.
+#' @param readFunction Function to read each data file (default read.eda).
+#' @param scanDirs Logical, if TRUE, treats files as directory and scans for CSV files.
+#' @param ... Additional arguments passed to the analysis functions.
+#' @return A list containing analysis results for each participant pair.
+#' @export
 
 analyzeGroup <- function(files,window_size=60,window_step=10,readFunction=read.eda,scanDirs=T,...){
   if(dir.exists(files) & scanDirs){
@@ -1073,8 +1118,16 @@ analyzeGroup <- function(files,window_size=60,window_step=10,readFunction=read.e
   return(output)
 }
 
-
-
+#' Combine participant data into a group dyad
+#'
+#' @description Merges overlapping time series data from multiple participants into a single data frame.
+#' @param pn A list of participant data frames.
+#' @param cols A vector of column names to include (default "EDA").
+#' @param norm Logical, whether to normalize data.
+#' @param na.interpolate Logical, if TRUE interpolates missing values.
+#' @param interpolation.method Function used for interpolation (default na.spline).
+#' @return A combined data frame of group time series data.
+#' @export
 
 as.group <- function(pn,cols=c("EDA"),norm=F,na.interpolate=T,interpolation.method=na.spline) {
   pn.name <- names(pn)
@@ -1110,7 +1163,6 @@ as.group <- function(pn,cols=c("EDA"),norm=F,na.interpolate=T,interpolation.meth
     }
   }  
   return(dyad)
-  
   
 }
 

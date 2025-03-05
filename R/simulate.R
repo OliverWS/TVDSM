@@ -12,6 +12,23 @@ library(lmerTest)
 library(progress)
 library(stringr)
 library(compute.es)
+
+#' Simulate a Dyadic Time Series
+#' 
+#' This function simulates a dyadic time series for two interacting persons using self- and co-regulation parameters.
+#' 
+#' @param duration Duration of simulation in seconds (default: 600).
+#' @param fs Sampling frequency (default: 32).
+#' @param selfReg.coef Self-regulation coefficient (default: 0.5).
+#' @param coReg.coef Co-regulation coefficient (default: 1.0).
+#' @param interaction.coef Interaction coefficient (default: 0).
+#' @param lag Lag to apply (default: 0).
+#' @param mu Mean value for baseline signal (default: 1).
+#' @param sd Standard deviation for noise (default: 2).
+#' @param trend Linear trend added to the signal (default: 0).
+#' @param sr.ratio Ratio of signal to noise (default: 0.95).
+#' @return A list with elements: plt (ggplot object), data (simulated data frame), and eq (model equation).
+#' @export
 simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,trend=0,sr.ratio=0.95) {
   sr = selfReg.coef
   cr = coReg.coef
@@ -62,7 +79,23 @@ simulateDyad <- function(duration=600,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inte
   return(list(plt=g1,data=outputData,eq=eq))
 }
 
-simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,sr.ratio=0.95) {
+#' Simulate a Partner Time Series
+#'
+#' This function simulates a partner's time series based on an input signal and regulation parameters.
+#'
+#' @param x.signal Numeric vector representing the input signal.
+#' @param fs Sampling frequency (default: 32).
+#' @param selfReg.coef Self-regulation coefficient (default: 0.5).
+#' @param coReg.coef Co-regulation coefficient (default: 1.0).
+#' @param interaction.coef Interaction coefficient (default: 0).
+#' @param lag Lag to apply (default: 0).
+#' @param mu Mean value (default: 1).
+#' @param sd Standard deviation (default: 2).
+#' @param trend Linear trend to add (default: 0).
+#' @param sr.ratio Ratio of signal to noise (default: 0.95).
+#' @return A list with elements: data (simulated partner data frame), plt (ggplot object), and eq (model equation).
+#' @export
+simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,interaction.coef=0,lag=0,mu=1,sd=2,trend=0,sr.ratio=0.95) {
   sr = selfReg.coef
   cr = coReg.coef
   i = interaction.coef
@@ -109,6 +142,7 @@ simulatePartner <- function(x.signal,fs=32,selfReg.coef=0.5,coReg.coef=1.0,inter
 
   return(list(data=outputData,plt=g1,eq=eq))
 }
+
 o.scale <- function(x,use.sd=F){
   if(use.sd){
     sx <- (x - min(x, na.rm=T))/sd(x,na.rm = T)
@@ -131,12 +165,24 @@ o.smooth <- function(x,window=10){
   
 }
 
-
+#' Bootstrap Dyadic Simulation
+#'
+#' Runs a bootstrapping simulation using the dyadic simulation and model estimation.
+#'
+#' @param n Number of bootstrap replications (default: 100).
+#' @return A vector of bootstrapped simulation statistics.
+#' @export
 bootstrapSimulation <- function(n=100) {
-  r<-replicate(n,computeStateSpace(simulateDyad(duration=600,fs = 1,sr.ratio =0.95,lag=0,mu = 0.5,sr = 0,cr =0.25,i = 0),downsample = 1,x_mu = 0.5,y_mu=0.5,lag = 0,type = 2),simplify = "array")
+  r<-replicate(n,fitDSModelForDyad(simulateDyad(duration=600,fs = 1,sr.ratio =0.95,lag=0,mu = 0.5,sr = 0,cr =0.25,i = 0),downsample = 1,x_mu = 0.5,y_mu=0.5,lag = 0,type = 2),simplify = "array")
   return(unlist(r[11,]))
 }
 
+#' Sample Signal
+#'
+#' Reads a sample signal from an Excel file for simulation purposes.
+#'
+#' @return A numeric vector representing the sample signal.
+#' @export
 sampleSignal <- function(){
   data <- read_excel(paste("~/Dropbox/CouplesData/All Raw Data/","002",".xlsx",sep=""))
   
@@ -145,6 +191,16 @@ sampleSignal <- function(){
   return(d.sc[,2])
 }
 
+#' Create Dyad Data Frame
+#'
+#' Constructs a dyadic data frame from EDA data with generated timestamps.
+#'
+#' @param edaData Matrix or data frame with two columns representing signals.
+#' @param sample_rate Sampling rate (default: 0.1).
+#' @param start Start time as POSIXlt (default: 2015-01-01 0:0:0).
+#' @param norm Logical indicating whether to normalize data (default: TRUE).
+#' @return A data frame with columns: Timestamp, Person A, and Person B.
+#' @export
 makeDyad <- function(edaData, sample_rate=0.1, start=strptime("2015-01-01 0:0:0","%Y-%m-%d %H:%M:%S"),norm=T) {
   dt <- as.difftime(sample_rate,units = "secs")
   timestamps <- seq(from = start, by=dt , length.out = dim(edaData)[1])
@@ -161,12 +217,26 @@ makeDyad <- function(edaData, sample_rate=0.1, start=strptime("2015-01-01 0:0:0"
   return(na.omit(outputData))
 }
 
+#' Compare Simulated Signals
+#'
+#' Compares simulated signals using partner simulation and dyadic analysis, then plots the results.
+#'
+#' @param x.signal Signal for person A (default: sampleSignal()).
+#' @param fs Sampling frequency (default: 0.1).
+#' @param coReg.coef Co-regulation coefficient (default: 0.1).
+#' @param selfReg.coef Self-regulation coefficient (default: 0.05).
+#' @return A plot grid comparing simulation outputs.
+#' @export
 compareSim <- function(x.signal = sampleSignal(), fs=0.1,coReg.coef=0.1,selfReg.coef=0.05){
   sp <- simulatePartner(x.signal = x.signal,fs =0.1,mu = 0.5,sr.ratio = 1.0,coReg.coef = coReg.coef,selfReg.coef=selfReg.coef,i = 0)
   a <- analyzeDyad(dyad=sp$data,xname = "Person A",yname="Person B",window_size = 600)
   plot_grid(sp$plt,a$plt,ncol=1,nrow=2)
 }
 
+#' Run Example Simulations
+#'
+#' Executes example simulation scenarios over a range of regulation coefficients.
+#' @export
 examples <- function(){
   setwd("~/Dropbox/Dynamical Systems Modeling Paper/")
   data <- read_excel(paste("~/Dropbox/CouplesData/All Raw Data/","002",".xlsx",sep=""))
@@ -191,7 +261,19 @@ examples <- function(){
   }
 }
 
-
+#' Run False Pairings Analysis
+#'
+#' Runs TVDSM analysis on true and false pairings from lists of participant signals.
+#'
+#' @param participantAList List of signals for person A.
+#' @param participantBList List of signals for person B.
+#' @param window_size Window size for analysis (default: 60).
+#' @param window_step Step size between windows (default: window_size).
+#' @param downsample Downsample factor (default: 1).
+#' @param lag Lag to be applied (default: 0).
+#' @param type Analysis type specifier (default: 3).
+#' @return A list containing results for true pairs and false pairs.
+#' @export
 runFalsePairings <- function(participantAList, participantBList, window_size=60, window_step=window_size, downsample=1, lag=0,type=3) {
   n <- length(participantAList)
   nFalse = 1
@@ -232,7 +314,14 @@ runFalsePairings <- function(participantAList, participantBList, window_size=60,
   
 }
 
-
+#' Compare Simulated Dyads
+#'
+#' Compares true dyad pairings with simulated (false) dyad pairings using statistical tests and visualization.
+#'
+#' @param pairs A list with elements 'truePairs' and 'falsePairs'.
+#' @param title Title for the comparison plot (default: "True vs. Simulated Dyads").
+#' @return A list containing the compiled data frame, plot object, and t-test results.
+#' @export
 compareSimulatedDyads <- function(pairs,title="True vs. Simulated Dyads"){
   truePairs <- pairs$truePairs
   falsePairs <- pairs$falsePairs

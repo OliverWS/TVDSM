@@ -1,11 +1,11 @@
-Package: cbsl
+Package: tvdsm
 Type: Package
-Title: R Functions for Computational Behavioral Science
-Version: 1.2
-Date: 2016-02-12
-Author: Oliver Wilder-Smith
-Maintainer: Who to complain to <wilder-smith.o@husky.neu.edu>
-Description: R functions for use in Computational Behavioral Science Research
+Title: R Package for Time-Varying Dynamic State Models
+Version: 1.3
+Date: 2025-02-21
+Author: Oliver Saunders Wilder & Richard Palumbo
+Maintainer: <oliversw@media.mit.edu>
+Description: TVDSM is a package for fitting and analyzing data using Time-Varying Dynamic State Models (TVDSM)
 License: Apache 2.0
 Depends:
     R (>= 3.1.2)

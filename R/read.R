@@ -2,6 +2,15 @@ library(readxl)
 library(edfReader)
 library(lubridate)
 
+#' Read IBI Data from CSV
+#'
+#' This function reads interbeat interval (IBI) data from a CSV file.
+#'
+#' @param file File path to the CSV file.
+#' @param startTime Starting time as a string (default "1970-01-01 0:0:0").
+#' @param start Starting time as a POSIXlt object (default parsed from startTime).
+#' @return A data frame with Timestamp and IBI columns.
+#' @export
 read.IBI <- function(file, startTime="1970-01-01 0:0:0",start=strptime(startTime,"%Y-%m-%d %H:%M:%S",tz = "")){
   raw <- read.csv(file,header = F)
   ibi.secs <- (raw$V1/1000.0)
@@ -11,6 +20,15 @@ read.IBI <- function(file, startTime="1970-01-01 0:0:0",start=strptime(startTime
   data
 }
 
+#' Read IBI Time Series Data
+#'
+#' Reads IBI data and constructs a time series with computed heart rate (HR).
+#'
+#' @param file File path to the CSV file.
+#' @param startTime Starting time string (default "1970-01-01 0:0:0").
+#' @param start Starting time as POSIXlt (default parsed from startTime).
+#' @return A data frame with Timestamp, IBI, and HR columns.
+#' @export
 read.IBI.TS <- function(file, startTime="1970-01-01 0:0:0",start=strptime(startTime,"%Y-%m-%d %H:%M:%S",tz = "")){
   data <- read.IBI(file,startTime = startTime,start=start)
   end <- max(data$Timestamp)
@@ -27,6 +45,13 @@ read.IBI.TS <- function(file, startTime="1970-01-01 0:0:0",start=strptime(startT
 }
 
 
+#' Read Engagement Codes
+#'
+#' Reads engagement codes from an Excel or CSV file.
+#'
+#' @param path File path to the codes file.
+#' @return A data frame containing engagement codes.
+#' @export
 read.ERCodes <- function(path){
   if(grepl(".xls", path)){
     data <- read_excel(path,"text")
@@ -54,6 +79,18 @@ read.ERCodes <- function(path){
 }
 
 
+#' Read Condition Codes
+#'
+#' Reads condition codes from a CSV or Excel file.
+#'
+#' @param path File path (default "ConditionTimes.csv").
+#' @param startCol Column name for start time.
+#' @param endCol Column name for end time.
+#' @param conditionCol Column name for condition.
+#' @param fmt Format string for time (default "%H:%M:%S").
+#' @param ... Additional parameters.
+#' @return A data frame with condition codes.
+#' @export
 read.Codes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",conditionCol="Condition",fmt="%H:%M:%S",...){
 if(grepl(".xls", path) || grepl(".xlsx", path)){
     data <- read_excel(path)
@@ -71,6 +108,16 @@ if(grepl(".xls", path) || grepl(".xlsx", path)){
 }
 
 
+#' Read RTCodes
+#'
+#' Reads RTCodes from a CSV or Excel file.
+#'
+#' @param path File path (default "ConditionTimes.csv").
+#' @param startCol Column name for start time.
+#' @param endCol Column name for end time.
+#' @param fmt Time format (default "%y-%m-%d %H:%M:%S").
+#' @return A data frame with RTCodes.
+#' @export
 read.RTCodes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol="End.Time",fmt="%y-%m-%d %H:%M:%S"){
   if(grepl(".xls", path) || grepl(".xlsx", path)){
     data <- read_excel(path)
@@ -91,6 +138,14 @@ read.RTCodes <- function(path="ConditionTimes.csv",startCol="Start.Time",endCol=
 
 
 
+#' Read iButton Data
+#'
+#' Reads data from an iButton CSV file skipping header lines.
+#'
+#' @param path File path to the CSV file.
+#' @param header Logical indicating if file has header (default TRUE).
+#' @return A data frame with Timestamp and Temperature columns.
+#' @export
 read.ibutton <- function(path,header=T) {
   if(header){
     data <- read.csv(path,skip=14)
@@ -106,6 +161,13 @@ read.ibutton <- function(path,header=T) {
   return(subset(data,select=c("Timestamp","Temperature")))
 }
 
+#' Read Reda Data
+#'
+#' Reads and processes REDA data from a CSV file.
+#'
+#' @param file File path to the REDA data file.
+#' @return A data frame containing the processed REDA data.
+#' @export
 read.reda <- function(file) {
   FIELDS <- c("Z","Y","X","Battery","Temperature","EDA","Tonic","Phasic","Events")
   #First lets read the file header info
@@ -127,6 +189,13 @@ read.reda <- function(file) {
 }
 
 
+#' Read EDA Data
+#'
+#' Reads EDA (electrodermal activity) data from a CSV file.
+#'
+#' @param file File path to the EDA data file.
+#' @return A data frame with EDA data, Timestamp, and Motion computed.
+#' @export
 read.eda <- function(file) {
   #First lets read the file header info
   sample_rate <- as.numeric(scan(file, skip = 4, nlines = 1,sep = ":",strip.white = T, quiet=T, what = list("character","numeric"))[[2]]) # only 1 line after the skipped one
@@ -150,6 +219,13 @@ read.eda <- function(file) {
   return(data)
 }
 
+#' Save EDA Data to File
+#'
+#' Writes EDA data to a file with a header.
+#'
+#' @param data Data frame containing EDA data.
+#' @param filename Output file name.
+#' @export
 save.eda <- function(data, filename) {
   # Log File Created by Q Analytics - (c) 2011 Affectiva Inc.
   # File Version: 1.01
@@ -183,6 +259,13 @@ save.eda <- function(data, filename) {
 }
 write.eda <- save.eda
 
+#' Read CSV Data with Timestamp Parsing
+#'
+#' Reads a CSV file and parses the Timestamp column using ymd_hms.
+#'
+#' @param file File path to the CSV file.
+#' @return A data frame with a parsed Timestamp column.
+#' @export
 read.csvdata <- function(file) {
   
   timeformat ="%Y-%m-%d %H:%M:%OS"
@@ -192,6 +275,13 @@ read.csvdata <- function(file) {
 }
 
 
+#' Read Biosync Data
+#'
+#' Reads biosync data from a CSV file and fixes the Timestamp format.
+#'
+#' @param file File path to the CSV file.
+#' @return A data frame with a corrected Timestamp column.
+#' @export
 read.biosync <- function(file) {
   
   timeformat ="%Y-%m-%d %H:%M:%OS"
@@ -201,6 +291,13 @@ read.biosync <- function(file) {
   return(data)
 }
 
+#' Read EDF Data
+#'
+#' Reads EDF (European Data Format) data using edfReader.
+#'
+#' @param file File path to the EDF file.
+#' @return A list of data frames, one per signal.
+#' @export
 read.edf <- function(file){
   header = edfReader::readEdfHeader(file)
   data = edfReader::readEdfSignals(header,signals = "Ordinary")
@@ -218,6 +315,13 @@ read.edf <- function(file){
   }
   return(output)
 }
+#' Read Actiwave Data
+#'
+#' Reads Actiwave data from a CSV file and computes IBI.
+#'
+#' @param file File path to the Actiwave CSV file.
+#' @return A data frame with Timestamp, HR, and IBI columns.
+#' @export
 read.actiwave <- function(file) {
   
   timeformat ="%m/%d/%Y %H:%M:%S"
@@ -233,6 +337,13 @@ read.actiwave <- function(file) {
   return(data)
 }
 
+#' Get Sampling Frequency
+#'
+#' Computes the sampling frequency from the Timestamp column of a data frame.
+#'
+#' @param d Data frame with a Timestamp column.
+#' @return The sampling frequency.
+#' @export
 getFS <- function(d){
   fs <- 1.0/diff(d$Timestamp)[[1]]
   if(fs < 1.0){
@@ -244,6 +355,14 @@ getFS <- function(d){
 }
 
 
+#' Downsample EDA Data
+#'
+#' Downsamples EDA data to a target sampling rate.
+#'
+#' @param d Data frame with EDA data.
+#' @param targetRate Desired sampling rate (default 1.0).
+#' @return A downsampled data frame.
+#' @export
 downsample.eda <- function(d,targetRate=1.0){
   current.fs <- getFS(d)
   q <- round(current.fs/targetRate)
@@ -265,6 +384,13 @@ downsample.eda <- function(d,targetRate=1.0){
 
 
 #/Users/OliverWS/Downloads/1418312035_192103
+#' Read Empatica Data
+#'
+#' Reads Empatica device data from a specified directory.
+#'
+#' @param path Directory path containing Empatica CSV files.
+#' @return A list of data frames for different signals (ACC, BVP, EDA, TEMP, IBI).
+#' @export
 read.empatica <- function(path) {
   FIELDS <- c("Z","Y","X","Battery","Temperature","EDA")
   FILES <- c("ACC.csv","BVP.csv","EDA.csv","TEMP.csv","IBI.csv")
@@ -280,6 +406,13 @@ read.empatica <- function(path) {
   return(data)
 }
 
+#' Read E4 Data
+#'
+#' Reads E4 device data from a specified directory.
+#'
+#' @param path Directory path containing E4 CSV files.
+#' @return A data frame with processed E4 data.
+#' @export
 read.e4 <- function(path) {
   FIELDS <- c("Z","Y","X","Battery","Temperature","EDA")
   FILES <- c("ACC.csv","BVP.csv","EDA.csv","TEMP.csv","IBI.csv")
@@ -302,6 +435,13 @@ read.e4 <- function(path) {
 }
 
 
+#' Read Empatica EDA Data
+#'
+#' Reads EDA data from an Empatica EDA CSV file.
+#'
+#' @param file File path to the EDA CSV file.
+#' @return A data frame with Timestamp and EDA data.
+#' @export
 read.empatica.eda <- function(file){
   raw <- read.csv(file,header = F)
   start_s <- raw$V1[1]
@@ -314,6 +454,13 @@ read.empatica.eda <- function(file){
   data
 }
 
+#' Read Empatica Accelerometer Data
+#'
+#' Reads accelerometer data from an Empatica ACC CSV file.
+#'
+#' @param file File path to the ACC CSV file.
+#' @return A data frame with X, Y, Z, and Timestamp columns.
+#' @export
 read.empatica.acc <- function(file){
   raw <- read.csv(file,header = F)
   start_s <- raw$V1[1]
@@ -326,6 +473,13 @@ read.empatica.acc <- function(file){
   data
 }
 
+#' Read Empatica BVP Data
+#'
+#' Reads blood volume pulse (BVP) data from an Empatica BVP CSV file.
+#'
+#' @param file File path to the BVP CSV file.
+#' @return A data frame with BVP and Timestamp columns.
+#' @export
 read.empatica.bvp <- function(file){
   raw <- read.csv(file,header = F)
   start_s <- raw$V1[1]
@@ -372,6 +526,17 @@ read.empatica.temp <- function(file) {
   data
 }
 
+#' Create Simulated Dyad Data
+#'
+#' Simulates a dyad using two participant data frames.
+#'
+#' @param p1 Data frame for participant 1.
+#' @param p2 Data frame for participant 2.
+#' @param cols Columns to include (default "EDA").
+#' @param norm Logical indicating whether to normalize data (default FALSE).
+#' @param verbose Logical for verbose output (default FALSE).
+#' @return A data frame representing the simulated dyad.
+#' @export
 as.simulateddyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F) {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))
@@ -412,6 +577,14 @@ as.simulateddyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F) {
   
 }
 
+#' Scale Vector to [0,1]
+#'
+#' Scales a numeric vector to the range [0,1].
+#'
+#' @param x Numeric vector.
+#' @param use.sd Logical, if TRUE uses standard deviation for scaling (default FALSE).
+#' @return Scaled numeric vector.
+#' @export
 o.scale <- function(x,use.sd=F){
   if(use.sd){
     sx <- (x - min(x, na.rm=T))/sd(x,na.rm = T)
@@ -427,6 +600,18 @@ o.scale <- function(x,use.sd=F){
 
 
 
+#' Read Dyad Data from File
+#'
+#' Reads dyad data from a file and constructs a data frame with Timestamps assigned based on the sample rate.
+#'
+#' @param f File path to the dyad data file.
+#' @param sample_rate Sampling rate (default 32.0).
+#' @param p1.name Optional name for participant 1 column (if NULL, first column name is used).
+#' @param p2.name Optional name for participant 2 column (if NULL, second column name is used).
+#' @param start Starting time as POSIXlt (default "2016-01-01 0:0:0").
+#' @param readFunction Function to read the file (default read.csv).
+#' @return A data frame with Timestamp and dyad data.
+#' @export
 read.dyad <- function(f,sample_rate=32.0,p1.name=NULL,p2.name=NULL,start=strptime("2016-01-01 0:0:0","%Y-%m-%d %H:%M:%S"), readFunction=read.csv){
   data <- as.data.frame(readFunction(f))
   if(is.null(p1.name)){
@@ -447,6 +632,19 @@ read.dyad <- function(f,sample_rate=32.0,p1.name=NULL,p2.name=NULL,start=strptim
   return(na.omit(outputData))
 }
 
+#' Convert Two Participant Data into a Dyad
+#'
+#' Aligns and merges two participant data frames into a dyadic data frame based on overlapping timestamps.
+#'
+#' @param p1 Data frame for participant 1.
+#' @param p2 Data frame for participant 2.
+#' @param cols Columns to include (default "EDA").
+#' @param norm Logical, if TRUE normalize the data (default FALSE).
+#' @param verbose Logical for verbose output (default FALSE).
+#' @param na.interpolate Logical, if TRUE interpolate NA values (default TRUE).
+#' @param interpolation.method Function to interpolate NAs (default na.spline).
+#' @return A dyadic data frame with aligned timestamps.
+#' @export
 as.dyad <- function(p1,p2,cols=c("EDA"),norm=F,verbose=F,na.interpolate=T,interpolation.method=na.spline) {
   p1.name <- deparse(substitute(p1))
   p2.name <- deparse(substitute(p2))

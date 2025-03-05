@@ -17,11 +17,15 @@ library(signal)
 library(gridExtra)
 library(progress)
 
-CBSL.update <- function(){
-  library(devtools)
-  install_github("OliverWS/CBSL.R",auth_token = "2f83b9ce082240ab6a07075eaee6ff32e1c954f8")
-}
-
+#' ggCaterpillar: Plot random effects as QQ-plots or caterpillar dotplots.
+#'
+#' This function creates either a normal QQ-plot or a caterpillar-style dotplot for random effects.
+#'
+#' @param re A list or matrix of random effects.
+#' @param QQ Logical flag; if TRUE a QQ-plot is generated, otherwise a caterpillar plot is used (default: TRUE).
+#' @param likeDotplot Logical flag; if TRUE the plot is styled like a dotplot (default: TRUE).
+#' @return A list of ggplot objects.
+#' @export
 ggCaterpillar <- function(re, QQ=TRUE, likeDotplot=TRUE) {
   library(ggplot2)
   f <- function(x) {
@@ -35,34 +39,50 @@ ggCaterpillar <- function(re, QQ=TRUE, likeDotplot=TRUE) {
                        ID=factor(rep(rownames(x), ncol(x))[ord], levels=rownames(x)[ord]),
                        ind=gl(ncol(x), nrow(x), labels=names(x)))
     
-    if(QQ) {  ## normal QQ-plot
-      p <- ggplot(pDf, aes(nQQ, y))
-      p <- p + facet_wrap(~ ind, scales="free")
+    if(QQ) {
+      p <- ggplot(pDf, aes(nQQ, y)) + facet_wrap(~ ind, scales="free")
       p <- p + xlab("Standard normal quantiles") + ylab("Random effect quantiles")
-    } else {  ## caterpillar dotplot
+    } else {
       p <- ggplot(pDf, aes(ID, y)) + coord_flip()
-      if(likeDotplot) {  ## imitate dotplot() -> same scales for random effects
+      if(likeDotplot) {
         p <- p + facet_wrap(~ ind)
-      } else {           ## different scales for random effects
+      } else {
         p <- p + facet_grid(ind ~ ., scales="free_y")
       }
       p <- p + xlab("Levels") + ylab("Random effects")
     }
-    
     p <- p + theme(legend.position="none")
-    p <- p + geom_hline(yintercept=0)
-    p <- p + geom_errorbar(aes(ymin=y-ci, ymax=y+ci), width=0, colour="black")
+    p <- p + geom_hline(yintercept=0) + geom_errorbar(aes(ymin=y-ci, ymax=y+ci), width=0, colour="black")
     p <- p + geom_point(aes(size=1.2), colour="blue") 
     return(p)
   }
-  
   lapply(re, f)
 }
 
+#' Center a Numeric Vector
+#'
+#' This function centers a numeric vector by subtracting its minimum (and optionally scaling by SD).
+#'
+#' @param d A numeric vector to center.
+#' @param use.sd Logical indicating whether to scale by standard deviation (default FALSE).
+#' @return A scaled numeric vector.
+#' @export
 o.center <- function(d){
-  return(d - mean(d, na.rm=T))
+  if(use.sd){
+    sx <- (d - min(d, na.rm=T))/sd(d,na.rm = T)
+  } else {
+    sx <- (d - min(d, na.rm=T))/(max(d,na.rm=T)-min(d,na.rm=T))    
+  }
+  return(sx)
 }
 
+#' Calculate R-squared from a Mixed Effects Model
+#'
+#' This function fits a simple linear model of the response against the fitted values from a mixed effects model and returns the R-squared.
+#'
+#' @param m A mixed effects model (e.g., from lme4).
+#' @return R-squared value.
+#' @export
 r2.corr.mer <- function(m) {
   lmfit <-  lm(model.response(model.frame(m)) ~ fitted(m))
   summary(lmfit)$r.squared

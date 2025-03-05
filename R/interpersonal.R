@@ -792,7 +792,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   t <- seq.int(1,to = length(d$Timestamp),by = round(downsample*fs))
   sourceData <- data.frame(Timestamp=t)
   sourceData[[names(d)[2]]] <- ax
-  sourceData[[names(d)[3]] <- ay
+  sourceData[[names(d)[3]]] <- ay
   
   
   if (window_size <= 0) {

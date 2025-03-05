@@ -2,7 +2,7 @@ pandoc: 3.1.11
 pkgdown: 2.1.1
 pkgdown_sha: ~
 articles: {}
-last_built: 2025-03-05T17:46Z
+last_built: 2025-03-05T17:49Z
 urls:
   reference: http://oliverws.github.io/TVDSM/reference
   article: http://oliverws.github.io/TVDSM/articles

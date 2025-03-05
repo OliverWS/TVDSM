@@ -125,7 +125,6 @@ plotDyad <- function(d, title = "", ylabel = "EDA", legend_label = "Participant"
   if (grayscale) {
     g <- g + scale_color_grey()
   }
-  print(g)
   return(g)
 }
 

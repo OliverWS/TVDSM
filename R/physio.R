@@ -1,7 +1,7 @@
-library(signal)
-library(matrixStats)
-library(Hmisc)
-library(lavaan)
+require(signal)
+require(matrixStats)
+require(Hmisc)
+require(lavaan)
 
 #' Compute Root Mean Square of Successive Differences (RMSSD)
 #'

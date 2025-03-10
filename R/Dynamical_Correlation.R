@@ -6,7 +6,7 @@
 # The sample-level dynamical correlation can then be computed by averaging the individual dynamical correlations (Eq. 7)
 
 #install.packages("caTools")                             	### load package {caTools} to call 'trapz' ###                                      
-library(caTools)   
+require(caTools)   
 
 ind_DC=function(x,y,t,na=FALSE){                     	### input x, y (data matrices with rows representing measurements and columns representing subjects) 
   #               t    (number of time points)
@@ -115,7 +115,7 @@ boot_test_DC=function(x1,y1,t1,x2,y2,t2,ms=c(FALSE,FALSE),B=1000,randPairs=F){
 # ##########################
 # ### Simulation Example###
 # ##########################
-# library(MASS)
+# require(MASS)
 # ###### DC=1 ######
 # n=100             # sample size
 # t=seq(0,1,length.out=100)       # length of data

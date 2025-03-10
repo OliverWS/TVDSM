@@ -1,7 +1,7 @@
-library(readxl)
-library(edfReader)
-library(lubridate)
-library(Hmisc)
+require(readxl)
+require(edfReader)
+require(lubridate)
+require(Hmisc)
 #' Read IBI Data from CSV
 #'
 #' This function reads interbeat interval (IBI) data from a CSV file.

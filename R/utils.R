@@ -1,21 +1,21 @@
-library(psych)
-library(xtable)
-#library(ascii)
-library(ggplot2)
-library(mvnormtest)
-library(lawstat)
-library(foreign)
-library(MASS)
-library(car)
-library(lsr)
-library(gvlma)
-library(lattice)
-library(lme4)
-library(Hmisc)
-library(grid)
-library(signal)
-library(gridExtra)
-library(progress)
+require(psych)
+require(xtable)
+#require(ascii)
+require(ggplot2)
+require(mvnormtest)
+require(lawstat)
+require(foreign)
+require(MASS)
+require(car)
+require(lsr)
+require(gvlma)
+require(lattice)
+require(lme4)
+require(Hmisc)
+require(grid)
+require(signal)
+require(gridExtra)
+require(progress)
 
 #' ggCaterpillar: Plot random effects as QQ-plots or caterpillar dotplots.
 #'
@@ -27,7 +27,7 @@ library(progress)
 #' @return A list of ggplot objects.
 #' @export
 ggCaterpillar <- function(re, QQ=TRUE, likeDotplot=TRUE) {
-  library(ggplot2)
+  require(ggplot2)
   f <- function(x) {
     pv   <- attr(x, "postVar")
     cols <- 1:(dim(pv)[1])
@@ -737,7 +737,7 @@ o.assumptions <- function(y,group=NULL,type="ANOVA",sig=0.05,n_threshold=30) {
 o.isnorm <- function(y,sig=0.05,n_threshold=30) {
   print("Testing Assumption of Normality Using Shapiro–Wilk",quote=FALSE)
   if(length(y) < 3){
-    print("Shaprio test librarys N > 2",quote=FALSE)
+    print("Shaprio test requires N > 2",quote=FALSE)
     return(FALSE)
   }
   isnorm <- shapiro.test(na.omit(y))

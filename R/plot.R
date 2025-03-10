@@ -2,12 +2,12 @@
 #'
 #' This script uses several plotting libraries including ggplot2, grid, signal, gridExtra, reshape, and cowplot.
 
-library(ggplot2)
-library(grid)
-library(signal)
-library(gridExtra)
-library(reshape)
-library(cowplot)
+require(ggplot2)
+require(grid)
+require(signal)
+require(gridExtra)
+require(reshape)
+require(cowplot)
 
 
 #' Format p-value for display

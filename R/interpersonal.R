@@ -13,6 +13,7 @@ require(reshape)
 require(systemfit)
 require(Hmisc)
 require(progress)
+require(gsignal)
 
 #' Run ANOVA on model set
 #'
@@ -589,8 +590,8 @@ fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, ste
 
 fitDSModelForDyad <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL,verbose=F) {
   FS <- round(getFS(dyad))
-  ax <- decimate(dyad[,2], downsample*FS)
-  ay <- decimate(dyad[,3],downsample*FS)
+  ax <- gsignal::decimate(dyad[,2], downsample*FS)
+  ay <- gsignal::decimate(dyad[,3],downsample*FS)
   newFS <- round(1.0/downsample)
   mdl <- list(
     x.base.r.squared=0,
@@ -789,8 +790,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   fs <- getFS(d)
   
   #Pre-downsample source data to match what is used in analysis
-  ax <- decimate(d[,2], round(downsample*fs))
-  ay <- decimate(d[,3],round(downsample*fs))
+  ax <- gsignal::decimate(d[,2], round(downsample*fs))
+  ay <- gsignal::decimate(d[,3],round(downsample*fs))
   t <- seq.int(1,to = length(d$Timestamp),by = round(downsample*fs))
   sourceData <- data.frame(Timestamp=t)
   sourceData[[names(d)[2]]] <- ax

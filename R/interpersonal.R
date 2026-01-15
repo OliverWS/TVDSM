@@ -14,6 +14,7 @@ require(systemfit)
 require(Hmisc)
 require(progress)
 require(gsignal)
+require(matrixStats)
 
 #' Run ANOVA on model set
 #'
@@ -308,6 +309,7 @@ plot.tvdsm <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),sav
     if(autoscale == F){
       plt2 <- plt2 + ylim(0,1)
     }
+     
   }
   if(plotParams == T){
     combinedPlt <- plot_grid(plt1,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
@@ -315,7 +317,7 @@ plot.tvdsm <- function(data,xname="x",yname="y",title=paste(xname,"&",yname),sav
   else if(plotParams == "raw"){
     colnames(rawData) <- c("Timestamp",xname,yname)
     plt.raw <- plotDyad(rawData,title = title,ylabel = "EDA (µS)")
-    combinedPlt <- plot_grid(plt.raw,plt2,align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
+    combinedPlt <- plot_grid(plt.raw,plt2 + xlim(min(rawData$Timestamp),max(rawData$Timestamp)),align = "hv",ncol = 1,nrow = 2,rel_heights = c(2,1))
   }
   else {
     combinedPlt <- plt2
@@ -372,19 +374,20 @@ plot.density <- function(data,group="Dyad", xname='Particpant 1 Beta', yname="Pa
 #' @return A list containing the fitted models, R-squared values, and model coefficients.
 #' @export
 
-fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, step=0.25,p.value=0.01,verbose=F,lag=0){
+fitDSModel <- function(x,y,x_mu=0,y_mu=0,type=2, step=0.25,p.value=0.01,verbose=F,lag=0){
   if(is.null(lag)){
-    x_prime <-o.Lag(x,lag=0)
-    y_prime <- o.Lag(y,lag=0)
-    x_prime.zLag <- o.Lag(x,lag=0)
-    y_prime.zLag <- o.Lag(y,lag=0)
+    x_prime <-o.Lag(x,lag=0,robust = F)
+    y_prime <- o.Lag(y,lag=0,robust = F)
+    x_prime.zLag <- o.Lag(x,lag=0,robust = F)
+    y_prime.zLag <- o.Lag(y,lag=0,robust = F)
+    
     
   }
   else {
-    x_prime <-o.Lag(x,lag=lag)
-    y_prime <- o.Lag(y,lag=lag)
-    x_prime.zLag <- o.Lag(x,lag=0)
-    y_prime.zLag <- o.Lag(y,lag=0)
+    x_prime <-o.Lag(x,lag=lag,robust = F)
+    y_prime <- o.Lag(y,lag=lag,robust = F)
+    x_prime.zLag <- o.Lag(x,lag=0,robust = F)
+    y_prime.zLag <- o.Lag(y,lag=0,robust = F)
     
   }
 
@@ -501,8 +504,8 @@ fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, ste
   }
   else if(type==2){
     
-    x_model <- x_prime ~ I(x_mu-x) * I(y-x)
-    y_model <- y_prime ~ I(y_mu-y) * I(x-y)
+    x_model <- x_prime ~  I(y-x)
+    y_model <- y_prime ~  I(x-y)
     
     
     eq <- list(x_model,y_model)
@@ -513,12 +516,12 @@ fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, ste
     
     b0 <- o.coef(x_model,1)
     b1 <- o.coef(x_model,2)
-    b2 <- o.coef(x_model,3)
-    b21 <- o.coef(x_model,4)
+    b2 <- NA
+    b21 <- NA
     b3 <- o.coef(y_model,1)
     b4 <- o.coef(y_model,2)
-    b5 <- o.coef(y_model,3)
-    b45 <- o.coef(y_model,4)
+    b5 <- NA
+    b45 <- NA
   }
   
   else {
@@ -555,8 +558,15 @@ fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, ste
   }
   tst <- lrtest(basefit,fit)
   if(tst$`Pr(>Chisq)`[[2]] < p.value) {
-    x.base.r.squared=summary(base_x_model)$r.squared
-    y.base.r.squared=summary(base_y_model)$r.squared
+    if(type == 2){
+        x.base.r.squared=summary(base_x_model)$r.squared
+        y.base.r.squared=summary(base_y_model)$r.squared
+    }
+    else {
+        x.base.r.squared=0
+        y.base.r.squared=0
+        
+    }
     x.r.squared = summary(x_model)$r.squared
     y.r.squared = summary(y_model)$r.squared
   }
@@ -570,9 +580,21 @@ fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, ste
     x.r.squared = 0
     y.r.squared = 0
   }
+  debugData = list(base_x_summary=summary(base_x_model),base_y_summary =summary(base_y_model), x_summary=summary(x_model), y_summary=summary(y_model))
   
+  clamp <- function(val,lowerLimit=-Inf,upperLimit=Inf) {
+      if(val > upperLimit){
+          return(upperLimit)
+      }
+      else if(val < lowerLimit){
+          return(lowerLimit)
+      }
+      else {
+          return(val)
+      }
+  }
   
-  return(list(x_model=x_model,y_model=y_model,base_x_model=base_x_model,base_y_model=base_y_model,model=fit,basemodel=basefit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=(x.r.squared - x.base.r.squared),dy.r.squared=(y.r.squared - y.base.r.squared),x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5,b21=b21,b45=b45))
+  return(list(x_model=x_model,y_model=y_model,base_x_model=base_x_model,base_y_model=base_y_model,model=fit,basemodel=basefit,x.base.r.squared=x.base.r.squared,y.base.r.squared=y.base.r.squared, x.r.squared=x.r.squared, y.r.squared=y.r.squared,dx.r.squared=clamp(x.r.squared - x.base.r.squared,lowerLimit=0),dy.r.squared=clamp(y.r.squared - y.base.r.squared,lowerLimit=0),x.eq=s1,y.eq=s2,b0=b0,b1=b1,b2=b2,b3=b3,b4=b4,b5=b5,b21=b21,b45=b45,debug=debugData))
 }
 
 #' Fit dynamic system model for dyad data
@@ -588,11 +610,13 @@ fitDSModel <- function(x,y,x_mu=mean(x,na.rm=T),y_mu=mean(y,na.rm=T),type=2, ste
 #' @return A list containing model outputs and timing information.
 #' @export
 
-fitDSModelForDyad <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL,verbose=F) {
-  FS <- round(getFS(dyad))
-  ax <- gsignal::decimate(dyad[,2], downsample*FS)
-  ay <- gsignal::decimate(dyad[,3],downsample*FS)
-  newFS <- round(1.0/downsample)
+fitDSModelForDyad <- function(dyad,type=4,lag=0, downsample=-1,x_mu=NULL,y_mu=NULL,verbose=F,p.value=0.01) {
+
+    FS <- round(getFS(dyad))
+    ax <- dyad[,2]
+    ay <- dyad[,3]
+    newFS <- FS
+
   mdl <- list(
     x.base.r.squared=0,
     y.base.r.squared=0,
@@ -603,7 +627,7 @@ fitDSModelForDyad <- function(dyad,type=4,downsample=1,lag=0,x_mu=NULL,y_mu=NULL
     x.eq="s1",y.eq="s2",
     b0=NA,b1=NA,b2=NA,b3=NA,b4=NA,b5=NA,b21=NA,b45=NA)
   
-tryCatch(mdl <- fitDSModel(ax,ay,p.value = 0.05,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose),
+tryCatch(mdl <- fitDSModel(ax,ay,p.value = p.value,type=type,lag=lag*newFS,x_mu = x_mu,y_mu=y_mu,verbose=verbose),
            error=function(e){
              print(e)
            })
@@ -656,7 +680,7 @@ urlForModel <- function(m) {
 #' @param noPlots Logical, if TRUE no plots are generated.
 #' @param relativeToLag Reference lag index (default -1).
 #' @param type Model type.
-#' @param plotParams Logical, whether to plot model parameters.
+#' @param plotParams Logical, whether to plot modefitDSModelForDyadl parameters.
 #' @param pltTitle Title for the plots.
 #' @return A list with optimal lag summary and model outputs.
 #' @export
@@ -739,7 +763,7 @@ n = 1;
 #' @return A list containing TVDSM model outputs, summary, and plots.
 #' @export
 
-analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=fitDSModelForDyad,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams="raw",pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=4,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F, codes="",useRealTime=F, incTSD=F, ...) {
+analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_size=60*5,window_step=window_size,start="", end="",func=fitDSModelForDyad,na.rm=T,simulate=F,dname=paste(xname,yname,sep="+"),lag=0,noPlots=F, plotParams="raw",pltTitle=paste(dname,"(","Lag","=",lag,")"), measure="EDA",type=4,downsample=1, x.baseline=NA, y.baseline=NA, verbose=F, codes="",useRealTime=F, incTSD=F, use.delta.rsquared=T,p.cutoff=0.01, ...) {
   timeformat ="%Y-%m-%d %H:%M:%S"
   
   if(length(dyad) > 0){
@@ -764,13 +788,13 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   fs <- getFS(d)
   
   FUN_TSD <- function(data){
-    out <- func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline)
+    out <- func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline,p.value=p.cutoff)
     out$xTSD <- tsDescriptives(data[,2],fs=fs)
     out$yTSD <- tsDescriptives(data[,3],fs=fs)
     return(out)
   }
   FUN <- function(data){
-    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline))
+    return(func(data,lag=lag,type=type,downsample=downsample,x_mu=x.baseline,y_mu=y.baseline,p.value=p.cutoff))
   }
   
 
@@ -790,12 +814,22 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   fs <- getFS(d)
   
   #Pre-downsample source data to match what is used in analysis
-  ax <- gsignal::decimate(d[,2], round(downsample*fs))
-  ay <- gsignal::decimate(d[,3],round(downsample*fs))
-  t <- seq.int(1,to = length(d$Timestamp),by = round(downsample*fs))
-  sourceData <- data.frame(Timestamp=t)
-  sourceData[[names(d)[2]]] <- ax
-  sourceData[[names(d)[3]]] <- ay
+  if(downsample > 0){
+      ax <- gsignal::decimate(d[,2], round(downsample*fs))
+      ay <- gsignal::decimate(d[,3],round(downsample*fs))
+      t <- seq.int(1,to = length(d$Timestamp),by = round(downsample*fs))
+      sourceData <- data.frame(Timestamp=d$Timestamp[t])
+      sourceData[[names(d)[2]]] <- ax
+      sourceData[[names(d)[3]]] <- ay
+  }
+  else {
+      ax <- d[,2]
+      ay <- d[,3]
+      t <- seq_along(d$Timestamp)
+      sourceData <- data.frame(Timestamp=t)
+      sourceData[[names(d)[2]]] <- ax
+      sourceData[[names(d)[3]]] <- ay
+  }
   
   
   if (window_size <= 0) {
@@ -803,10 +837,10 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
     window_step <- window_size
   }
   if(incTSD){
-    data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN_TSD,na.rm = na.rm,verbose=verbose)
+    data <- o.window.list(sourceData,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN_TSD,na.rm = na.rm,verbose=verbose)
   }
   else {
-    data <- o.window.list(d,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN,na.rm = na.rm,verbose=verbose)
+    data <- o.window.list(sourceData,window_size = window_size*fs, window_step=window_step*fs, FUN = FUN,na.rm = na.rm,verbose=verbose)
   }
   if(codes != ""){
     
@@ -848,7 +882,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   out <- list()
   
   if(noPlots == F){
-    pltData<- plot.tvdsm(data,xname=xname,yname=yname,use.delta.rsquared = T,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=d, ...)
+    pltData<- plot.tvdsm(data,xname=xname,yname=yname,use.delta.rsquared = use.delta.rsquared ,by.condition = (codes != ""),title = pltTitle,plotParams=plotParams,rawData=sourceData, ...)
     print(pltData)
     out$plt <- pltData
     colnames(d) <- c("Timestamp",xname,yname)

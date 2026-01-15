@@ -1206,16 +1206,14 @@ as.group <- function(pn,cols=c("EDA"),norm=F,na.interpolate=T,interpolation.meth
 }
 
 o.Lag <- function(x, lag=0, robust=T) {
-  if (!is.numeric(x)) {
-    warning("Input vector is not numeric. Converting to numeric.")
-    x <- as.numeric(x)
-  }
-  
+   x <- as.numeric(x)
+   attributes(x) <- NULL
+
   if(robust){
-    dx <- (Lag(x,(-1*lag)-1) - Lag(x,(-1*lag)+1))/2
+    dx <- (as.numeric(Lag(x,(-1*lag)-1)) - as.numeric(Lag(x,(-1*lag)+1)) )/2
   }
   else {
-    dx <- Lag(x,(-1*lag)-1) -  Lag(x,(-1*lag))
+    dx <- as.numeric(Lag(x,(-1*lag)-1)) -  as.numeric(Lag(x,(-1*lag)) )
   }
   
   return(dx)

@@ -1,0 +1,267 @@
+# tvdsm: Tools for Dyadic Data Analysis Using Time-Varying Dynamical Systems Models
+
+`tvdsm` is an R package designed to help you analyze dyadic data
+efficiently. This README serves as the main page for the pkgdown website
+and provides support documentation including quick examples and guidance
+on using the key function `analyzeDyad`.
+
+More information about the package can be found at
+<https://oliverws.github.io/TVDSM/>.
+
+To read in-depth information about the TVDSM approach, please see
+[Saunders Wilder, O (2017)](https://doi.org/10.17760/D20316235).
+
+## Quick Start
+
+Below is a simple example of using `analyzeDyad` to analyze dyadic data:
+
+``` r
+# Load the tvdsm package
+library(tvdsm)
+
+
+# Run the analysis using analyzeDyad
+PersonA <- read.csvdata("PersonA.csv")
+PersonB <- read.csvdata("PersonB.csv")
+dyad <- as.dyad(PersonA, PersonB, cols = c("EDA"))
+
+result <- analyzeDyad(dyad=dyad, window_size=60, lag=0,xname = "PersonA",yname="PersonB",plotParams = "raw")
+
+head(result$summary)
+#             timestamp            name               Start                 End dx.r.squared dy.r.squared   x.selfreg   x.coreg x.interaction   y.selfreg   y.coreg y.interaction
+# 1 1970-01-01 00:00:00 PersonA+PersonB 1970-01-01 00:00:00 1970-01-01 00:01:00    0.8609977    0.7678614  0.00000000 0.7595278            NA  0.00000000 1.3113947            NA
+# 2 1970-01-01 00:01:00 PersonA+PersonB 1970-01-01 00:01:00 1970-01-01 00:02:00    0.8972776    0.6761051  0.02346823 0.7968545            NA -0.05435490 1.2197551            NA
+# 3 1970-01-01 00:02:00 PersonA+PersonB 1970-01-01 00:02:00 1970-01-01 00:03:00    0.8029374    0.7413561  0.00000000 0.5092651            NA  0.00000000 1.9555250            NA
+# 4 1970-01-01 00:03:00 PersonA+PersonB 1970-01-01 00:03:00 1970-01-01 00:04:00    0.8384866    0.7174741  0.00000000 0.3875892            NA  0.00000000 2.5704267            NA
+# 5 1970-01-01 00:04:00 PersonA+PersonB 1970-01-01 00:04:00 1970-01-01 00:05:00    0.7615926    0.5771764  0.00000000 0.2225588            NA -0.05550322 4.3719645            NA
+# 6 1970-01-01 00:05:00 PersonA+PersonB 1970-01-01 00:05:00 1970-01-01 00:06:00    0.6726747    0.4688025 -0.06390888 1.7151281            NA -0.14787452 0.4763664            NA
+```
+
+## What does analyzeDyad do?
+
+The `analyzeDyad` function performs the following steps:
+
+- **Data Processing:** Cleans and pre-processes the dyadic data for
+  analysis.
+- **Statistical Analysis:** Applies the chosen method (e.g., “default”)
+  to uncover patterns and relationships in the data.
+- **Output Generation:** Produces a summary of the analysis including
+  statistical measures, model fits, and diagnostic plots.
+
+For example, the output typically includes:
+
+- A **summary table** of fit indices and parameter estimates.
+- **Diagnostic plots** for assessing model assumptions and fit.
+- Additional **supporting metrics** to help interpret the analysis
+  results.
+
+## Learn More and Get Help
+
+For more detailed documentation and support, please visit our
+[Documentation Site](https://oliverws.github.io/TVDSM/)
+
+*tvdsm* is maintained by Oliver Saunders Wilder, PhD. Contributions and
+issues are welcome!
+
+# Package index
+
+## All functions
+
+- [`RMSSD()`](http://oliverws.github.io/TVDSM/reference/RMSSD.md) :
+  Compute Root Mean Square of Successive Differences (RMSSD)
+- [`TSDescriptivesByCondition()`](http://oliverws.github.io/TVDSM/reference/TSDescriptivesByCondition.md)
+  : Alias for descriptivesByCondition
+- [`analyzeDyad()`](http://oliverws.github.io/TVDSM/reference/analyzeDyad.md)
+  : Analyze dyad data for TVDSM analysis
+- [`analyzeGroup()`](http://oliverws.github.io/TVDSM/reference/analyzeGroup.md)
+  : Analyze a group of participant data files
+- [`analyzeLags()`](http://oliverws.github.io/TVDSM/reference/analyzeLags.md)
+  : Analyze model performance over varying lags
+- [`annotate.relative()`](http://oliverws.github.io/TVDSM/reference/annotate.relative.md)
+  : Annotate a ggplot with relative coordinates
+- [`as.dyad()`](http://oliverws.github.io/TVDSM/reference/as.dyad.md) :
+  Convert Two Participant Data into a Dyad
+- [`as.group()`](http://oliverws.github.io/TVDSM/reference/as.group.md)
+  : Combine participant data into a group dyad
+- [`as.simulateddyad()`](http://oliverws.github.io/TVDSM/reference/as.simulateddyad.md)
+  : Create Simulated Dyad Data
+- [`bootstrapSimulation()`](http://oliverws.github.io/TVDSM/reference/bootstrapSimulation.md)
+  : Bootstrap Dyadic Simulation
+- [`compareSim()`](http://oliverws.github.io/TVDSM/reference/compareSim.md)
+  : Compare Simulated Signals
+- [`compareSimulatedDyads()`](http://oliverws.github.io/TVDSM/reference/compareSimulatedDyads.md)
+  : Compare Simulated Dyads
+- [`describeDyad()`](http://oliverws.github.io/TVDSM/reference/describeDyad.md)
+  : Describe dyad interdependence
+- [`descriptivesByCondition()`](http://oliverws.github.io/TVDSM/reference/descriptivesByCondition.md)
+  : Descriptives By Condition
+- [`distance()`](http://oliverws.github.io/TVDSM/reference/distance.md)
+  : Calculate Euclidean Distance
+- [`downsample.eda()`](http://oliverws.github.io/TVDSM/reference/downsample.eda.md)
+  : Downsample EDA Data
+- [`dsmodel()`](http://oliverws.github.io/TVDSM/reference/dsmodel.md) :
+  Fit Dyadic Model
+- [`dsmodel.multilag()`](http://oliverws.github.io/TVDSM/reference/dsmodel.multilag.md)
+  : Fit Multi-lag Dyadic Model
+- [`dsmodel.sem()`](http://oliverws.github.io/TVDSM/reference/dsmodel.sem.md)
+  : Fit Dyadic Model using SEM
+- [`dummyCodeByCondition()`](http://oliverws.github.io/TVDSM/reference/dummyCodeByCondition.md)
+  : Dummy Code By Condition
+- [`dyad.dsgraph()`](http://oliverws.github.io/TVDSM/reference/dyad.dsgraph.md)
+  : Plot Dyadic Graph
+- [`dyad.dsmodel()`](http://oliverws.github.io/TVDSM/reference/dyad.dsmodel.md)
+  : Build Dyadic Model
+- [`dynamicalCorrelation()`](http://oliverws.github.io/TVDSM/reference/dynamicalCorrelation.md)
+  : Compute dynamical correlation using bootstrap methods
+- [`examples()`](http://oliverws.github.io/TVDSM/reference/examples.md)
+  : Run Example Simulations
+- [`fitDSModel()`](http://oliverws.github.io/TVDSM/reference/fitDSModel.md)
+  : Fit a dynamic system model
+- [`fitDSModelForDyad()`](http://oliverws.github.io/TVDSM/reference/fitDSModelForDyad.md)
+  : Fit dynamic system model for dyad data
+- [`generateI3Mat()`](http://oliverws.github.io/TVDSM/reference/generateI3Mat.md)
+  : Generate an I3 matrix for interdependence analysis
+- [`get.key()`](http://oliverws.github.io/TVDSM/reference/get.key.md) :
+  Extract a key from a list of objects
+- [`getFS()`](http://oliverws.github.io/TVDSM/reference/getFS.md) : Get
+  Sampling Frequency
+- [`ggCaterpillar()`](http://oliverws.github.io/TVDSM/reference/ggCaterpillar.md)
+  : ggCaterpillar: Plot random effects as QQ-plots or caterpillar
+  dotplots.
+- [`ggbracket()`](http://oliverws.github.io/TVDSM/reference/ggbracket.md)
+  : Add bracket annotations for statistical comparisons on a ggplot
+- [`gghist()`](http://oliverws.github.io/TVDSM/reference/gghist.md) :
+  Create a histogram with density and normality annotation
+- [`ggrel.x()`](http://oliverws.github.io/TVDSM/reference/ggrel.x.md) :
+  Calculate a relative x-coordinate in a ggplot
+- [`ggrel.y()`](http://oliverws.github.io/TVDSM/reference/ggrel.y.md) :
+  Calculate a relative y-coordinate in a ggplot
+- [`interruptedTimeSeries()`](http://oliverws.github.io/TVDSM/reference/interruptedTimeSeries.md)
+  : Interrupted Time Series Analysis (Not Implemented)
+- [`linearTrend()`](http://oliverws.github.io/TVDSM/reference/linearTrend.md)
+  : Compute Linear Trend Slope
+- [`lmp()`](http://oliverws.github.io/TVDSM/reference/lmp.md) :
+  Calculate p-value from an lm object
+- [`makeDyad()`](http://oliverws.github.io/TVDSM/reference/makeDyad.md)
+  : Create Dyad Data Frame
+- [`multiplot()`](http://oliverws.github.io/TVDSM/reference/multiplot.md)
+  : Arrange multiple ggplot objects in a grid
+- [`normalize()`](http://oliverws.github.io/TVDSM/reference/normalize.md)
+  : Normalize a Numeric Vector
+- [`o.Lag()`](http://oliverws.github.io/TVDSM/reference/o.Lag.md) :
+  Compute Lag Difference
+- [`o.center()`](http://oliverws.github.io/TVDSM/reference/o.center.md)
+  : Center a Numeric Vector
+- [`o.coef()`](http://oliverws.github.io/TVDSM/reference/o.coef.md) :
+  Extract Coefficient with Significance Check
+- [`o.estLag()`](http://oliverws.github.io/TVDSM/reference/o.estLag.md)
+  : Estimate Lag with Moving Window
+- [`o.rescale()`](http://oliverws.github.io/TVDSM/reference/o.rescale.md)
+  : Rescale a Vector to \[0,1\]
+- [`o.scale()`](http://oliverws.github.io/TVDSM/reference/o.scale.md) :
+  Scale Vector to \[0,1\]
+- [`o.smooth()`](http://oliverws.github.io/TVDSM/reference/o.smooth.md)
+  : Smooth a Numeric Vector
+- [`p.format()`](http://oliverws.github.io/TVDSM/reference/p.format.md)
+  : Format p-value for display
+- [`pbcopy()`](http://oliverws.github.io/TVDSM/reference/pbcopy.md) :
+  Copy Text to Clipboard
+- [`plot(`*`<density>`*`)`](http://oliverws.github.io/TVDSM/reference/plot.density.md)
+  : Plot density contour of beta coefficients
+- [`plot(`*`<dsgraph>`*`)`](http://oliverws.github.io/TVDSM/reference/plot.dsgraph.md)
+  : Create Plot for Dyadic State Space Graph
+- [`plot(`*`<eda>`*`)`](http://oliverws.github.io/TVDSM/reference/plot.eda.md)
+  : Plot EDA data with optional accelerometer data
+- [`plot(`*`<lagparams>`*`)`](http://oliverws.github.io/TVDSM/reference/plot.lagparams.md)
+  : Plot lag parameters over time
+- [`plot(`*`<tvdsm>`*`)`](http://oliverws.github.io/TVDSM/reference/plot.tvdsm.md)
+  : Plot TVDSM model results
+- [`plotDyad()`](http://oliverws.github.io/TVDSM/reference/plotDyad.md)
+  : Plot dyadic data using ggplot2
+- [`plotEDAByCondition()`](http://oliverws.github.io/TVDSM/reference/plotEDAByCondition.md)
+  : Plot EDA by Condition
+- [`plotMetric()`](http://oliverws.github.io/TVDSM/reference/plotMetric.md)
+  : Plot a metric with grouping and error bars
+- [`plotTSDescriptives()`](http://oliverws.github.io/TVDSM/reference/plotTSDescriptives.md)
+  : Plot Time Series Descriptive Statistics
+- [`plotlyDyad()`](http://oliverws.github.io/TVDSM/reference/plotlyDyad.md)
+  : Plot dyadic data using Plotly
+- [`r2.corr.mer()`](http://oliverws.github.io/TVDSM/reference/r2.corr.mer.md)
+  : Calculate R-squared from a Mixed Effects Model
+- [`rand.dyad()`](http://oliverws.github.io/TVDSM/reference/rand.dyad.md)
+  : Generate Random Dyadic Data
+- [`read.Codes()`](http://oliverws.github.io/TVDSM/reference/read.Codes.md)
+  : Read Condition Codes
+- [`read.ERCodes()`](http://oliverws.github.io/TVDSM/reference/read.ERCodes.md)
+  : Read Engagement Codes
+- [`read.IBI()`](http://oliverws.github.io/TVDSM/reference/read.IBI.md)
+  : Read IBI Data from CSV
+- [`read.IBI.TS()`](http://oliverws.github.io/TVDSM/reference/read.IBI.TS.md)
+  : Read IBI Time Series Data
+- [`read.RTCodes()`](http://oliverws.github.io/TVDSM/reference/read.RTCodes.md)
+  : Read RTCodes
+- [`read.actiwave()`](http://oliverws.github.io/TVDSM/reference/read.actiwave.md)
+  : Read Actiwave Data
+- [`read.biosync()`](http://oliverws.github.io/TVDSM/reference/read.biosync.md)
+  : Read Biosync Data
+- [`read.csvdata()`](http://oliverws.github.io/TVDSM/reference/read.csvdata.md)
+  : Read CSV Data with Timestamp Parsing
+- [`read.dyad()`](http://oliverws.github.io/TVDSM/reference/read.dyad.md)
+  : Read Dyad Data from File
+- [`read.e4()`](http://oliverws.github.io/TVDSM/reference/read.e4.md) :
+  Read E4 Data
+- [`read.eda()`](http://oliverws.github.io/TVDSM/reference/read.eda.md)
+  : Read EDA Data
+- [`read.edf()`](http://oliverws.github.io/TVDSM/reference/read.edf.md)
+  : Read EDF Data
+- [`read.empatica()`](http://oliverws.github.io/TVDSM/reference/read.empatica.md)
+  : Read Empatica Data
+- [`read.empatica.acc()`](http://oliverws.github.io/TVDSM/reference/read.empatica.acc.md)
+  : Read Empatica Accelerometer Data
+- [`read.empatica.bvp()`](http://oliverws.github.io/TVDSM/reference/read.empatica.bvp.md)
+  : Read Empatica BVP Data
+- [`read.empatica.eda()`](http://oliverws.github.io/TVDSM/reference/read.empatica.eda.md)
+  : Read Empatica EDA Data
+- [`read.ibutton()`](http://oliverws.github.io/TVDSM/reference/read.ibutton.md)
+  : Read iButton Data
+- [`read.reda()`](http://oliverws.github.io/TVDSM/reference/read.reda.md)
+  : Read Reda Data
+- [`runAnova()`](http://oliverws.github.io/TVDSM/reference/runAnova.md)
+  : Run ANOVA on model set
+- [`runFalsePairings()`](http://oliverws.github.io/TVDSM/reference/runFalsePairings.md)
+  : Run False Pairings Analysis
+- [`sampleSignal()`](http://oliverws.github.io/TVDSM/reference/sampleSignal.md)
+  : Sample Signal
+- [`save.eda()`](http://oliverws.github.io/TVDSM/reference/save.eda.md)
+  : Save EDA Data to File
+- [`saveDataForGraphing()`](http://oliverws.github.io/TVDSM/reference/saveDataForGraphing.md)
+  : Save data for graphing from TVDSM analysis
+- [`saveInterpersonalData()`](http://oliverws.github.io/TVDSM/reference/saveInterpersonalData.md)
+  : Save interpersonal analysis data to a CSV file
+- [`scatter_plot()`](http://oliverws.github.io/TVDSM/reference/scatter_plot.md)
+  : Create a scatter plot with a linear fit and correlation annotation
+- [`se()`](http://oliverws.github.io/TVDSM/reference/se.md) : Compute
+  Standard Error of a Vector
+- [`simulate()`](http://oliverws.github.io/TVDSM/reference/simulate.md)
+  : Simulate Data using Linear Models
+- [`simulateDyad()`](http://oliverws.github.io/TVDSM/reference/simulateDyad.md)
+  : Simulate a Dyadic Time Series
+- [`simulatePartner()`](http://oliverws.github.io/TVDSM/reference/simulatePartner.md)
+  : Simulate a Partner Time Series
+- [`statespacegraph()`](http://oliverws.github.io/TVDSM/reference/statespacegraph.md)
+  : Plot State Space Graph
+- [`topography()`](http://oliverws.github.io/TVDSM/reference/topography.md)
+  : Plot Topography Density
+- [`tsDescriptives()`](http://oliverws.github.io/TVDSM/reference/tsDescriptives.md)
+  : Compute Time Series Descriptive Statistics
+- [`urlForModel()`](http://oliverws.github.io/TVDSM/reference/urlForModel.md)
+  : Generate URL for model visualization
+- [`validateConditionTimes()`](http://oliverws.github.io/TVDSM/reference/validateConditionTimes.md)
+  : Validate condition times within data range
+- [`vectorfield()`](http://oliverws.github.io/TVDSM/reference/vectorfield.md)
+  : Create a Vector Flow Plot
+- [`vectorflow()`](http://oliverws.github.io/TVDSM/reference/vectorflow.md)
+  : Visualize Vector Field
+- [`window()`](http://oliverws.github.io/TVDSM/reference/window.md) :
+  Apply Moving Window Operation
+

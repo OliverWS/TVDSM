@@ -825,8 +825,7 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
   else {
       ax <- d[,2]
       ay <- d[,3]
-      t <- seq_along(d$Timestamp)
-      sourceData <- data.frame(Timestamp=t)
+      sourceData <- data.frame(Timestamp=d$Timestamp)
       sourceData[[names(d)[2]]] <- ax
       sourceData[[names(d)[3]]] <- ay
   }

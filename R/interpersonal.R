@@ -897,6 +897,8 @@ analyzeDyad <- function(f1="",f2="",dyad=c(),xname=f1,yname=f2, norm=F,window_si
                         End=as.POSIXct(get.key(mdls,"End"),origin = "1970-01-01"),
                         dx.r.squared=get.key(mdls,"dx.r.squared"),
                         dy.r.squared=get.key(mdls,"dy.r.squared"),
+                        x.r.squared=get.key(mdls,"x.r.squared"),
+                        y.r.squared=get.key(mdls,"y.r.squared"),
                         x.selfreg=get.key(mdls,"b1"),
                         x.coreg=get.key(mdls,"b2"),
                         x.interaction=get.key(mdls,"b21"),

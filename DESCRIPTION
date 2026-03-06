@@ -1,8 +1,8 @@
 Package: tvdsm
 Type: Package
 Title: R Package for Time-Varying Dynamic State Models
-Version: 1.6.2
-Date: 2026-01-15
+Version: 1.6.4
+Date: 2026-03-05
 Author: Oliver Saunders Wilder, Ph.D. & Richard Palumbo, Ph.D.
 Maintainer: <oliversw@media.mit.edu>
 Encoding: UTF-8

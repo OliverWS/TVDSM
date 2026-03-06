@@ -558,15 +558,9 @@ fitDSModel <- function(x,y,x_mu=0,y_mu=0,type=2, step=0.25,p.value=0.01,verbose=
   }
   tst <- lrtest(basefit,fit)
   if(tst$`Pr(>Chisq)`[[2]] < p.value) {
-    if(type == 2){
-        x.base.r.squared=summary(base_x_model)$r.squared
-        y.base.r.squared=summary(base_y_model)$r.squared
-    }
-    else {
-        x.base.r.squared=0
-        y.base.r.squared=0
-        
-    }
+    x.base.r.squared=summary(base_x_model)$r.squared
+    y.base.r.squared=summary(base_y_model)$r.squared
+    
     x.r.squared = summary(x_model)$r.squared
     y.r.squared = summary(y_model)$r.squared
   }

@@ -561,8 +561,6 @@ fitDSModel <- function(x,y,x_mu=0,y_mu=0,type=2, step=0.25,p.value=0.01,verbose=
     x.base.r.squared=summary(base_x_model)$r.squared
     y.base.r.squared=summary(base_y_model)$r.squared
     
-    x.r.squared = summary(x_model)$r.squared
-    y.r.squared = summary(y_model)$r.squared
   }
   else {
     if(verbose){
@@ -571,9 +569,10 @@ fitDSModel <- function(x,y,x_mu=0,y_mu=0,type=2, step=0.25,p.value=0.01,verbose=
     x.base.r.squared=0
     y.base.r.squared=0
     
-    x.r.squared = 0
-    y.r.squared = 0
   }
+  x.r.squared = summary(x_model)$r.squared
+  y.r.squared = summary(y_model)$r.squared
+  
   debugData = list(base_x_summary=summary(base_x_model),base_y_summary =summary(base_y_model), x_summary=summary(x_model), y_summary=summary(y_model))
   
   clamp <- function(val,lowerLimit=-Inf,upperLimit=Inf) {
